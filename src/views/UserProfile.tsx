@@ -38,6 +38,7 @@ import ProfileHeaderCard from '../features/social/components/ProfileHeaderCard';
 import '../features/social/views/FeedList.scss';
 import { useAccountBalances } from '../hooks/useAccountBalances';
 import { useAddressByChainName, useChainName } from '../hooks/useChainName';
+import { usePreferredChainName } from '../hooks/usePreferredChainName';
 
 import AccountPortfolio from '@/components/Account/AccountPortfolio';
 import ProfileTabPanel from '../features/social/components/ProfileTabPanel';
@@ -67,8 +68,9 @@ export default function UserProfile({
   );
   const effectiveAddress = isChainName && resolvedAddress ? resolvedAddress : (address as string);
   const { data: graphCounts, countsStatus } = useSocialGraphCounts(effectiveAddress);
-  const { aex9Balances } = useAccountBalances(effectiveAddress);
+  useAccountBalances(effectiveAddress);
   const { chainName } = useChainName(effectiveAddress);
+  const pendingChainName = usePreferredChainName(effectiveAddress);
   const { canEdit } = useProfile(effectiveAddress);
   const { activeAccount } = useAeSdk();
   const { openModal } = useModal();
@@ -113,6 +115,19 @@ export default function UserProfile({
     }) as unknown as Promise<any>,
     enabled: !!effectiveAddress,
     staleTime: 10_000,
+  });
+
+  // Total of the Holdings list endpoint. The tab badge uses it so the count
+  // always matches the rows the Holdings tab can actually render.
+  const { data: ownedTokensPage } = useQuery({
+    queryKey: ['profile-holdings-count', effectiveAddress],
+    queryFn: () => AccountTokensService.listTokenHolders({
+      address: effectiveAddress,
+      limit: 1,
+      page: 1,
+    }) as unknown as Promise<{ items: any[]; meta?: { totalItems?: number } }>,
+    enabled: !!effectiveAddress,
+    staleTime: 60_000,
   });
 
   const [editOpen, setEditOpen] = useState(false);
@@ -168,13 +183,19 @@ export default function UserProfile({
     }
   }, [searchParams]);
 
-  // Owned/created token counts come from the account aggregate
-  // (holdings_count/total_created_tokens) — no separate list-count queries needed.
+  // Created count comes from the account aggregate (total_created_tokens);
+  // the Holdings count comes from the holdings list query above.
 
   const bioText = getLinkedBio(accountInfo) || '';
   const linkedPreferredName = getLinkedPreferredAensName(accountInfo);
-  const displayName = (linkedPreferredName || accountInfo?.public_name || chainName || '').trim()
-    || effectiveAddress;
+  // A name just linked or claimed shows right away; the account keeps
+  // reporting the previous one until the API has indexed the change.
+  const displayName = (
+    (pendingChainName.isPending
+      ? pendingChainName.name || chainName
+      : linkedPreferredName || accountInfo?.public_name || chainName)
+    || ''
+  ).trim() || effectiveAddress;
   const isXVerified = isXLinked(accountInfo);
   const linkedXUsername = getLinkedXUsername(accountInfo);
   // Your own X link or unlink still on its way: shown instead of the "Link
@@ -448,11 +469,10 @@ export default function UserProfile({
               {
                 key: 'owned',
                 label: t('explore:holdings'),
-                // `aex9Balances` is always an array and starts empty, so its
-                // length is only a real count once something has loaded into it.
-                // Until then show nothing rather than a zero the API may contradict.
-                count: accountInfo?.holdings_count
-                  ?? (aex9Balances.length > 0 ? aex9Balances.length : undefined),
+                // Count the same list the tab renders. The account aggregate's
+                // holdings_count can lag or include tokens the list never shows,
+                // so it is only a fallback until the list has loaded.
+                count: ownedTokensPage?.meta?.totalItems ?? accountInfo?.holdings_count,
               },
               { key: 'created', label: t('explore:created'), count: accountInfo?.total_created_tokens },
               { key: 'transactions', label: t('explore:activity'), count: undefined },

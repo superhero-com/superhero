@@ -65,6 +65,7 @@ const TradeTransactionConfirm = ({
 
   const tokenAFormatted = formatFractionalPrice(Decimal.from(tokenA ?? 0));
   const tokenBFormatted = formatFractionalPrice(Decimal.from(tokenB ?? 0));
+  const tokenLabel = token?.symbol || token?.name ? `#${token.symbol || token.name}` : '';
 
   return (
     <div className="w-full max-w-md mx-auto space-y-4">
@@ -80,7 +81,7 @@ const TradeTransactionConfirm = ({
             <FractionFormatter fractionalPrice={tokenAFormatted} />
           </span>
           <span className="text-sm font-bold uppercase text-white/80 truncate max-w-[120px]">
-            {isBuying ? COIN_SYMBOL : token?.symbol}
+            {isBuying ? COIN_SYMBOL : tokenLabel}
           </span>
         </div>
 
@@ -89,7 +90,7 @@ const TradeTransactionConfirm = ({
             <FractionFormatter fractionalPrice={tokenBFormatted} />
           </span>
           <span className="text-sm font-bold uppercase text-white/80 truncate max-w-[120px]">
-            {isBuying ? token?.symbol : COIN_SYMBOL}
+            {isBuying ? tokenLabel : COIN_SYMBOL}
           </span>
         </div>
 
@@ -103,7 +104,7 @@ const TradeTransactionConfirm = ({
       <p className="text-sm text-white/80">
         {t('common.modals.transactionConfirm.estimatedOutput', {
           amount: tokenBFormatted.number,
-          symbol: isBuying ? token?.symbol : COIN_SYMBOL,
+          symbol: isBuying ? tokenLabel : COIN_SYMBOL,
         })}
       </p>
 
@@ -298,7 +299,7 @@ const CreateTokenTransactionConfirm = ({
                       fractionalPrice={formatFractionalPrice(details.estimatedTokens)}
                     />
                     &nbsp;
-                    {details.tokenName}
+                    {`#${details.tokenName}`}
                   </span>
                 </TransactionConfirmDetailRow>
               )}
@@ -311,7 +312,7 @@ const CreateTokenTransactionConfirm = ({
                     fractionalPrice={formatFractionalPrice(Decimal.from(details?.tokenAmount ?? 0))}
                   />
                   &nbsp;
-                  {details?.tokenName}
+                  {details?.tokenName && `#${details.tokenName}`}
                 </span>
               </TransactionConfirmDetailRow>
               {details?.estimatedCost && !details.estimatedCost.isZero && (

@@ -1,7 +1,9 @@
 import {
   afterEach, describe, expect, it, vi,
 } from 'vitest';
-import { wasDismissedRecently, markDismissed, clearDismissal } from '../storage';
+import {
+  wasDismissedRecently, markDismissed, clearDismissal, rememberNostrSubmission, readNostrSubmission,
+} from '../storage';
 
 const A = 'ak_first';
 const B = 'ak_second';
@@ -44,5 +46,38 @@ describe('nostr-link dismissal cooldown (per-account, localStorage)', () => {
     clearDismissal(A);
     expect(wasDismissedRecently(A)).toBe(false);
     expect(wasDismissedRecently(B)).toBe(true);
+  });
+});
+
+describe('public submission receipts', () => {
+  it('retains the original submission time while waiting for the account index', () => {
+    vi.useFakeTimers();
+    const submittedAt = Date.now();
+    rememberNostrSubmission('api-a', A, 'npub1test', 'th_test');
+    vi.advanceTimersByTime(14 * 60_000);
+    expect(readNostrSubmission('api-a', A)).toEqual({ npub: 'npub1test', txHash: 'th_test', submittedAt });
+    vi.advanceTimersByTime(60_000);
+    expect(readNostrSubmission('api-a', A)?.submittedAt).toBe(submittedAt);
+  });
+
+  it('cannot cross accounts or API networks', () => {
+    rememberNostrSubmission('api-a', A, 'npub1test', 'th_test');
+    expect(readNostrSubmission('api-a', B)).toBeNull();
+    expect(readNostrSubmission('api-b', A)).toBeNull();
+  });
+
+  it('ignores malformed receipts and timestamps in the future', () => {
+    localStorage.setItem('nostr_link_submitted:api-a:ak_first', '{bad json');
+    expect(readNostrSubmission('api-a', A)).toBeNull();
+    vi.useFakeTimers();
+    rememberNostrSubmission('api-a', A, 'npub1test', 'th_test');
+    vi.setSystemTime(Date.now() - 1);
+    expect(readNostrSubmission('api-a', A)).toBeNull();
+  });
+
+  it('does not require browser storage to be available', () => {
+    const read = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new Error('blocked'); });
+    expect(readNostrSubmission('api-a', A)).toBeNull();
+    read.mockRestore();
   });
 });

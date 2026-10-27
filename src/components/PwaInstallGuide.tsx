@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Share, ToggleRight } from 'lucide-react';
 import { isIOSWebKit, isMobileDevice, isStandalone } from '@/utils/displayMode';
 import { usePwaInstallSnooze } from '@/hooks/usePwaInstallSnooze';
 import {
@@ -40,16 +41,13 @@ interface PwaInstallGuideProps {
   trigger?: 'location' | 'chat' | 'general';
 }
 
-// ── Icons (inline SVG — no extra icon dep) ────────────────────────────────────
+// ── Icons (inline SVG, plus lucide's Share/Toggle glyphs that match iOS) ──────
 
-/** Three-dot horizontal menu — matches iOS Safari 18+ toolbar icon for Add to Home Screen */
-const ThreeDotsIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-    <circle cx="4" cy="9" r="1.4" fill="currentColor" />
-    <circle cx="9" cy="9" r="1.4" fill="currentColor" />
-    <circle cx="14" cy="9" r="1.4" fill="currentColor" />
-  </svg>
-);
+/** The square-with-arrow Share glyph, as Safari draws it. */
+const ShareIcon = () => <Share size={18} strokeWidth={1.8} aria-hidden="true" />;
+
+/** The "Open as Web App" switch on iOS 26's Add to Home Screen sheet. */
+const ToggleOnIcon = () => <ToggleRight size={18} strokeWidth={1.8} aria-hidden="true" />;
 
 const PlusSquareIcon = () => (
   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
@@ -90,11 +88,13 @@ const DownloadIcon = () => (
 
 function getSteps(platform: InstallPlatform, t: ReturnType<typeof useTranslation>['t']): InstallStep[] {
   if (platform === 'ios') {
+    // Safari's real path: Share menu (behind ••• on iOS 26, a toolbar button
+    // before that) -> Add to Home Screen -> Open as Web App (iOS 26+) -> Add.
     return [
       {
         title: t('components.pwaInstallGuide.ios.step1.title'),
         description: t('components.pwaInstallGuide.ios.step1.description'),
-        icon: <ThreeDotsIcon />,
+        icon: <ShareIcon />,
       },
       {
         title: t('components.pwaInstallGuide.ios.step2.title'),
@@ -104,11 +104,16 @@ function getSteps(platform: InstallPlatform, t: ReturnType<typeof useTranslation
       {
         title: t('components.pwaInstallGuide.ios.step3.title'),
         description: t('components.pwaInstallGuide.ios.step3.description'),
-        icon: <CheckIcon />,
+        icon: <ToggleOnIcon />,
       },
       {
         title: t('components.pwaInstallGuide.ios.step4.title'),
         description: t('components.pwaInstallGuide.ios.step4.description'),
+        icon: <CheckIcon />,
+      },
+      {
+        title: t('components.pwaInstallGuide.ios.step5.title'),
+        description: t('components.pwaInstallGuide.ios.step5.description'),
         icon: <HomeIcon />,
       },
     ];
@@ -311,11 +316,12 @@ export const PwaInstallGuide = ({
                   >
                     {step.title}
                   </div>
-                  {/* Expand description only on active step */}
+                  {/* Expand description only on active step. 100px fits five
+                      lines, so the longer ru/ar descriptions are not clipped. */}
                   <div
                     className="text-xs leading-relaxed overflow-hidden transition-all duration-300"
                     style={{
-                      maxHeight: active ? 60 : 0,
+                      maxHeight: active ? 100 : 0,
                       opacity: active ? 1 : 0,
                       color: 'rgba(255,255,255,0.5)',
                       marginTop: active ? 2 : 0,

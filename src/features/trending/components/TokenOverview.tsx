@@ -3,7 +3,7 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  ArrowDown, ArrowUp, Check, ChevronDown, Hash, Share2,
+  ArrowDown, ArrowUp, Check, ChevronDown, Share2,
 } from 'lucide-react';
 import { toAe } from '@aeternity/aepp-sdk';
 import type { TokenDto } from '@/api/generated/models/TokenDto';
@@ -107,9 +107,8 @@ const TokenOverview = ({
     <div className="token-overview-container" dir={i18n.dir()}>
       <section className="token-overview" aria-label={name} aria-busy={notice === 'loading'} {...highlight}>
         <header className="token-overview-heading">
-          <span className="token-overview-mark" aria-hidden="true"><Hash /></span>
           <div className="token-overview-identity">
-            <h1 dir="auto">{name}</h1>
+            <h1 dir="auto" title={`#${name}`}>{`#${name}`}</h1>
             <div className="token-overview-meta">
               <span>{t('overview.type')}</span>
               {collection && (

@@ -1,9 +1,20 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import type { PostDto } from '@/api/generated';
 import { compactTime, fullTimestamp } from '@/utils/time';
 import { BlockchainInfoPopover } from './BlockchainInfoPopover';
 import InlineCopyButton from './InlineCopyButton';
+
+// Short time in the byline, exact date and time on hover/long-press.
+const PostTime = ({ createdAt }: { createdAt: string }) => {
+  const { i18n } = useTranslation();
+  return (
+    <time dateTime={createdAt} title={fullTimestamp(createdAt)}>
+      {compactTime(createdAt, i18n.resolvedLanguage)}
+    </time>
+  );
+};
 
 const PostAuthorHeader = ({ item, displayName, compact }: {
   item: PostDto; displayName: string; compact: boolean;
@@ -26,9 +37,7 @@ const PostAuthorHeader = ({ item, displayName, compact }: {
         </Link>
         <span className="feed-post__time">
           <span aria-hidden="true">·</span>
-          <time dateTime={item.created_at} title={fullTimestamp(item.created_at)}>
-            {compactTime(item.created_at)}
-          </time>
+          <PostTime createdAt={item.created_at} />
         </span>
       </div>
       <div className="feed-post__address">

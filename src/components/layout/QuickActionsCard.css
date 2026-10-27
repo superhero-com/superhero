@@ -64,6 +64,11 @@
   gap: 10px;
 }
 
+/* Odd number of actions: let the last one fill the row instead of leaving a hole. */
+.quick-actions-card__action:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
 .quick-actions-card__action {
   position: relative;
   isolation: isolate;
@@ -227,7 +232,6 @@
   .quick-actions-card--entered .quick-actions-card__action:nth-child(6) { animation-delay: 225ms; }
 }
 
-.quick-actions-card__action--explore { --qa-color: #d360e8; --qa-deep: #8a27bd; --qa-shine: #f4b6ff; }
 .quick-actions-card__action--create { --qa-color: #ff9968; --qa-deep: #cd4d60; --qa-shine: #ffd3aa; }
 .quick-actions-card__action--swap { --qa-color: #32ccbb; --qa-deep: #11776f; --qa-shine: #abfff0; }
 .quick-actions-card__action--wrap { --qa-color: #5eaaff; --qa-deep: #345fcf; --qa-shine: #bedcff; }

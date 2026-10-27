@@ -227,6 +227,7 @@
       "chainNameClaimStarted": "Claim submitted. Waiting for sponsorship and transfer…",
       "chainNameClaimPending": "Claim status: {{status}}",
       "chainNameClaimCompleted": ".chain name claimed successfully.",
+      "chainNameClaimProcessing": "Registering your name on chain. This can take a few minutes; you can close this window and your profile will update when it's done.",
       "chainNameClaimWalletUnavailable": "Wallet message signing is not available right now. Please try again.",
       "chainNameClaimNameTaken": "That .chain name is already taken. Try another one.",
       "chainNameClaimNameInProgress": "That .chain name is currently being claimed. Try another one.",
@@ -320,7 +321,11 @@
       "profitLoss": "Profit/Loss:",
       "loadingPortfolio": "Loading portfolio data...",
       "noDataAvailable": "No portfolio data available",
-      "valueTooltipDescription": "Portfolio value shows the combined worth of AE balance and trend tokens held in this wallet. The chart tracks how this value changes over time."
+      "valueTooltipDescription": "Portfolio value shows the combined worth of AE balance and trend tokens held in this wallet. The chart tracks how this value changes over time.",
+      "changeSources": "AE balance {{ae}} · Tokens {{tokens}}",
+      "tokenValuation": "Trend tokens are valued at their current bonding-curve price, not at what selling them would return. A sale moves the price down the curve, so the tokens you still hold can be worth less right after a profitable sale, and selling everything would return less than this value.",
+      "aeDenomination": "In AE, the value changes only when your AE balance changes (trades, transfers, fees) or your tokens are repriced. The AE/USD rate does not affect it; it only moves the USD view.",
+      "pnlPercentage": "The Trading P/L percentage is the gain relative to the amount spent buying tokens."
     },
     "account": {
       "firstBlockchainActivity": "Joined at:",
@@ -630,6 +635,8 @@
         "pageDescription": "Trustless swapping on Superhero DEX with live charts and recent activity."
       },
       "wallet": {
+        "pageTitle": "Multichain Wallet – Superhero",
+        "pageDescription": "The Superhero Wallet is your key to DAOs, tokens, DeFi tools, and more.",
         "hero": {
           "badge": "Multichain Wallet",
           "subtitle": "**Superhero** — more than a wallet, it’s your **key** to the decentralized world! Access, create, and engage. Superhero is the key to DAOs, tokens, DeFi tools, and more."
@@ -958,6 +965,8 @@
         "inviteAndEarn": "Invite & Earn"
       },
       "branding": {
+        "pageTitle": "Brand Kit – Superhero",
+        "pageDescription": "Superhero brand colors, typography, logos, and asset templates.",
         "brandKit": "Superhero Brand Kit",
         "heroTitle": "Brand Identity Guidelines",
         "heroDescription": "Welcome to the official Superhero resource hub. This guide details our brand colors, typography, logos, and digital asset templates to help you create materials.",
@@ -1020,6 +1029,8 @@
         }
       },
       "terms": {
+        "pageTitle": "Terms of Use – Superhero",
+        "pageDescription": "The terms for using Superhero.",
         "title": "TERMS OF USE",
         "lastUpdated": "The present Terms of Use (\"Terms\") were last updated on 29 September 2025.",
         "section1Title": "I. Company information",
@@ -1054,6 +1065,8 @@
         "copyrightNotice": "“COPYRIGHT – 2025 – Superhero.com ALL RIGHTS RESERVED”. Superhero.com reserves its right to take every necessary legal action against any breach or infringement of its intellectual property rights. The rules mentioned above apply to databases on the website, which are protected under Directive 96/9/EC of the European Parliament and the Council of 11 March 1996 on the legal protection of databases. For any additional questions, please contact the Superhero.com team at: superherowallet@protonmail.com"
       },
       "privacy": {
+        "pageTitle": "Privacy Policy – Superhero",
+        "pageDescription": "How Superhero handles your data.",
         "title": "PRIVACY POLICY",
         "lastUpdated": "The present Privacy Policy was last updated on 29 September 2025.",
         "introHeading": "I. Introduction",
@@ -1091,6 +1104,8 @@
         "contactP1": "To contact us with your questions or comments regarding this Policy or the information collection and dissemination practices of Superhero.com relevant to your use of the Website, please email us at superherowallet@protonmail.com."
       },
       "landing": {
+        "pageTitle": "On-Chain Attention Market – Superhero",
+        "pageDescription": "Discover, trade, and govern the trends you believe in on Superhero.",
         "heroBadge": "New paradigm shift in attention markets",
         "heroTitleLine1": "Following trends",
         "heroTitleLine2": "just got a new meaning",
@@ -1169,6 +1184,8 @@
         }
       },
       "tokenDetail": {
+        "pageTitle": "Token Details – Superhero DEX",
+        "pageDescription": "Price performance, pools, and supply for this token on Superhero DEX.",
         "loadingTokenDetails": "Loading token details...",
         "detailsAndStatistics": "Token details and statistics",
         "pools": "Pools ({{count}})",
@@ -1195,6 +1212,110 @@
         "orExplore": "Or explore these pages:",
         "browseTokens": "Browse Tokens",
         "createToken": "Create Token"
+      },
+      "invite": {
+        "pageTitle": "Invite & Earn – Superhero",
+        "pageDescription": "Invite friends to Superhero, share your links, and collect rewards as your community grows."
+      },
+      "trendCloud": {
+        "pageTitle": "Trend Cloud – Superhero",
+        "pageDescription": "See what's trending at a glance and tokenize the topics you care about."
+      },
+      "daos": {
+        "pageTitle": "DAOs – Superhero",
+        "pageDescription": "Explore community DAOs on Superhero, where token holders shape their treasuries together."
+      },
+      "dao": {
+        "pageTitle": "DAO – Superhero",
+        "pageDescription": "View DAO details, proposals, and votes on Superhero."
+      },
+      "daoVote": {
+        "pageTitle": "DAO Vote – Superhero",
+        "pageDescription": "Review the proposal and make your voice heard on Superhero."
+      },
+      "accounts": {
+        "pageTitle": "Top Accounts – Superhero",
+        "pageDescription": "Discover the top traders and creators on Superhero, ranked by on-chain activity."
+      },
+      "accountDetails": {
+        "pageTitle": "Account Activity – Superhero",
+        "pageDescription": "See the tokens this account holds and created, plus its transactions, on Superhero."
+      },
+      "createToken": {
+        "pageTitle": "Tokenize a Trend – Superhero",
+        "pageDescription": "Turn any trend into a token and build a community around it on Superhero."
+      },
+      "txQueue": {
+        "pageTitle": "Transaction Status – Superhero",
+        "pageDescription": "Track the status of your transaction on Superhero."
+      },
+      "chat": {
+        "pageTitle": "Chat – Superhero",
+        "pageDescription": "Chat with friends and token communities on Superhero."
+      },
+      "chatRelays": {
+        "pageTitle": "Nostr Relays – Superhero",
+        "pageDescription": "Choose the Nostr relays your Superhero chat reads from and writes to."
+      },
+      "chatDm": {
+        "pageTitle": "Direct Message – Superhero",
+        "pageDescription": "Your private conversation on Superhero."
+      },
+      "chatRoom": {
+        "pageTitle": "Community Chat – Superhero",
+        "pageDescription": "Chat with fellow token holders in this community room on Superhero."
+      },
+      "chatRoomInfo": {
+        "pageTitle": "Room Info – Superhero",
+        "pageDescription": "See the members and details of this community chat on Superhero."
+      },
+      "meet": {
+        "pageTitle": "Meet – Superhero",
+        "pageDescription": "Join a Superhero meeting."
+      },
+      "governance": {
+        "pageTitle": "Governance – Superhero",
+        "pageDescription": "Shape the future of the ecosystem through community polls on Superhero."
+      },
+      "faq": {
+        "pageTitle": "FAQ – Superhero",
+        "pageDescription": "Answers to the most common questions about Superhero."
+      },
+      "whitepaper": {
+        "pageTitle": "Whitepaper – Superhero",
+        "pageDescription": "How Superhero works: on-chain posts, community tokens, DAOs, and governance on æternity."
+      },
+      "dexWrap": {
+        "pageTitle": "Wrap AE – Superhero DEX",
+        "pageDescription": "Convert AE to WAE and back at an exact 1:1 rate on Superhero DEX."
+      },
+      "dexPool": {
+        "pageTitle": "Provide Liquidity – Superhero DEX",
+        "pageDescription": "Add liquidity to token pairs and manage your positions on Superhero DEX."
+      },
+      "dexAddTokens": {
+        "pageTitle": "Add Tokens – Superhero DEX",
+        "pageDescription": "Find the tokens in your wallet and create pools or add liquidity for them on Superhero DEX."
+      },
+      "dexExploreTokens": {
+        "pageTitle": "Explore Tokens – Superhero DEX",
+        "pageDescription": "Browse every token on Superhero DEX and compare prices and liquidity."
+      },
+      "dexExplorePools": {
+        "pageTitle": "Explore Pools – Superhero DEX",
+        "pageDescription": "Find token pairs and compare trading activity and volume on Superhero DEX."
+      },
+      "dexPoolDetail": {
+        "pageTitle": "Pool Details – Superhero DEX",
+        "pageDescription": "Price chart, reserves, and recent transactions for this pool on Superhero DEX."
+      },
+      "dexExploreTransactions": {
+        "pageTitle": "Transactions – Superhero DEX",
+        "pageDescription": "Follow the latest swaps and liquidity activity on Superhero DEX."
+      },
+      "dexExplore": {
+        "pageTitle": "Explore – Superhero DEX",
+        "pageDescription": "Explore tokens, pools, and transactions on Superhero DEX."
       }
     },
     "removeLiquidity": {
@@ -1353,8 +1474,6 @@
       "addLiquidity": "Add Liquidity"
     },
     "bridge": {
-      "title": "Bridge ETH ⇆ AE",
-      "description": "The Bridge enables secure transfers of tokens and native assets between Ethereum and æternity. It supports popular ERC‑20/AEX‑9 tokens as well as native ETH and AE. Choose a direction below, connect your wallets, and bridge in minutes.",
       "selectToken": "Select Token",
       "selectAToken": "Select a token",
       "token": "Token"
@@ -1471,6 +1590,7 @@
       "allTime": "All time",
       "balances": "Pool balances",
       "currentReserves": "Current reserves",
+      "poolValue": "Pool value",
       "exchangeRate": "Exchange rate",
       "rateHint": "Current reserve ratio, before swap fees and price impact.",
       "rateUnavailable": "Exchange rate unavailable for empty or unknown reserves",
@@ -1577,7 +1697,11 @@
       "nativeToken": "Native Token",
       "noTokensAvailable": "No tokens available",
       "tryAddingCustomToken": "Try adding a custom token by address",
-      "tokenNotFoundHint": "Can't find the token you're looking for? Try entering the contract address or check the token list settings below."
+      "tokenNotFoundHint": "Can't find the token you're looking for? Try entering the contract address or check the token list settings below.",
+      "tokenNotFound": "No AEX-9 token found at this address.",
+      "showAllTokens": "Show all",
+      "showActiveOnly": "Active only",
+      "verified": "Verified token"
     },
     "exploreTransactions": {
       "title": "Advanced Transaction Explorer",
@@ -1697,6 +1821,7 @@
       "description": "Deposit both tokens to share in trading fees.",
       "deposit": "Deposit {{symbol}}",
       "linked": "Linked to pool ratio",
+      "suggested": "Suggested from AE pool prices. You can edit it.",
       "selectFirst": "Select first deposit token",
       "selectSecond": "Select second deposit token",
       "ratioHint": "Amounts follow the pool ratio. Edit either one.",
@@ -1991,9 +2116,15 @@
       "copyFailed": "Could not copy. Select the address to copy it.",
       "actions": "Token actions",
       "pools": "Pools"
+    },
+    "slippageWarning": {
+      "high": "Slippage above 5% ({{slippagePct}}%) is high. Your trade may be front-run and you could receive much less than quoted.",
+      "low": "Slippage below 0.1% ({{slippagePct}}%) is very low. Your transaction may fail if the price moves."
     }
   },
   "social": {
+    "originalPost": "Original post",
+    "translatePost": "Translate",
     "copiedAddress": "Copied address",
     "profileTabs": {
       "offline": "Offline — showing last loaded",
@@ -2709,7 +2840,8 @@
       "buys": "Buys:",
       "sells": "Sells:",
       "created": "Created:",
-      "viewProfile": "View profile"
+      "viewProfile": "View profile",
+      "roiNotMeaningful": "Not meaningful: the portfolio was worth almost nothing at the start of this period."
     },
     "performanceTimeframe": {
       "closeMenu": "Close timeframe menu"
@@ -2819,7 +2951,8 @@
       "step2": "Post about Superhero to earn 50 AE",
       "progress": "{{done}} of {{total}} steps done",
       "connectX": "Connect X",
-      "postOnX": "Post & earn"
+      "postOnX": "Post & earn",
+      "dismiss": "Hide setup steps"
     },
     "users": {
       "title": "Top traders"
@@ -2971,7 +3104,52 @@
     "wrapFailed": "Wrapping failed. Try again.",
     "unwrapFailed": "Unwrapping failed. Try again.",
     "genericError": "Something went wrong. Please try again.",
-    "nameNotAllowedChar": "This token name uses characters that are not allowed for the selected collection. Choose a different name using only the allowed letters, numbers, or symbols."
+    "nameNotAllowedChar": "This token name uses characters that are not allowed for the selected collection. Choose a different name using only the allowed letters, numbers, or symbols.",
+    "dexContract": {
+      "AedexV2Library_IDENTICAL_ADDRESSES": "The router cannot trade a token for itself: both selected tokens are the same. Select two different tokens.",
+      "AedexV2Library_INSUFFICIENT_AMOUNT": "The router could not price this trade because the amount is zero. Enter an amount greater than zero.",
+      "AedexV2Library_INSUFFICIENT_LIQUIDITY": "This pool has no liquidity yet (both reserves are zero), so no price can be quoted. Add liquidity first or pick another pair.",
+      "AedexV2Library_NO_PAIR_FOUND": "The router found no pool for one step of this route. Pick a different pair or route.",
+      "AedexV2Library_INSUFFICIENT_INPUT_AMOUNT": "The router rejected the trade because the input amount is zero. Increase the amount you pay.",
+      "AedexV2Library_INSUFFICIENT_OUTPUT_AMOUNT": "The router rejected the trade because you would receive zero tokens. Increase the amount.",
+      "AedexV2Library_INVALID_PATH": "The swap route needs at least two tokens. Reselect the tokens and try again.",
+      "AedexV2Library_INTERNAL_ERROR_AMOUNTS_VOID": "The router hit an internal error while computing the route amounts. Refresh the quote and try again.",
+      "AedexV2Library_INTERNAL_ERROR_PATH_VOID": "The router hit an internal error while computing the route amounts. Refresh the quote and try again.",
+      "AedexV2Router_AMOUNT_LIST_IS_SHORTER": "The router hit an internal error while computing the route amounts. Refresh the quote and try again.",
+      "AedexV2Router_DIFFERENT_WAE_ADDRESSES": "The router is misconfigured (its WAE addresses do not match). This is not caused by your transaction; please report it.",
+      "AedexV2Router_INSUFFICIENT_A_AMOUNT": "The pool price moved: the router would use less of the first token than your minimum allows.{{hint}}",
+      "AedexV2Router_INSUFFICIENT_B_AMOUNT": "The pool price moved: the router would use less of the second token than your minimum allows.{{hint}}",
+      "AedexV2Router_EXCESSIVE_INPUT_AMOUNT": "The price moved: this trade now needs more input than the maximum you allowed.{{hint}}",
+      "AedexV2Router_INVALID_PATH_LAST": "Swaps to AE must end with wrapped AE (WAE), and this route does not. Reselect the tokens and try again.",
+      "AedexV2Router_INVALID_PATH_FIRST": "Swaps from AE must start with wrapped AE (WAE), and this route does not. Reselect the tokens and try again.",
+      "AedexV2Router_INSUFFICIENT_OUTPUT_AMOUNT": "The price moved: you would receive less than the minimum set by your slippage.{{hint}}",
+      "AedexV2Router_EXPIRED": "The transaction deadline passed before it was mined, so the router refused it.{{hint}}",
+      "WAE_LOW_BALANCE": "Your wrapped AE (WAE) balance is too low for this transfer. Lower the amount or wrap more AE.",
+      "WAE_LOW_ALLOWANCE": "The approved WAE amount is lower than this transaction needs. Approve a higher amount and try again.",
+      "WAE_ALLOWANCE_NOT_EXISTENT": "WAE has not been approved for the DEX on this account. Approve it and try again.",
+      "WAE_NON_NEGATIVE_VALUE_REQUIRED": "One of the amounts sent to the WAE contract is negative. Enter a positive amount.",
+      "WAE_ALLOWANCE_ALREADY_EXISTENT": "A WAE approval already exists for this account, so a new one cannot be created. Retry so the existing approval is updated.",
+      "AedexV2Factory_FORBIDDEN": "Only the factory admin can call this function, and your account is not the admin.",
+      "AedexV2Factory_IDENTICAL_ADDRESSES": "A pool needs two different tokens, and both selected tokens are the same. Select two different tokens.",
+      "AedexV2Factory_PAIR_EXISTS": "A pool for these two tokens already exists, so it cannot be created again. Add liquidity to the existing pool instead.",
+      "AedexV2Pair_NEGATIVE_VALUE_ON_TRANSFER": "The pool refused a transfer of a negative amount. Enter a positive amount.",
+      "AedexV2Pair_NOT_DEBUG_MODE": "This pool action is only allowed in debug mode and is disabled on this network.",
+      "AedexV2Pair_LP": "The pool found a negative balance or reserve and stopped the transaction. Refresh and try again.",
+      "AedexV2Pair_INSUFFICIENT_LIQUIDITY_MINTED": "Your deposit is too small to mint any pool tokens. Increase both amounts.",
+      "AedexV2Pair_INSUFFICIENT_OUTPUT_AMOUNT": "The pool rejected the swap because both output amounts are zero. Increase the input amount.",
+      "AedexV2Pair_INSUFFICIENT_LIQUIDITY": "The pool does not hold enough tokens for the amount you requested. Try a smaller amount.",
+      "AedexV2Pair_INVALID_TO": "The receiving address cannot be one of the pool's token contracts. Use your wallet address as the recipient.",
+      "AedexV2Pair_INSUFFICIENT_INPUT_AMOUNT": "The pool received no input tokens for this swap. Increase the amount and try again.",
+      "AedexV2Pair_INSUFFICIENT_BALANCE": "The pool did not receive enough tokens for this transaction. Check your balance and approval, then try again.",
+      "AedexV2Pair_INSUFFICIENT_LIQUIDITY_BURNED": "The amount of liquidity to remove is too small to return any tokens. Increase the amount.",
+      "AedexV2Pair_INSUFFICIENT_BALANCE_FOR_TRANSFER": "You do not hold enough pool tokens for this transfer. Lower the amount.",
+      "AedexV2Pair_BALANCE_ACCOUNT_NOT_EXISTENT": "This account has never provided liquidity to this pool, so there is nothing to remove.",
+      "AedexV2Pair_INSUFFICIENT_ALLOWANCE": "The router is not approved to move enough of your pool tokens. Approve a higher amount and try again.",
+      "AedexV2Pair_ALLOWANCE_NOT_EXISTENT": "Your pool tokens have not been approved for the router. Approve them and try again.",
+      "AedexV2Pair_INSUFFICIENT_TOTAL_SUPPLY": "The pool's total supply is lower than the liquidity being removed (internal pool error). Refresh and try again.",
+      "AedexV2Pair_INSUFFICIENT_BALANCE_FOR_BURNING": "The pool's total supply is lower than the liquidity being removed. Refresh your position and try a smaller amount."
+    },
+    "dexContractFallback": "The DEX contract rejected this transaction: {{code}}."
   },
   "landing": {
     "hero": {
@@ -3152,8 +3330,8 @@
     "bannerC": {
       "title": "On-chain attention",
       "description": "Every trend is a live market for attention. Trade the signal—and holders form a DAO that governs the community behind it.",
-      "primaryButton": "Start a DAO",
-      "secondaryButton": "See DAOs",
+      "primaryButton": "Explore DAOs",
+      "secondaryButton": "Launch a #trend",
       "eyebrow": "Community DAOs",
       "titleAccent": "markets.",
       "metaMain": "Token holders",
@@ -3412,7 +3590,7 @@
   "faq": {
     "welcome": "Welcome",
     "heroTitle": "Superhero — the all‑in‑one social + crypto app",
-    "heroDescription": "Discover trends, mint community tokens, trade on bonding curves, chat in real‑time, and govern treasuries — in partnership with Quali.chat.",
+    "heroDescription": "Discover trends, mint community tokens, trade on bonding curves, chat in real‑time, and govern treasuries.",
     "badgeCreate": "Create",
     "badgeTrade": "Trade",
     "badgeVote": "Vote",
@@ -3452,10 +3630,6 @@
     "collapse": "−",
     "qWhatIsSuperheroTitle": "What is Superhero?",
     "qWhatIsSuperheroAnswer": "Superhero is a social + crypto app on the aeternity blockchain. You can discover content, create posts, tip, trade community tokens, and take part in on‑chain governance — all in one place.",
-    "qChatPoweredByQualiTitle": "Who powers chat here?",
-    "qChatPoweredByQualiAnswer": "We partner with Quali.chat — a quality chat app for crypto people. Expect realtime conversations, moderation tools, and crypto‑friendly UX. Each token has a public room; holders can coordinate faster.",
-    "qWhatIsTrendingTitle": "What is Trendminer?",
-    "qWhatIsTrendingAnswer": "Trendminer lets you tokenize trending ideas. Creators launch community tokens on a bonding curve. Price adjusts with buys and sells; no order books, just math. A small fee flows into a token treasury (DAO) to fund community initiatives.",
     "qQuickStartTitle": "Quick start: how do I begin?",
     "qQuickStartLi1": "Install Superhero Wallet and fund it with a little AE.",
     "qQuickStartLi2": "Open Trending and sort by Market Cap to see established communities.",
@@ -3472,7 +3646,7 @@
     "qGovernanceTitle": "What is the Voting section?",
     "qGovernanceAnswer": "The Voting page provides a unified interface for browsing polls, voting, managing delegations, and viewing your on‑chain governance activity. All governance functions are accessible through tabs within a single page.",
     "qSocialTitle": "Is there a social feed?",
-    "qSocialAnswer": "Yes. You can browse posts, comment, and explore communities. Comments and token chats are powered by Quali.chat — real‑time rooms built for crypto‑native communities.",
+    "qSocialAnswer": "Yes. You can browse posts, comment, and explore communities. Chat is built into the Superhero web and mobile apps and runs on Nostr.",
     "qAccountsTitle": "What can I see on Accounts pages?",
     "qAccountsAnswer": "Account profiles show owned tokens, created tokens, and activity. Leaderboards highlight the most active creators and traders.",
     "qRewardsProgramTitle": "What is the Superhero Rewards Program?",
@@ -3512,7 +3686,6 @@
     "heroTitle": "Earn AE first, or buy it from external providers",
     "heroDescription": "AE is the native coin of the aeternity blockchain. Use it to pay network fees, tip, trade trend tokens, and participate in on-chain activity on Superhero.",
     "badgeBuy": "Buy",
-    "badgeBridge": "Bridge",
     "badgeEarn": "Earn",
     "onThisPage": "On this page",
     "tip": "Availability and pairs can change. Always confirm details with the provider before sending funds.",
@@ -3532,10 +3705,7 @@
     "safetyTitle": "Before you buy",
     "safetyLi1": "Confirm the token, network, deposit address, withdrawal fees, and minimum withdrawal amount.",
     "safetyLi2": "Start with a small test transaction before moving larger amounts.",
-    "safetyLi3": "Keep custody in your own wallet when possible and never share private keys or seed phrases.",
-    "buyAeWidget": {
-      "description": "Bridge native ETH from Ethereum to æternity as æETH, then automatically swap to AE tokens."
-    }
+    "safetyLi3": "Keep custody in your own wallet when possible and never share private keys or seed phrases."
   },
   "components": {
     "pwaInstallGuide": {
@@ -3555,20 +3725,24 @@
       "iosSafariNote": "Must use Safari — Chrome and Firefox on iOS cannot install PWAs.",
       "ios": {
         "step1": {
-          "title": "Tap the ⋯ menu",
-          "description": "Tap the three-dot menu (⋯) in the top-right corner of Safari."
+          "title": "Open the Share menu",
+          "description": "On iOS 26, tap ••• next to the address bar, then tap Share. On earlier versions, tap the Share button in the toolbar."
         },
         "step2": {
-          "title": "Add to Home Screen",
-          "description": "Scroll down and tap \"Add to Home Screen\" in the menu."
+          "title": "Tap \"Add to Home Screen\"",
+          "description": "Tap \"View More\" if you see it, then scroll down the list and tap \"Add to Home Screen\"."
         },
         "step3": {
-          "title": "Tap Add",
-          "description": "Confirm by tapping \"Add\" in the top right — the app icon appears on your home screen."
+          "title": "Keep \"Open as Web App\" on",
+          "description": "Leave this switch on so Superhero opens full screen, like an app. On earlier iOS versions, go straight to the next step."
         },
         "step4": {
-          "title": "Open from home screen",
-          "description": "Launch from your home screen icon — location sharing and offline mode now work."
+          "title": "Tap \"Add\"",
+          "description": "Tap \"Add\" in the top-right corner — the Superhero icon appears on your Home Screen."
+        },
+        "step5": {
+          "title": "Open from your Home Screen",
+          "description": "Launch from your Home Screen icon — location sharing and offline mode now work."
         }
       },
       "android": {

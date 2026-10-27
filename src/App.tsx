@@ -1,7 +1,7 @@
 import React, {
   Suspense, useEffect, useRef,
 } from 'react';
-import { useNavigate, useRoutes } from 'react-router-dom';
+import { useLocation, useNavigate, useRoutes } from 'react-router-dom';
 import { useAtom } from 'jotai';
 import { SHORTS_ENABLED } from './shorts-enabled';
 import GlobalNewAccountEducation from './components/GlobalNewAccountEducation';
@@ -27,6 +27,8 @@ import { PwaInstallPrompt } from './components/PwaInstallPrompt';
 import { PwaInstallFab, PwaInstallGuide } from './components/PwaInstallGuide';
 import { MobileAppInstallDialog } from './components/MobileAppInstall';
 import { usePwaInstall } from './hooks/usePwaInstall';
+import { usePreferredChainNameSync } from './hooks/usePreferredChainName';
+import { useKeyboardInset } from './hooks/useKeyboardInset';
 import { isMobileDevice } from './utils/displayMode';
 
 const CookiesDialog = React.lazy(
@@ -66,6 +68,9 @@ const ShortsWalletSync = SHORTS_ENABLED
 
 const App = () => {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const isChatRoute = pathname === '/chat' || pathname.startsWith('/chat/');
+  const keyboard = useKeyboardInset();
   const isMobile = useIsMobile();
   const { initSdk, activeAccount, sdkInitialized } = useAeSdk();
   const {
@@ -85,6 +90,8 @@ const App = () => {
     setInstallGuideOpen(true);
   }, [canPrompt, promptInstall]);
   const { loadAccountData } = useAccount();
+  // Keep the connected account's display name on the one it picked as preferred.
+  usePreferredChainNameSync(activeAccount);
   const {
     attemptReconnection,
     walletInfo,
@@ -195,7 +202,10 @@ const App = () => {
       )}
       {/* Mounted above the router so the relay pool survives route changes. */}
       <ChatProvider>
-        <div className="app-container">
+        <div
+          className={`app-container${isChatRoute ? ' app-container--chat' : ''}${isChatRoute && keyboard.inset ? ' chat-keyboard-open' : ''}`}
+          style={isChatRoute && keyboard.inset ? { height: keyboard.visibleHeight } : undefined}
+        >
           <GlobalNewAccountEducation />
           <AppHeader />
           <div className="app-content">
@@ -238,15 +248,15 @@ const App = () => {
           <Suspense fallback={<div className="loading-fallback" />}>
             <div className="app-routes-container">{useRoutes(routes as any)}</div>
           </Suspense>
-          {/* TODO: Disable feedback button on mobile for now */}
-          {!isMobile && <FeedbackButton />}
+          {/* Keep floating prompts clear of the chat composer. */}
+          {!isMobile && !isChatRoute && <FeedbackButton />}
           <div className="app-install-affordances">
             {/* PWA install prompt — hidden on mobile iOS where the FAB takes over */}
-            {!(isMobileDevice() && isIOS) && <PwaInstallPrompt />}
+            {!isChatRoute && !(isMobileDevice() && isIOS) && <PwaInstallPrompt />}
             {/* Mobile FAB — shown on iOS (no native prompt) or when native prompt unavailable.
               Uses isMobileDevice() (UA-based) instead of useIsMobile() (viewport-based)
               so landscape phones don't lose the install affordance. */}
-            {isMobileDevice() && (isIOS || !canPrompt) && (
+            {!isChatRoute && isMobileDevice() && (isIOS || !canPrompt) && (
             <PwaInstallFab
               onOpen={() => setMobileAppDialogOpen(true)}
               isInstalled={isInstalled}

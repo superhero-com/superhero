@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useDex } from '../../../hooks';
+import SlippageWarning from './SlippageWarning';
 
 const SwapInlineSettings = ({
   id, onClose, title, hint,
@@ -37,6 +38,7 @@ const SwapInlineSettings = ({
         </label>
       </div>
       <p>{hint || t('swapCard.slippageHint')}</p>
+      <SlippageWarning slippagePct={slippage} />
       <label className="swap-deadline" htmlFor={`${id}-deadline`}>
         {t('settings.transactionDeadline')}
         <span>

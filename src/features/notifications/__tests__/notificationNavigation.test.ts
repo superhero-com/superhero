@@ -63,6 +63,25 @@ describe('getNotificationLink', () => {
     expect(getNotificationLink(item('new-follow', {}))).toBeUndefined();
   });
 
+  it('routes a post tip to the post and a profile tip to the wallet', () => {
+    expect(
+      getNotificationLink(item('tip-received', { sender: 'ak_x', postId: '7_v3' })),
+    ).toBe('/post/7');
+    expect(getNotificationLink(item('tip-received', { sender: 'ak_x' }))).toBe('/wallet');
+  });
+
+  it('routes a mention to the mentioning post', () => {
+    expect(
+      getNotificationLink(item('post-mention', { author: 'ak_x', postId: '9_v3' })),
+    ).toBe('/post/9');
+    expect(getNotificationLink(item('post-mention', { author: 'ak_x' }))).toBeUndefined();
+  });
+
+  it('uses the tipper and the mentioning author as the row avatar', () => {
+    expect(getNotificationActor(item('tip-received', { sender: 'ak_tipper' }))).toBe('ak_tipper');
+    expect(getNotificationActor(item('post-mention', { author: 'ak_author' }))).toBe('ak_author');
+  });
+
   it('leaves unknown types non-navigable', () => {
     expect(getNotificationLink(item('announcement', { foo: 'bar' }))).toBeUndefined();
   });

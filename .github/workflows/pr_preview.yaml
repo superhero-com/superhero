@@ -137,8 +137,14 @@ jobs:
   stg_deploy:
     runs-on: ubuntu-latest
     name: PR deploy
+    # Shares its group with stg_undeploy in pr_undeploy.yaml (same slug, same
+    # prefix) so a slow build can never finish after the matching undeploy and
+    # resurrect an entry for an already-closed PR. Keyed by the PR number
+    # rather than the head branch name, which a release PR can share with many
+    # other PRs (head: develop/main) and which would otherwise serialize - and
+    # occasionally misorder - deploys/undeploys of unrelated PRs.
     concurrency:
-      group: preview-deploy-${{ github.event.pull_request.head.ref || github.ref_name }}
+      group: preview-deploy-${{ needs.main.outputs.branch_slug }}
       cancel-in-progress: false
     needs: main
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.action != 'closed')
@@ -146,7 +152,17 @@ jobs:
       BRANCH_SLUG: ${{ needs.main.outputs.branch_slug }}
       PR_NUMBER: ${{ needs.main.outputs.pr_number }}
     steps:
+      - name: Check the PR is still open
+        id: pr_state
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          STATE=$(gh pr view ${{ env.PR_NUMBER }} --repo ${{ github.repository }} --json state --jq .state)
+          echo "state=${STATE}" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@v6
+        if: github.event_name != 'pull_request' || steps.pr_state.outputs.state == 'OPEN'
         with:
           repository: aeternity/gitops-apps-superhero
           ref: stg
@@ -157,15 +173,21 @@ jobs:
       - name: Check the initial PR deployment status
         continue-on-error: true
         id: status
-        uses: aeternity/ae-github-actions/deploy-status@v7.5.0
+        if: github.event_name != 'pull_request' || steps.pr_state.outputs.state == 'OPEN'
+        uses: aeternity/ae-github-actions/deploy-status@v7
         with:
           url: https://${{ env.BRANCH_SLUG }}-${{ env.APP }}.${{ env.ENV }}.service.aepps.com
           timeout: 10
 
       - name: Staging deploy
         id: deploy
-        if: steps.status.outputs.status_code != '200'
-        uses: aeternity/ae-github-actions/argocd-deploy@v7.5.0
+        # The PR-is-open check guards against the deploy/undeploy race: this
+        # build can take several minutes, long enough for the PR behind it to
+        # merge and close (and get undeployed) before this step runs. Without
+        # it, deploying here would recreate an entry undeploy already removed,
+        # with no later event left to clean it up again.
+        if: steps.status.outputs.status_code != '200' && (github.event_name != 'pull_request' || steps.pr_state.outputs.state == 'OPEN')
+        uses: aeternity/ae-github-actions/argocd-deploy@v7
         with:
           url-prefix: ${{ env.BRANCH_SLUG }}
           env: ${{ env.ENV }}
@@ -175,8 +197,8 @@ jobs:
 
       - name: Staging PR Sync
         id: sync
-        if: steps.status.outputs.status_code == '200'
-        uses: aeternity/ae-github-actions/argocd-pr-sync@v7.5.0
+        if: steps.status.outputs.status_code == '200' && (github.event_name != 'pull_request' || steps.pr_state.outputs.state == 'OPEN')
+        uses: aeternity/ae-github-actions/argocd-pr-sync@v7
         with:
           git-sha: ${{ github.event.pull_request.head.sha || github.sha }}
           url-prefix: ${{ env.BRANCH_SLUG }}
@@ -199,7 +221,7 @@ jobs:
 
       - name: Wait for the deployment to go live
         continue-on-error: true
-        uses: aeternity/ae-github-actions/deploy-status@v7.5.0
+        uses: aeternity/ae-github-actions/deploy-status@v7
         with:
           url: https://${{ env.BRANCH_SLUG }}-${{ env.APP }}.${{ env.ENV }}.service.aepps.com
           timeout: 300

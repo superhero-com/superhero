@@ -22,6 +22,7 @@ const mocks = vi.hoisted(() => ({
   removes: vi.fn(),
   volumeOptions: vi.fn(),
   rangeSet: vi.fn(),
+  chain: null as null | { swapped: boolean },
 }));
 vi.mock('@/api/generated', () => ({
   DexPairService: {
@@ -32,6 +33,7 @@ vi.mock('@/api/generated', () => ({
     },
   },
 }));
+vi.mock('../../../hooks/usePairChainState', () => ({ usePairChainState: () => mocks.chain }));
 vi.mock('@/libs/WebSocketClient', () => ({
   default: {
     subscribeForTokenHistories: (_address: string, callback: () => void) => {
@@ -101,7 +103,7 @@ const content = (address: string) => (
   </QueryClientProvider>
 );
 beforeEach(() => {
-  vi.clearAllMocks(); mocks.options = []; mocks.data = [];
+  vi.clearAllMocks(); mocks.options = []; mocks.data = []; mocks.chain = null;
   client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   mocks.pair.mockResolvedValue(pair);
   mocks.history.mockResolvedValue([makeRow(0), makeRow(1)]);
@@ -128,6 +130,16 @@ describe('pool chart', () => {
       expect.objectContaining({ interval: 300 }),
     ));
     expect(screen.getByRole('link', { name: 'TradingView' })).toBeInTheDocument();
+  });
+  it('inverts indexed prices when the pair contract lists the tokens the other way round', async () => {
+    mocks.chain = { swapped: true };
+    render(content('pair-one'));
+    await screen.findByText('Latest 1h candle');
+    expect(screen.getByRole('region', { name: 'WTT price in AE' })).toBeInTheDocument();
+    expect(mocks.data.at(-1)).toMatchObject({ high: 1, low: 0.25, close: 1 / 3 });
+    fireEvent.click(screen.getByRole('button', { name: 'Flip chart price units' }));
+    expect(screen.getByRole('region', { name: 'AE price in WTT' })).toBeInTheDocument();
+    expect(mocks.data.at(-1)).toMatchObject({ high: 4, low: 1, close: 3 });
   });
   it('clears the previous pair while new metadata is pending and ignores its late history', async () => {
     let resolveHistory!: (value: unknown[]) => void;

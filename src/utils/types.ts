@@ -75,7 +75,7 @@ export interface ICollectionData {
 }
 
 export interface ICommunityFactorySchema {
-  address: string;
+  address: Encoded.ContractAddress;
   collections: Record<string, ICollectionData>;
 }
 

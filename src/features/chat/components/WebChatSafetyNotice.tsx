@@ -43,7 +43,7 @@ function persistDismissed(): void {
   }
 }
 
-export const WebChatSafetyNotice = () => {
+export const WebChatSafetyNotice = ({ dismissible = true }: { dismissible?: boolean }) => {
   const [dismissed, setDismissed] = useState(readDismissed);
 
   const dismiss = useCallback(() => {
@@ -51,7 +51,7 @@ export const WebChatSafetyNotice = () => {
     persistDismissed();
   }, []);
 
-  if (dismissed) return null;
+  if (dismissible && dismissed) return null;
 
   return (
     <aside
@@ -94,6 +94,7 @@ export const WebChatSafetyNotice = () => {
           </div>
         </div>
 
+        {dismissible && (
         <Button
           variant="ghost"
           size="sm"
@@ -103,6 +104,7 @@ export const WebChatSafetyNotice = () => {
         >
           <X className="h-4 w-4" aria-hidden />
         </Button>
+        )}
       </div>
     </aside>
   );

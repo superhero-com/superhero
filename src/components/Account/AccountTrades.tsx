@@ -140,14 +140,14 @@ const AccountTrades = ({ address, tab }: AccountTradesProps) => {
                     className="text-white hover:underline truncate text-sm"
                     title={tokenName}
                   >
-                    {tokenName}
+                    {`#${tokenName}`}
                   </a>
                 ) : (
                   <div
                     className="text-white truncate text-sm"
                     title={tokenName}
                   >
-                    {tokenName}
+                    {`#${tokenName}`}
                   </div>
                 )}
               </div>

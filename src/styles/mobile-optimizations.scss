@@ -33,6 +33,20 @@
   }
 }
 
+/* Page transition: each newly mounted page fades in. Opacity only, so fixed
+   overlays inside a page are not re-anchored by a transform. */
+@keyframes app-route-enter {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .app-routes-container > * {
+    animation: app-route-enter 180ms ease-out;
+  }
+}
+
 /* iOS WebKit uses sticky mobile header (in-flow), so fixed-header offsets are too large. */
 @media (max-width: 1023px) {
   html.ios-webkit .app-routes-container {

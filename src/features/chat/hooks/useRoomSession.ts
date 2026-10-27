@@ -4,15 +4,20 @@
  * `unlock` action, and re-renders on lock/unlock (including the 30-min idle lock)
  * via `useSyncExternalStore`.
  */
-import { useCallback, useState, useSyncExternalStore } from 'react';
+import {
+  useCallback, useEffect, useRef, useState, useSyncExternalStore,
+} from 'react';
 import { useAtomCallback } from 'jotai/utils';
 
 import { useAccount } from '@/hooks';
 import { fetchNostrLink } from '@/features/nostr-link/link-flow';
 import { nostrLinkStatusAtom } from '@/features/nostr-link/state';
+import { isUnlockPromptMounted, subscribeUnlockPrompt } from '@/features/wallet/unlock-broker';
 import type { NostrIdentityProvider } from '../identity/nostr-identity';
 import {
   lockRoomSession,
+  isRoomSessionUnlocked,
+  retainRoomSessionForAccount,
   roomKeySession,
   roomRevocableIdentity,
   subscribeRoomSession,
@@ -28,6 +33,8 @@ export interface UseRoomSessionResult {
   isUnlocked: boolean;
   /** True while an unlock is mid-flight (user verification / derivation). */
   isUnlocking: boolean;
+  /** The shared wallet confirmation host has finished mounting. */
+  canUnlock: boolean;
   /** Last unlock error, or `null`. */
   error: Error | null;
   /** Unlock the session for the active account (inline wallet only). */
@@ -38,13 +45,18 @@ export interface UseRoomSessionResult {
 
 export function useRoomSession(): UseRoomSessionResult {
   const { activeAccount } = useAccount();
+  const accountRef = useRef(activeAccount);
+  accountRef.current = activeAccount;
+  const canUnlock = useSyncExternalStore(subscribeUnlockPrompt, isUnlockPromptMounted, () => false);
   const isUnlocked = useSyncExternalStore(
     subscribeRoomSession,
-    () => roomKeySession.isUnlocked,
+    () => isRoomSessionUnlocked(activeAccount),
     () => false,
   );
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => { retainRoomSessionForAccount(activeAccount); }, [activeAccount]);
 
   // Unlocking caches the key locally but does NOT register the account's npub,
   // leaving a session peers cannot reach — they resolve `ak_…` → npub through the
@@ -53,8 +65,14 @@ export function useRoomSession(): UseRoomSessionResult {
   const promptLinkIfUnlinked = useAtomCallback(
     useCallback(async (get, set, address: string) => {
       const status = get(nostrLinkStatusAtom);
-      if (status === 'linked' || status === 'linking' || status === 'prompt') return;
-      set(nostrLinkStatusAtom, (await fetchNostrLink(address)) ? 'linked' : 'prompt');
+      if (accountRef.current !== address || status === 'checking'
+        || status === 'linked' || status === 'linking' || status === 'prompt') return;
+      const linked = await fetchNostrLink(address);
+      if (accountRef.current !== address) return;
+      set(nostrLinkStatusAtom, (previous) => {
+        if (previous === 'linked' || previous === 'linking') return previous;
+        return linked ? 'linked' : 'prompt';
+      });
     }, []),
   );
 
@@ -85,6 +103,7 @@ export function useRoomSession(): UseRoomSessionResult {
     pubkey: isUnlocked ? roomKeySession.keys?.publicKey ?? null : null,
     isUnlocked,
     isUnlocking,
+    canUnlock,
     error,
     unlock,
     lock,

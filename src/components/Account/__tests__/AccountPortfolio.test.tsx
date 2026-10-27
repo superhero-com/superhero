@@ -110,4 +110,19 @@ describe('profile portfolio overview', () => {
     expect(await screen.findByTestId('portfolio-total')).toHaveTextContent('0.00 AE');
     expect(await screen.findByText('Not enough history for this period.')).toBeVisible();
   });
+
+  it('shows trading P/L against cost basis and where an AE change came from', async () => {
+    request.mockImplementation(async (_address, params) => (params?.include
+      ? [{ ...current, total_pnl: { invested: { ae: 20, usd: 10 }, gain: { ae: 5, usd: 2.5 } } }]
+      : [{
+        ...current, timestamp: '2026-09-19T10:00:00Z', total_value_ae: 141, ae_balance: 101, tokens_value_ae: 40,
+      }]));
+    renderPortfolio();
+    expect(await screen.findByText('+5.00 AE')).toBeVisible();
+    expect(screen.getByText('(+25%)')).toBeVisible();
+    expect(await screen.findByTestId('portfolio-change-sources'))
+      .toHaveTextContent('AE balance -1.00 AE · Tokens +10.00 AE');
+    fireEvent.click(screen.getByRole('button', { name: 'USD' }));
+    expect(screen.queryByTestId('portfolio-change-sources')).toBeNull();
+  });
 });

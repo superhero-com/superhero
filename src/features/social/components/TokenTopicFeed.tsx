@@ -445,13 +445,13 @@ const TokenTopicFeed = ({
                   : 18;
                 const pretty = balanceDecimal.div(10 ** decimals).prettify();
                 const symbolBase = (displayTokenName || tokenSymbol || baseName || '').toString().replace(/^#/, '');
-                const symbol = symbolBase ? ` ${symbolBase}` : '';
+                const symbol = symbolBase ? ` #${symbolBase}` : '';
                 tokenHolderLabel = `${pretty}${symbol}`;
               }
             } catch {
               // Fallback: show raw balance if Decimal parsing fails
               const symbolBase = (displayTokenName || tokenSymbol || baseName || '').toString().replace(/^#/, '');
-              const symbol = symbolBase ? ` ${symbolBase}` : '';
+              const symbol = symbolBase ? ` #${symbolBase}` : '';
               tokenHolderLabel = `${holder.balance}${symbol}`;
             }
           }

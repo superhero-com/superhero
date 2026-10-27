@@ -1,4 +1,6 @@
-import { AeSdk, CompilerHttp, MemoryAccount } from '@aeternity/aepp-sdk';
+import {
+  AeSdk, CompilerHttp, Encoded, MemoryAccount,
+} from '@aeternity/aepp-sdk';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import {
   useCallback, useEffect, useMemo, useRef, useState,
@@ -17,7 +19,6 @@ import { useCommunityFactory } from '@/hooks/useCommunityFactory';
 import { useInvitation } from '@/hooks/useInvitation';
 import { cn } from '@/lib/utils';
 import { Decimal } from '@/libs/decimal';
-import { ensureSdkInitializeContract } from '@/libs/initializeContractTyped';
 import { APP_NAME } from '@/config';
 import { normalizeSecretKey } from '@/utils/secretKey';
 
@@ -137,15 +138,10 @@ const CollectInvitationLinkCard = ({
         // Claim invitation
         if (!staticAeSdk) throw new Error('SDK not available');
 
-        const claimSdk = ensureSdkInitializeContract(staticAeSdk as any) as typeof staticAeSdk;
-        await claimSdk.addAccount(account, { select: true });
-
-        const affiliationTreasury = await getAffiliationTreasury(claimSdk);
-        await affiliationTreasury.contract.redeem_invitation_code(
-          activeAccount,
-          {
-            onAccount: account,
-          },
+        const affiliationTreasury = await getAffiliationTreasury(staticAeSdk);
+        await affiliationTreasury.redeemInvitationCode(
+          normalizedInvitationKey,
+          activeAccount as Encoded.AccountAddress,
         );
         setSuccessMessage(t('trending.invitations.collect.claimedSuccess'));
       }

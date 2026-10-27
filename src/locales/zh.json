@@ -127,6 +127,9 @@
       "profileBio": "向世界介绍你自己…"
     },
     "messages": {
+      "txCompletedInWalletTab": "您的交易已在钱包标签页中确认。请刷新此页面查看结果。",
+      "txSentFromCallback": "交易已发送。您可以关闭此标签页并返回 Superhero。",
+      "txSendFromCallbackFailed": "无法发送已签名的交易：{{error}}",
       "somethingWentWrong": "出了点问题",
       "success": "成功",
       "savingProfile": "正在保存个人资料…",

@@ -322,7 +322,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
         } catch {
           safeLocalStringStorage.removeItem(storedResultKey);
         }
-        const queueEntry = currentQueue[uniqueId] || parsedStoredResult;
+        const queueEntry = parsedStoredResult ?? currentQueue[uniqueId];
         if (!queueEntry) return;
 
         if (queueEntry.status === 'cancelled') {
@@ -511,7 +511,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
           } catch {
             safeLocalStringStorage.removeItem(storedResultKey);
           }
-          const queueEntry = currentQueue[uniqueId] || parsedStoredResult;
+          const queueEntry = parsedStoredResult ?? currentQueue[uniqueId];
 
           if (queueEntry) {
             if (queueEntry.status === 'cancelled') {

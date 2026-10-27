@@ -1,5 +1,30 @@
 {
   "common": {
+    "profileImages": {
+      "title": "Profile images",
+      "personalize": "Add a photo and cover.",
+      "changeAvatar": "Change avatar",
+      "changeCover": "Change cover",
+      "chooseAvatar": "Choose avatar",
+      "chooseCover": "Choose cover",
+      "cropAvatar": "Crop your avatar",
+      "cropCover": "Crop your cover",
+      "cropHint": "Drag to reposition and use the slider to zoom.",
+      "cropArea": "Image crop area. Use the arrow keys to reposition.",
+      "zoom": "Zoom",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "apply": "Apply",
+      "chooseAnother": "Choose another image",
+      "removeAvatar": "Remove avatar",
+      "removeCover": "Remove cover",
+      "checkPending": "Check pending change",
+      "preparing": "Preparing your image…",
+      "fileError": "Choose a JPEG, PNG or WebP image up to 10 MiB.",
+      "sizeError": "Choose an image at least 128 pixels per side and up to 24 megapixels.",
+      "openError": "This image could not be opened. Please choose another.",
+      "saveError": "Could not save the image. Please try again."
+    },
     "socialGraph": {
       "follow": "Follow",
       "following": "Following",
@@ -2125,6 +2150,20 @@
   "social": {
     "originalPost": "Original post",
     "translatePost": "Translate",
+    "images": {
+      "add": "Attach images",
+      "photos": "Photos",
+      "choose": "Choose images",
+      "selected": "Selected images",
+      "preview": "Post image {{number}}",
+      "remove": "Remove image {{number}}",
+      "open": "Open image {{number}}",
+      "viewer": "Post images",
+      "viewerHint": "Use the arrow buttons or arrow keys to browse images.",
+      "previous": "Previous image",
+      "next": "Next image",
+      "limit": "Up to four images or GIFs per post."
+    },
     "copiedAddress": "Copied address",
     "profileTabs": {
       "offline": "Offline — showing last loaded",

@@ -21,13 +21,15 @@ function fmt(amount: string): string {
 }
 
 function formatChangedFields(
-  fields: Array<'bio' | 'website' | 'chain_name'>,
+  fields: Array<'bio' | 'website' | 'chain_name' | 'avatar' | 'cover'>,
   t: TFunction,
 ): string {
-  const labels: Record<'bio' | 'website' | 'chain_name', string> = {
+  const labels: Record<'bio' | 'website' | 'chain_name' | 'avatar' | 'cover', string> = {
     bio: t('common.transactionNotification.fieldBio'),
     website: t('common.transactionNotification.fieldWebsite'),
     chain_name: t('common.transactionNotification.fieldChainName'),
+    avatar: t('common.transactionNotification.fieldAvatar', { defaultValue: 'Avatar' }),
+    cover: t('common.transactionNotification.fieldCover', { defaultValue: 'Cover' }),
   };
   const parts = fields.map((field) => labels[field]);
   if (!parts.length) return t('common.transactionNotification.fieldProfile');
@@ -227,9 +229,11 @@ function getPendingMeta(payload: TxPayload, t: TFunction): { title: string; subt
     case TxPayloadType.UpdateProfile:
       return {
         title: t('common.transactionNotification.updatingProfileEllipsis'),
-        subtitle: t('common.transactionNotification.savingYourFields', {
-          fields: formatChangedFields(payload.fields, t),
-        }),
+        subtitle: payload.fields.some((field) => field === 'avatar' || field === 'cover')
+          ? t('common.transactionNotification.confirmingOnChainEllipsis')
+          : t('common.transactionNotification.savingYourFields', {
+            fields: formatChangedFields(payload.fields, t),
+          }),
       };
     // Same shape as CreateToken's pending state on purpose: what the user is
     // waiting on is the chain, and the subtitle says so.

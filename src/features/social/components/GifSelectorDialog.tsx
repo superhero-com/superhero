@@ -13,6 +13,7 @@ import { CONFIG } from '@/config';
 import Spinner from '@/components/Spinner';
 
 interface GifSelectorDialogProps {
+  maxItems?: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   mediaUrls: string[];
@@ -20,6 +21,7 @@ interface GifSelectorDialogProps {
 }
 
 export const GifSelectorDialog = ({
+  maxItems = 4,
   open,
   onOpenChange,
   mediaUrls,
@@ -90,6 +92,7 @@ export const GifSelectorDialog = ({
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleGifClick = (gif: any) => {
+    if (mediaUrls.length >= maxItems) return;
     try {
       const u = new URL(gif.original);
       const params = new URLSearchParams();
@@ -112,6 +115,7 @@ export const GifSelectorDialog = ({
       <DialogContent className="max-h-[60vh] sm:max-h-[90vh] overflow-hidden sm:max-w-[600px] bg-gray-900 border-white/12 text-white flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-white">{t('gifSelector.addAGif')}</DialogTitle>
+          {mediaUrls.length >= maxItems && <p role="status" className="text-sm text-white/70">{t('images.limit')}</p>}
         </DialogHeader>
 
         <div className="space-y-4 overflow-y-auto flex-1 pb-20">

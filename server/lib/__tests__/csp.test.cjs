@@ -73,6 +73,14 @@ describe('relay origins', () => {
 });
 
 describe('deploy-time overrides', () => {
+  it('allows a configured profile image API without granting script access', () => {
+    const origin = 'https://profile-api.example.com';
+    expect(directive(policy(), 'connect-src')).not.toContain(origin);
+    const csp = policy({ VITE_PROFILE_MEDIA_API_URL: `${origin}/api` });
+    expect(directive(csp, 'connect-src').split(' ')).toContain(origin);
+    expect(directive(csp, 'script-src')).not.toContain(origin);
+  });
+
   it('allows direct uploads only to the configured storage origin', () => {
     const destination = 'https://uploads.example.com';
     expect(directive(policy(), 'connect-src')).not.toContain(destination);

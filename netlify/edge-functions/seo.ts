@@ -71,6 +71,8 @@ export function jsonLdSafe(schema: Record<string, unknown>): string {
 }
 
 function absolutize(url?: string, origin?: string): string | undefined {
+  const image = typeof url === 'string' && /^ipfs:superhero:images:(bafy[a-z2-7]{55})(-preview)?$/.exec(url);
+  if (image) return `${(Deno.env.get('PROFILE_MEDIA_PUBLIC_URL') || `${origin}/profile-images`).replace(/\/$/, '')}/images/${image[1]}/${image[2] ? 'thumb' : 'image'}.webp`;
   if (!url) return undefined;
   if (/^https?:\/\//i.test(url)) return url;
   if (url.startsWith('//')) return `https:${url}`;
@@ -208,7 +210,7 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
             datePublished: data?.created_at,
             dateModified: data?.updated_at || data?.created_at,
             author: { '@type': 'Person', name: data?.sender_address, identifier: data?.sender_address },
-            image: media,
+            image: media.map((url: string) => absolutize(url, fullUrl.origin)),
             interactionStatistic: [
               {
                 '@type': 'InteractionCounter',

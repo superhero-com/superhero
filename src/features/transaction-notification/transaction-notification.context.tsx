@@ -40,7 +40,7 @@ export type TxPayload =
   | { type: typeof TxPayloadType.AddLiquidity; tokenASymbol: string; tokenBSymbol: string; amountA: string; amountB: string; lpTokensEstimate?: string }
   | { type: typeof TxPayloadType.RemoveLiquidity; tokenASymbol: string; tokenBSymbol: string; liquidityPct: string; lpAmount: string }
   | { type: typeof TxPayloadType.SocialGraph; action: 'follow' | 'unfollow' | 'block' | 'unblock'; targetAddress: string }
-  | { type: typeof TxPayloadType.UpdateProfile; fields: Array<'bio' | 'website' | 'chain_name'> }
+  | { type: typeof TxPayloadType.UpdateProfile; fields: Array<'bio' | 'website' | 'chain_name' | 'avatar' | 'cover'> }
   // No handle carried: the claim's `value` may be the X user id rather than the
   // username, and "@1234567890" in a toast is worse than no handle at all.
   // `startedAt` is when the change was broadcast: the wait is minutes, not

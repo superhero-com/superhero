@@ -114,6 +114,16 @@ function resolveNotificationPath(data) {
       const follower = str(data.follower);
       return follower ? `/users/${encodeURIComponent(follower)}` : '/';
     }
+    // Mirrors getNotificationLink: a post tip opens the post, a profile tip the wallet.
+    case 'tip-received': {
+      const post = str(data.postId);
+      return post ? postPath(post) : '/wallet';
+    }
+    // Mirrors getNotificationLink: open the post that mentions the recipient.
+    case 'post-mention': {
+      const post = str(data.postId);
+      return post ? postPath(post) : '/';
+    }
     default:
       return '/';
   }

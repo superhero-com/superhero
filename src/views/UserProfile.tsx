@@ -24,6 +24,7 @@ import {
   getLinkedBio,
   getLinkedPreferredAensName,
   getLinkedSite,
+  getLinkedAvatarUrl,
   getLinkedXUsername,
   isXLinked,
   patchAccountCacheEntry,
@@ -202,6 +203,7 @@ export default function UserProfile({
   // your X account" prompt, which the not-yet-updated account would offer.
   const pendingXChange = usePendingXLinkChange(canEdit ? effectiveAddress : null);
   const linkedSite = getLinkedSite(accountInfo);
+  const linkedAvatarUrl = getLinkedAvatarUrl(accountInfo);
   // Posts count is the true total the list response already carries, not the
   // 100-capped page length. Undefined until loaded — the counts row renders
   // nothing rather than a zero.
@@ -369,6 +371,7 @@ export default function UserProfile({
         verifiedUsername={linkedXUsername}
         bio={bioText}
         site={linkedSite}
+        avatarUrl={linkedAvatarUrl}
         ownProfile={canEdit}
         followersCount={graphCounts?.followers}
         followingCount={graphCounts?.following}

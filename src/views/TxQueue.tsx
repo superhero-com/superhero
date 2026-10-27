@@ -63,6 +63,8 @@ const parseMessageSignRequest = (raw: string | null): MessageSignRequest | null 
       || parsed.type === 'address-link-prefaens-unclaim'
       || parsed.type === 'address-link-site-submit'
       || parsed.type === 'address-link-site-unclaim'
+      || parsed.type === 'address-link-avatar-submit'
+      || parsed.type === 'address-link-avatar-unclaim'
     );
     if (
       isAddressLinkType
@@ -185,6 +187,26 @@ const submitMessageSignRequest = async (
       nonce: request.nonce,
       signature,
       verification_token: request.verification_token,
+    });
+    return;
+  }
+
+  if (request.type === 'address-link-avatar-submit') {
+    await SuperheroApi.submitAvatarAddressLink({
+      address: request.address,
+      value: request.value,
+      nonce: request.nonce,
+      signature,
+      verification_token: request.verification_token,
+    });
+    return;
+  }
+
+  if (request.type === 'address-link-avatar-unclaim') {
+    await SuperheroApi.submitAvatarAddressLinkUnclaim({
+      address: request.address,
+      nonce: request.nonce,
+      signature,
     });
     return;
   }
@@ -332,6 +354,8 @@ const TxQueue = () => {
               }
               if (request.type === 'address-link-site-submit') return tCommon('messages.siteLinkSuccess');
               if (request.type === 'address-link-site-unclaim') return tCommon('messages.siteUnlinkSuccess');
+              if (request.type === 'address-link-avatar-submit') return tCommon('messages.avatarLinkSuccess');
+              if (request.type === 'address-link-avatar-unclaim') return tCommon('messages.avatarUnlinkSuccess');
               return tCommon('messages.preferredNameUnlinkSuccess');
             })(),
           });

@@ -21,12 +21,13 @@ function fmt(amount: string): string {
 }
 
 function formatChangedFields(
-  fields: Array<'bio' | 'website' | 'chain_name'>,
+  fields: Array<'bio' | 'website' | 'avatar' | 'chain_name'>,
   t: TFunction,
 ): string {
-  const labels: Record<'bio' | 'website' | 'chain_name', string> = {
+  const labels: Record<'bio' | 'website' | 'avatar' | 'chain_name', string> = {
     bio: t('common.transactionNotification.fieldBio'),
     website: t('common.transactionNotification.fieldWebsite'),
+    avatar: t('common.transactionNotification.fieldAvatar'),
     chain_name: t('common.transactionNotification.fieldChainName'),
   };
   const parts = fields.map((field) => labels[field]);

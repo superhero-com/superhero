@@ -128,6 +128,7 @@
       "preferredName": "Preferred name",
       "available": "Available",
       "website": "Website",
+      "profilePicture": "Profile picture",
       "xTwitter": "X (Twitter)"
     },
     "actions": {
@@ -200,6 +201,8 @@
       "invalidNostrKey": "Nostr key must be between 1 and 255 characters",
       "invalidAvatarUrl": "Avatar URL must be a valid URL up to 500 characters",
       "invalidWebsiteUrl": "Website must be a valid URL (including https://) up to 500 characters",
+      "invalidAvatarUrl": "Profile picture must be an https link to an image (.jpg, .png, .gif or .webp) up to 200 characters",
+      "avatarUrlHint": "Paste an https link to an image hosted online.",
       "invalidUsername": "Username must contain only letters, numbers, and underscores (2-32 chars)",
       "invalidSolName": "Sol name must be between 1 and 255 characters",
       "connectWalletToEditProfile": "Connect your wallet to edit your profile",
@@ -210,6 +213,8 @@
       "bioUnlinkSuccess": "Bio unlinked successfully.",
       "siteLinkSuccess": "Website linked successfully.",
       "siteUnlinkSuccess": "Website unlinked successfully.",
+      "avatarLinkSuccess": "Profile picture updated.",
+      "avatarUnlinkSuccess": "Profile picture removed.",
       "preferredNameLinkSuccess": "Preferred name linked successfully.",
       "preferredNameUnlinkSuccess": "Preferred name unlinked successfully.",
       "preferredNameNotOwned": "Select a .chain name you own.",
@@ -286,6 +291,7 @@
       "walletAccountMismatchX": "Connected wallet account does not match X verification address",
       "bioRequiredToLink": "Enter a bio before linking it",
       "siteRequiredToLink": "Enter a website before linking it",
+      "avatarRequiredToLink": "Enter an image link before saving it",
       "preferredNameRequiredToLink": "Choose a preferred name before linking it",
       "missingAddressForXVerification": "Missing address for X verification",
       "missingXOAuthToken": "Missing X OAuth token",
@@ -295,6 +301,8 @@
       "missingAddressForPreferredNameUnlink": "Missing address for preferred name unlink",
       "missingAddressForBioUnlink": "Missing address for bio unlink",
       "missingAddressForSiteUnlink": "Missing address for site unlink",
+      "missingAddressForAvatarLink": "Missing address for profile picture link",
+      "missingAddressForAvatarUnlink": "Missing address for profile picture unlink",
       "missingAddressForXUnlink": "Missing address for X unlink",
       "requestFailed": "Request failed",
       "xCallbackTakingLong": "This is taking longer than usual. Check your profile again in a few minutes to see whether your X account is linked."
@@ -1377,6 +1385,7 @@
     "transactionNotification": {
       "fieldBio": "bio",
       "fieldWebsite": "website",
+      "fieldAvatar": "profile picture",
       "fieldChainName": "chain name",
       "fieldProfile": "profile",
       "confirmInWallet": "Confirm in your wallet",

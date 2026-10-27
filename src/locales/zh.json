@@ -1756,6 +1756,7 @@
       "description": "存入两种代币，分享交易手续费。",
       "deposit": "存入 {{symbol}}",
       "linked": "按资金池比例联动",
+      "suggested": "根据 AE 资金池价格建议，可自行修改。",
       "selectFirst": "选择第一种存入代币",
       "selectSecond": "选择第二种存入代币",
       "ratioHint": "金额按资金池比例联动，可编辑任意一项。",

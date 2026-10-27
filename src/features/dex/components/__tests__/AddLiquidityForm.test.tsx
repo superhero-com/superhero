@@ -11,7 +11,13 @@ import { liquidityEstimate } from '../../utils/liquidityEstimate';
 import AddLiquidityForm from '../AddLiquidityForm';
 
 const mocks = vi.hoisted(() => ({
-  account: 'ak_test' as string | undefined, execute: vi.fn(), refresh: vi.fn(), clear: vi.fn(), ready: true,
+  account: 'ak_test' as string | undefined,
+  execute: vi.fn(),
+  refresh: vi.fn(),
+  clear: vi.fn(),
+  ready: true,
+  exists: true,
+  reference: undefined as string | undefined,
 }));
 const tokens = [
   {
@@ -29,13 +35,20 @@ vi.mock('@/api/generated', () => ({ DexService: { getDexTokenByAddress: vi.fn() 
 vi.mock('@/components/ConnectWalletButton', () => ({ ConnectWalletButton: () => <button type="button">Connect wallet</button> }));
 vi.mock('@/components/dex/core/TokenSelector', () => ({ default: ({ selected }: { selected: { symbol: string } }) => <button type="button">{selected?.symbol}</button> }));
 vi.mock('../LiquidityConfirmation', () => ({ default: ({ show, onConfirm, disabled }: { show: boolean; onConfirm: () => void; disabled: boolean }) => (show ? <button type="button" disabled={disabled} onClick={onConfirm}>Confirm test deposit</button> : null) }));
+const pool = {
+  reserveA: 100n * 10n ** 18n, reserveB: 200n * 10n ** 6n, totalSupply: 10n * 10n ** 18n,
+};
 vi.mock('../../hooks', () => ({
   useAddLiquidity: () => {
     const [state, setState] = useState({
       tokenA: '', tokenB: '', amountA: '', amountB: '', decA: 18, decB: 6, loading: false, error: null,
     } as AddLiquidityState);
     return {
-      state: { ...state, pairExists: true, pairPreview: mocks.ready ? liquidityEstimate(state, { reserveA: 100n * 10n ** 18n, reserveB: 200n * 10n ** 6n, totalSupply: 10n * 10n ** 18n }) : null },
+      state: {
+        ...state,
+        pairExists: mocks.exists,
+        pairPreview: mocks.ready ? liquidityEstimate(state, mocks.exists ? pool : null) : null,
+      },
       setState,
       executeAddLiquidity: mocks.execute,
       quoteStatus: mocks.ready ? 'ready' : 'error',
@@ -43,10 +56,15 @@ vi.mock('../../hooks', () => ({
     };
   },
 }));
+// Like the real hook, no ratio unless enabled (the last argument).
+vi.mock('../../hooks/useReferenceRatio', () => ({ useReferenceRatio: (...args: unknown[]) => (args[4] ? mocks.reference : undefined) }));
 function mount() {
   return render(<MemoryRouter initialEntries={['/defi/pool?from=AE&to=ct_test']}><AddLiquidityForm /></MemoryRouter>);
 }
-beforeEach(() => { mocks.account = 'ak_test'; mocks.ready = true; mocks.execute.mockResolvedValue('th_result'); });
+beforeEach(() => {
+  mocks.account = 'ak_test'; mocks.ready = true; mocks.exists = true; mocks.reference = undefined;
+  mocks.execute.mockResolvedValue('th_result');
+});
 
 describe('Add liquidity form', () => {
   it('links either deposit, blocks insufficient balances and waits for review confirmation', async () => {
@@ -81,5 +99,41 @@ describe('Add liquidity form', () => {
     view.rerender(<MemoryRouter initialEntries={['/defi/pool?from=AE&to=ct_test']}><AddLiquidityForm /></MemoryRouter>);
     await waitFor(() => expect(screen.getByRole('button', { name: 'Pool unavailable' })).toBeDisabled());
     expect(screen.getByRole('button', { name: 'Try again' })).toBeEnabled();
+  });
+  it('suggests the second deposit for a new pool from AE prices and keeps user edits', async () => {
+    mocks.exists = false;
+    mocks.reference = '0.25';
+    mount();
+    const first = await screen.findByRole('textbox', { name: 'Deposit AE' });
+    const second = await screen.findByRole('textbox', { name: 'Deposit TEST' });
+    fireEvent.change(first, { target: { value: '10' } });
+    await waitFor(() => expect(second).toHaveValue('40'));
+    expect(screen.getByText('Suggested from AE pool prices. You can edit it.')).toBeInTheDocument();
+    fireEvent.change(first, { target: { value: '2' } });
+    await waitFor(() => expect(second).toHaveValue('8'));
+    fireEvent.change(second, { target: { value: '9' } });
+    fireEvent.change(first, { target: { value: '3' } });
+    await waitFor(() => expect(first).toHaveValue('3'));
+    expect(second).toHaveValue('9');
+  });
+  it('fills the suggestion when AE prices load after typing and follows them until edited', async () => {
+    mocks.exists = false;
+    const view = mount();
+    const first = await screen.findByRole('textbox', { name: 'Deposit AE' });
+    const second = await screen.findByRole('textbox', { name: 'Deposit TEST' });
+    const pricesLoad = (reference: string) => {
+      mocks.reference = reference;
+      view.rerender(<MemoryRouter initialEntries={['/defi/pool?from=AE&to=ct_test']}><AddLiquidityForm /></MemoryRouter>);
+    };
+    fireEvent.change(first, { target: { value: '10' } });
+    expect(second).toHaveValue('');
+    pricesLoad('0.25');
+    await waitFor(() => expect(second).toHaveValue('40'));
+    pricesLoad('0.5');
+    await waitFor(() => expect(second).toHaveValue('20'));
+    fireEvent.change(second, { target: { value: '9' } });
+    pricesLoad('0.25');
+    expect(second).toHaveValue('9');
+    expect(first).toHaveValue('10');
   });
 });

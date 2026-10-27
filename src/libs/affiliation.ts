@@ -1,11 +1,10 @@
 import { AppService } from '@/api/generated';
-import type { AeSdk } from '@aeternity/aepp-sdk';
+import type { AeSdk, Encoded } from '@aeternity/aepp-sdk';
 import { initCommunityFactory } from 'bctsl-sdk';
-import { ensureSdkInitializeContract } from './initializeContractTyped';
 
-async function getFactoryAddress(): Promise<string> {
+async function getFactoryAddress(): Promise<Encoded.ContractAddress> {
   const schema = await AppService.getFactory();
-  const address: string | undefined = schema?.address;
+  const address: Encoded.ContractAddress | undefined = schema?.address;
   if (!address) throw new Error('Community Factory address not available');
   return address;
 }
@@ -16,9 +15,6 @@ async function getFactoryAddress(): Promise<string> {
  */
 export async function getAffiliationTreasury(sdk: AeSdk) {
   const factoryAddress = await getFactoryAddress();
-  const factory = await initCommunityFactory(
-    ensureSdkInitializeContract(sdk as any),
-    factoryAddress,
-  );
+  const factory = await initCommunityFactory(sdk, factoryAddress);
   return factory.affiliationTreasury();
 }

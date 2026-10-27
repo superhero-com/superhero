@@ -1590,6 +1590,7 @@
       "allTime": "All time",
       "balances": "Pool balances",
       "currentReserves": "Current reserves",
+      "poolValue": "Pool value",
       "exchangeRate": "Exchange rate",
       "rateHint": "Current reserve ratio, before swap fees and price impact.",
       "rateUnavailable": "Exchange rate unavailable for empty or unknown reserves",

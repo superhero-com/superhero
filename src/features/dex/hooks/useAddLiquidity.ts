@@ -8,11 +8,12 @@ import { useRecentActivities } from '../../../hooks/useRecentActivities';
 import { CONFIG } from '../../../config';
 import {
   MINIMUM_LIQUIDITY, ensureAllowanceForRouter, ensurePairAllowanceForRouter,
-  getPairInfo, initDexContracts,
+  getPairInfo, getTokenBalance, initDexContracts,
   subSlippage,
   toAettos,
 } from '../../../libs/dex';
 import { errorToUserMessage } from '../../../libs/errorMessages';
+import { fullRemovalAmount } from '../utils/removalEstimate';
 import { useLiquidityPreview } from './useLiquidityPreview';
 import { TxPayloadType, useTransactionNotification } from '../../transaction-notification/transaction-notification.context';
 import type {
@@ -245,7 +246,7 @@ export function useAddLiquidity() {
 
       // Convert liquidity amount to bigint
       // For full removal, use raw balance to avoid precision loss
-      const liquidityAmount = params.isFullRemoval && params.rawBalance
+      let liquidityAmount = params.isFullRemoval && params.rawBalance
         ? BigInt(params.rawBalance)
         : toAettos(params.liquidity, 18); // LP tokens are 18 decimals
 
@@ -271,6 +272,12 @@ export function useAddLiquidity() {
 
         if (!pairInfo || !pairInfo.reserveA || !pairInfo.reserveB || !pairInfo.totalSupply) {
           throw new Error('Unable to get pair information');
+        }
+
+        // Full removal: burn the live on-chain LP balance (the indexed one can lag) so none is left.
+        if (params.isFullRemoval) {
+          const onChainLp = await getTokenBalance(sdk, pairInfo.pairAddress, address);
+          liquidityAmount = fullRemovalAmount(liquidityAmount, onChainLp);
         }
 
         // Calculate expected amounts based on current reserves and total supply
@@ -318,6 +325,12 @@ export function useAddLiquidity() {
 
         if (!pairInfo || !pairInfo.reserveA || !pairInfo.reserveB || !pairInfo.totalSupply) {
           throw new Error('Unable to get pair information');
+        }
+
+        // Full removal: burn the live on-chain LP balance (the indexed one can lag) so none is left.
+        if (params.isFullRemoval) {
+          const onChainLp = await getTokenBalance(sdk, pairInfo.pairAddress, address);
+          liquidityAmount = fullRemovalAmount(liquidityAmount, onChainLp);
         }
 
         // Calculate expected amounts based on current reserves and total supply

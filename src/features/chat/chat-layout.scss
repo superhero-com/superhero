@@ -90,6 +90,7 @@
   span { font-size: 10px; opacity: .75; }
 }
 .chat-sidebar-scroll { min-height: 0; flex: 1; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.chat-sidebar-scroll > aside { margin: 16px 16px 0; }
 .chat-list { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 10px; list-style: none; }
 .chat-list-row {
   display: flex;

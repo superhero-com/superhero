@@ -16,36 +16,6 @@
   width: 100%;
 }
 
-.transactions-carousel-track {
-  display: flex;
-  gap: 8px;
-  animation: transactions-scroll linear infinite;
-  will-change: transform;
-  
-  @include mobile {
-    gap: 4px;
-    // Faster animation for mobile
-    animation-duration: 25s !important;
-  }
-  
-  @keyframes transactions-scroll {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-  
-  // Pause animation on hover for better UX
-  &:hover {
-    animation-play-state: paused;
-  }
-  
-  // Pause animation on touch for mobile
-  @include mobile {
-    &:active {
-      animation-play-state: paused;
-    }
-  }
-}
-
 .transactions-carousel-track-smooth {
   display: flex;
   gap: 8px;
@@ -295,10 +265,6 @@
 
 // Reduced motion support
 @media (prefers-reduced-motion: reduce) {
-  .transactions-carousel-track {
-    animation: none;
-  }
-  
   .transaction-card:hover {
     transform: none;
   }
@@ -315,11 +281,6 @@
 
 // Additional mobile optimizations
 @include mobile {
-  .transactions-carousel-track {
-    // Faster animation for mobile
-    animation-duration: 30s !important;
-  }
-
   // Pin the skeleton shimmer speed so mobile matches the post skeleton.
   .transaction-skeleton {
     .skeleton-avatar,

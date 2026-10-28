@@ -20,15 +20,15 @@ export const DmThreadHeader = ({ pubkey, contact, profile }: DmThreadHeaderProps
   const npub = contact?.npub || hexToNpub(pubkey);
   const displayName = contact ? formatContactName(contact, profile) : shortenNpub(npub);
   return (
-    <header className="flex items-center gap-2 border-b border-border px-3 py-3">
+    <header className="chat-thread-header">
       <Link
         to="/chat"
-        className="rounded-md p-1 text-muted-foreground hover:text-foreground"
+        className="chat-header-button chat-back"
         aria-label="Back to chat"
       >
         <ArrowLeft className="h-5 w-5" />
       </Link>
-      <Identicon address={npub} size={36} />
+      <Identicon address={npub} size={42} />
       <div className="min-w-0 flex-1">
         <div className="truncate text-base font-semibold text-foreground">{displayName}</div>
         <div className="truncate text-xs text-muted-foreground">{shortenNpub(npub)}</div>

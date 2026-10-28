@@ -128,8 +128,7 @@ const TokenListTableRow = ({
         <td className="cell cell-name py-3 pl-2 pr-1 align-middle">
           <div className="flex items-center gap-1.5 min-w-0">
             <div className="text-[13px] font-bold text-white truncate">
-              <span className="text-white/40 text-[.85em] mr-0.5">#</span>
-              {token.symbol || token.name}
+              {`#${token.symbol || token.name}`}
             </div>
             {showCollectionBadge && (
               <Badge
@@ -201,13 +200,12 @@ const TokenListTableRow = ({
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5 min-w-0">
                 <div className="token-name text-sm font-bold text-white truncate">
-                  <span className="text-white/40 text-[.85em] mr-0.5">#</span>
-                  {token.symbol || token.name}
+                  {`#${token.symbol || token.name}`}
                 </div>
               </div>
               {token.name && token.symbol && token.name !== token.symbol && (
                 <div className="text-[11px] text-white/40 truncate leading-3 mt-0.5">
-                  {token.name}
+                  {`#${token.name}`}
                 </div>
               )}
             </div>

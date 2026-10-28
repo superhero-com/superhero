@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { formatLiquidityValue, linkedDeposit, liquidityEstimate } from '../liquidityEstimate';
+import {
+  formatLiquidityValue, linkedDeposit, liquidityEstimate, referenceRatio,
+} from '../liquidityEstimate';
 
 const pool = { reserveA: 1000n * 10n ** 18n, reserveB: 2000n * 10n ** 6n, totalSupply: 100n * 10n ** 18n };
 
@@ -31,5 +33,19 @@ describe('liquidity estimates', () => {
     expect(linkedDeposit('', '2', 18, 'A')).toBe('');
     expect(linkedDeposit('2', undefined, 18, 'A')).toBeNull();
     expect(formatLiquidityValue('0.0000000000123456')).toBe('0.0000000000123456');
+  });
+  it('derives a starting ratio for a new pair from both tokens\' AE pools', () => {
+    // A: 1 A = 2 AE (18 decimals), B: 1 B = 0.5 AE (6 decimals) -> 1 B = 0.25 A
+    const legA = { reserveA: 50n * 10n ** 18n, reserveB: 100n * 10n ** 18n };
+    const legB = { reserveA: 200n * 10n ** 6n, reserveB: 100n * 10n ** 18n };
+    const ratio = referenceRatio(legA, legB, 18, 6);
+    expect(ratio).toBe('0.25');
+    expect(linkedDeposit('1', ratio, 6, 'A')).toBe('4');
+    expect(referenceRatio(null, legB, 18, 6)).toBeUndefined();
+    expect(referenceRatio({ reserveA: 0n, reserveB: 1n }, legB, 18, 6)).toBeUndefined();
+    expect(referenceRatio(legA, { reserveA: 0n, reserveB: 1n }, 18, 6)).toBeUndefined();
+    // 1 A = 3e-21 AE: still priced, since nothing is rounded before the last division
+    const dust = { reserveA: 10n ** 39n, reserveB: 3n * 10n ** 18n };
+    expect(referenceRatio(dust, legA, 18, 18)).toBe('666666666666666666666.66666666666666666667');
   });
 });

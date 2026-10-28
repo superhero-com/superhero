@@ -14,7 +14,7 @@ export function useRequestNostrLinkPrompt() {
   const setStatus = useSetAtom(nostrLinkStatusAtom);
 
   useEffect(() => {
-    setStatus((prev) => (prev === 'done' || prev === 'error' ? 'prompt' : prev));
+    setStatus((prev) => (prev === 'done' ? 'prompt' : prev));
   }, [setStatus]);
 
   return status;

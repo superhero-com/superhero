@@ -33,5 +33,7 @@ describe('validators', () => {
     expect(isValidMessageContent('  hi ')).toBe(true);
     expect(isValidMessageContent('   ')).toBe(false);
     expect(sanitizeMessageContent('  a   b  ')).toBe('a b');
+    expect(sanitizeMessageContent('  First line\r\n\r\nSecond line  '))
+      .toBe('First line\n\nSecond line');
   });
 });

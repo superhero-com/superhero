@@ -9,7 +9,8 @@ import {
 } from 'lucide-react';
 import { SuperheroApi } from '@/api/backend';
 import {
-  finiteAmount, portfolioChange, portfolioPeriod, portfolioPoints, portfolioValue,
+  finiteAmount, portfolioChange, portfolioChangeSources, portfolioPeriod, portfolioPoints,
+  portfolioValue, tradingPnl,
   PORTFOLIO_RANGES, type PortfolioCurrency, type PortfolioRange, type PortfolioSnapshot,
 } from './portfolioModel';
 
@@ -60,7 +61,10 @@ const AccountPortfolio = ({ address }: AccountPortfolioProps) => {
   const value = portfolioValue(snapshot, currency);
   const points = portfolioPoints(history.data ?? [], snapshot, currency, Date.now());
   const change = portfolioChange(points);
-  const pnl = finiteAmount(snapshot?.total_pnl?.gain?.[currency]);
+  const changeSources = currency === 'ae'
+    ? portfolioChangeSources(history.data ?? [], snapshot, Date.now()) : null;
+  const pnlResult = tradingPnl(snapshot, currency);
+  const pnl = pnlResult?.amount ?? null;
   const aeBalance = finiteAmount(snapshot?.ae_balance);
   const tokensValue = finiteAmount(snapshot?.tokens_value_ae);
   const allocationTotal = aeBalance !== null && tokensValue !== null
@@ -95,13 +99,15 @@ const AccountPortfolio = ({ address }: AccountPortfolioProps) => {
     ...(range === 'all' ? { year: 'numeric' } as const : {}),
     ...(includeTime ? { hour: 'numeric', minute: '2-digit' } as const : {}),
   }).format(time);
+  const formatPercentage = (percentage: number | null) => (percentage === null ? '' : ` (${new Intl.NumberFormat(i18n.language, {
+    maximumFractionDigits: 2, signDisplay: 'exceptZero',
+  }).format(percentage)}%)`);
+  const formatSigned = (amount: number, unit: PortfolioCurrency = currency) => (
+    (amount > 0 ? '+' : '') + formatAmount(amount, unit)
+  );
   const formatChange = () => {
     if (!change) return '—';
-    const sign = change.amount > 0 ? '+' : '';
-    const percentage = change.percentage === null ? '' : ` (${new Intl.NumberFormat(i18n.language, {
-      maximumFractionDigits: 2, signDisplay: 'exceptZero',
-    }).format(change.percentage)}%)`;
-    return sign + formatAmount(change.amount) + percentage;
+    return formatSigned(change.amount) + formatPercentage(change.percentage);
   };
 
   return (
@@ -156,6 +162,14 @@ const AccountPortfolio = ({ address }: AccountPortfolioProps) => {
                   <ChangeIcon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                   <span dir="ltr">{formatChange()}</span>
                 </div>
+                {changeSources && change && change.amount !== 0 && (
+                <p data-testid="portfolio-change-sources" className="mt-1 text-[10px] leading-snug text-white/50" dir="ltr">
+                  {t('portfolio.changeSources', {
+                    ae: formatSigned(changeSources.aeBalance, 'ae'),
+                    tokens: formatSigned(changeSources.tokens, 'ae'),
+                  })}
+                </p>
+                )}
               </div>
 
             </div>
@@ -248,14 +262,20 @@ const AccountPortfolio = ({ address }: AccountPortfolioProps) => {
             <dt className="flex items-center gap-1.5 text-xs text-white/60">
               <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-neon-purple" />
               {t('portfolio.tokenValue')}
+              <span title={t('portfolio.tokenValuation')} className="inline-flex cursor-help">
+                <Info className="h-3 w-3 text-white/40" aria-hidden="true" />
+                <span className="sr-only">{t('portfolio.tokenValuation')}</span>
+              </span>
             </dt>
             <dd className="mt-1.5 break-words text-xs font-semibold tabular-nums md:text-sm text-white" dir="ltr">{formatAmount(tokensValue, 'ae')}</dd>
           </div>
           <div className="min-w-0">
             <dt className="text-xs text-white/60">{t('portfolio.tradingPnl')}</dt>
             <dd className={['text-xs font-semibold tabular-nums md:text-sm mt-1.5', pnl !== null && pnl < 0 ? 'text-error' : 'text-white'].join(' ')} dir="ltr">
-              {pnl !== null && pnl > 0 ? '+' : ''}
-              {formatAmount(pnl)}
+              {pnl === null ? formatAmount(pnl) : formatSigned(pnl)}
+              {pnlResult && pnlResult.percentage !== null && (
+                <span className="font-normal text-white/60">{formatPercentage(pnlResult.percentage)}</span>
+              )}
             </dd>
             <dd className="text-xs text-white/50 mt-1">{t('portfolio.allTime')}</dd>
           </div>
@@ -268,6 +288,9 @@ const AccountPortfolio = ({ address }: AccountPortfolioProps) => {
             {t('portfolio.details')}
           </summary>
           <p className="max-w-md pb-2 leading-relaxed">{t('portfolio.valuesExplanation')}</p>
+          <p className="max-w-md pb-2 leading-relaxed">{t('portfolio.tokenValuation')}</p>
+          <p className="max-w-md pb-2 leading-relaxed">{t('portfolio.aeDenomination')}</p>
+          <p className="max-w-md pb-2 leading-relaxed">{t('portfolio.pnlPercentage')}</p>
         </details>
         <div role="group" aria-label={t('portfolio.timeRange')} className="flex gap-0.5 rounded-full bg-white/[0.04] p-1">
           {(Object.keys(PORTFOLIO_RANGES) as PortfolioRange[]).map((option) => (

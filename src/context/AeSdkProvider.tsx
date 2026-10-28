@@ -4,7 +4,7 @@ import { indexForAddress } from '@/features/wallet/manifest-store';
 import { requestUnlock } from '@/features/wallet/unlock-broker';
 import { createIndexedDbVaultStore } from '@/features/wallet/vault-store';
 import {
-  AeSdk, AeSdkAepp, CompilerHttp, Contract, Encoded, Node,
+  AeSdk, AeSdkAepp, CompilerHttp, Encoded, Node,
 } from '@aeternity/aepp-sdk';
 import { useAtom } from 'jotai';
 import {
@@ -68,25 +68,6 @@ const nodes: { instance: Node; name: string }[] = [
     instance: new Node(CURRENT_NETWORK.url),
   },
 ];
-
-type ContractInitializeOptions = Parameters<typeof Contract.initialize>[0];
-type LegacyInitializableSdk = {
-  getContext: () => Partial<ContractInitializeOptions>;
-  initializeContract?: (
-    options: ContractInitializeOptions,
-  ) => ReturnType<typeof Contract.initialize>;
-};
-
-const ensureLegacyInitializeContract = (sdkInstance: LegacyInitializableSdk) => {
-  if (typeof sdkInstance.initializeContract === 'function') return;
-  Object.defineProperty(sdkInstance, 'initializeContract', {
-    configurable: true,
-    value: (options: ContractInitializeOptions) => Contract.initialize({
-      ...sdkInstance.getContext(),
-      ...options,
-    }),
-  });
-};
 
 const bytesToHex = (bytes: Uint8Array | number[]) => Array.from(bytes)
   .map((byte) => byte.toString(16).padStart(2, '0'))
@@ -341,7 +322,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
         } catch {
           safeLocalStringStorage.removeItem(storedResultKey);
         }
-        const queueEntry = currentQueue[uniqueId] || parsedStoredResult;
+        const queueEntry = parsedStoredResult ?? currentQueue[uniqueId];
         if (!queueEntry) return;
 
         if (queueEntry.status === 'cancelled') {
@@ -530,7 +511,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
           } catch {
             safeLocalStringStorage.removeItem(storedResultKey);
           }
-          const queueEntry = currentQueue[uniqueId] || parsedStoredResult;
+          const queueEntry = parsedStoredResult ?? currentQueue[uniqueId];
 
           if (queueEntry) {
             if (queueEntry.status === 'cancelled') {
@@ -626,12 +607,6 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
       nodes,
       onCompiler: new CompilerHttp(CURRENT_NETWORK.compilerUrl),
     });
-
-    // TODO:Remove this once libraries are updated to use the new Contract.initialize method
-    // Compatibility shim for libraries still calling sdk.initializeContract
-    // (removed in aepp-sdk v14).
-    ensureLegacyInitializeContract(aeSdkInstance as unknown as LegacyInitializableSdk);
-    ensureLegacyInitializeContract(staticAeSdkInstance as unknown as LegacyInitializableSdk);
 
     aeSdkRef.current = aeSdkInstance;
     staticAeSdkRef.current = staticAeSdkInstance;

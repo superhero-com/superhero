@@ -27,7 +27,7 @@ import { isPlatformAuthenticatorAvailable, RP_ID } from '../webauthn';
 import {
   clearManifest, loadManifest, manifestForFirstAccount, saveManifest,
 } from '../manifest-store';
-import { deriveAccount, deriveSecretKey } from '../derivation';
+import { deriveAccount } from '../derivation';
 import { createIndexedDbVaultStore } from '../vault-store';
 import type { VaultStore } from '../vault-store';
 import { unlockVault, type VaultRecord } from '../vault-record';
@@ -58,7 +58,7 @@ type Step =
   | 'creating'
   | 'protect'
   | 'recovery'
-  | 'passkey-key'
+  | 'passkey-mnemonic'
   | 'done';
 
 const defaultStore = createIndexedDbVaultStore();
@@ -89,7 +89,7 @@ const STEP_PROGRESS: Partial<Record<Step, number>> = {
   creating: 0.6,
   protect: 0.75,
   recovery: 0.9,
-  'passkey-key': 0.9,
+  'passkey-mnemonic': 0.9,
   done: 1,
 };
 
@@ -212,10 +212,11 @@ const OptionCard = ({
  * The connect modal offers the choice — passkey card, wallet card — so the
  * flow must not ask it again on a second screen. `passkey` runs the ceremony
  * the moment the vault probe confirms there is nothing here yet; `import`
- * opens straight onto the phrase field. Left unset, the flow starts on its own
- * `choose` screen (WalletLab, tests).
+ * opens straight onto the phrase field; `phrase` opens straight onto a new
+ * recovery phrase, the card's way in on a device that can't create a passkey.
+ * Left unset, the flow starts on its own `choose` screen (WalletLab, tests).
  */
-export type OnboardingEntry = 'passkey' | 'import';
+export type OnboardingEntry = 'passkey' | 'import' | 'phrase';
 
 interface Props {
   store?: VaultStore;
@@ -296,11 +297,11 @@ const WalletOnboarding = ({
   const [recoveryCode, setRecoveryCode] = useState('');
   const [recoverySaved, setRecoverySaved] = useState(false);
   const [copied, setCopied] = useState(false);
-  // Passkey wallets only: the main private key derived from the passkey, held
-  // ONLY for the `passkey-key` step and dropped at `done` (see `finish`).
-  const [mainKey, setMainKey] = useState('');
-  const [keyRevealed, setKeyRevealed] = useState(false);
-  const [keyCopied, setKeyCopied] = useState(false);
+  // Passkey wallets only: the existing derived mnemonic, held ONLY for the
+  // backup step and dropped at `done` (see `finish`). Never persist it in the clear.
+  const [backupMnemonic, setBackupMnemonic] = useState('');
+  const [mnemonicRevealed, setMnemonicRevealed] = useState(false);
+  const [mnemonicCopied, setMnemonicCopied] = useState(false);
   // Erasing is unrecoverable for a passkey wallet, so it takes two taps.
   const [resetArmed, setResetArmed] = useState(false);
   // Held ONLY between the recovery ceremony and the user's confirm — see
@@ -506,18 +507,17 @@ const WalletOnboarding = ({
   }, [store, dek]);
 
   /**
-   * Passkey wallets: show the main private key the passkey derives, and offer to
-   * download it — or skip. This replaces the recovery code on the passkey path:
-   * the passkey itself re-derives the wallet on any device it syncs to, and the
-   * key is the copy that works without it (importable into the extension or the
-   * app). Nothing is persisted; the key is derived on the spot from the seed.
+   * Passkey wallets: offer the already-derived mnemonic as an optional backup.
+   * It restores every account derived from this phrase, without the passkey.
+   * Keep it transient and hidden until explicitly revealed; do not generate a
+   * new phrase or substitute a single-account private key.
    */
-  const goToKeyBackup = useCallback((seed: string) => {
+  const goToMnemonicBackup = useCallback((seed: string) => {
     setError('');
-    setMainKey(deriveSecretKey(seed, 0));
-    setKeyRevealed(false);
-    setKeyCopied(false);
-    setStep('passkey-key');
+    setBackupMnemonic(seed);
+    setMnemonicRevealed(false);
+    setMnemonicCopied(false);
+    setStep('passkey-mnemonic');
   }, []);
 
   /**
@@ -611,15 +611,9 @@ const WalletOnboarding = ({
 
   /**
    * DEVICE-GATED. The "Use a passkey" create path, offered on every surface: one
-   * passkey ceremony produces the wallet. The BIP39 seed is derived from the
-   * passkey's PRF output, so there is nothing for the user to write down — it is
-   * re-derivable wherever that passkey is, which for a device-bound credential
-   * (Windows Hello) means this device only. There is no reveal screen, so do not
-   * describe the seed as exportable (passkey-seed.ts).
-   *
-   * The mandatory recovery code is enrolled immediately after, exactly as on the
-   * seed path: the passkey is the primary factor, the code is the escape hatch
-   * for a forgotten passphrase or an Apple PRF rekey.
+   * passkey ceremony produces the wallet. Its existing BIP39 mnemonic is then
+   * offered as an optional backup, hidden until revealed. The phrase can restore
+   * the wallet independently of the passkey; no recovery-code factor is added.
    */
   const createWithPasskey = useCallback(async () => {
     setError('');
@@ -637,7 +631,7 @@ const WalletOnboarding = ({
       // Straight to the wallet backup step: the passkey already IS the unlock, so the
       // `protect` step (which offers to add one) has nothing left to ask, and
       // no recovery code is needed — the passkey re-derives the wallet.
-      goToKeyBackup(created.mnemonic);
+      goToMnemonicBackup(created.mnemonic);
     } catch (e) {
       // An RP ID / origin mismatch fails as a SecurityError BEFORE any OS UI
       // appears, so "nothing happened when I tapped" is the symptom. Say which
@@ -649,7 +643,7 @@ const WalletOnboarding = ({
         : (e as Error).message);
       setStep('choose');
     }
-  }, [store, goToKeyBackup]);
+  }, [store, goToMnemonicBackup]);
 
   // Take the path the caller chose, once — only from a fresh `choose`, so an
   // existing vault (`exists`) and a failed ceremony that fell back to `choose`
@@ -665,10 +659,12 @@ const WalletOnboarding = ({
       setError('');
       setImportText('');
       setStep('import-enter');
+    } else if (entry === 'phrase') {
+      startCreate();
     } else {
       createWithPasskey();
     }
-  }, [entry, probed, step, createWithPasskey]);
+  }, [entry, probed, step, createWithPasskey, startCreate]);
 
   /** DEVICE-GATED. Recovery ceremony → show the derived address; persists nothing. */
   const startRecover = useCallback(async () => {
@@ -722,13 +718,13 @@ const WalletOnboarding = ({
       setDeviceUnlockAvailable(true);
       const seed = recovered.mnemonic;
       dropRecovered();
-      goToKeyBackup(seed);
+      goToMnemonicBackup(seed);
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setBusy(false);
     }
-  }, [store, recovered, record, dek, goToRecovery, goToKeyBackup, dropRecovered]);
+  }, [store, recovered, record, dek, goToRecovery, goToMnemonicBackup, dropRecovered]);
 
   /**
    * Enrollment is complete. Drop every transient secret this component held —
@@ -746,20 +742,21 @@ const WalletOnboarding = ({
     setPass2('');
     setGenerated('');
     setRecoveryCode('');
-    setMainKey('');
-    setKeyRevealed(false);
+    setBackupMnemonic('');
+    setMnemonicRevealed(false);
+    setMnemonicCopied(false);
     setStep('done');
   }, []);
 
-  /** The backup file: address + private key + how to use it. Built on demand, never stored. */
+  /** Plaintext phrase export, built only for an explicit download/share action. */
   const backupFile = useCallback(() => new File([
-    'Superhero wallet backup\n\n',
+    'Superhero wallet recovery phrase backup\n\n',
     `Address: ${firstAddr}\n`,
-    `Private key: ${mainKey}\n\n`,
-    'This wallet was generated by your passkey. To use it without the passkey, open the\n',
-    'Superhero Wallet app (iOS or Android), choose Import, and paste the private key.\n\n',
-    'Anyone with this key controls this wallet and its funds. Never share it with anyone.\n',
-  ], `superhero-wallet-${firstAddr.slice(0, 10) || 'backup'}.txt`, { type: 'text/plain' }), [firstAddr, mainKey]);
+    `Recovery phrase: ${backupMnemonic}\n\n`,
+    'Keep all 12 words in this exact order. To restore this wallet without the passkey,\n',
+    'open Superhero Wallet (iOS or Android), choose Import wallet, and enter the recovery phrase.\n\n',
+    'Anyone with these words can access your wallet and all its derived accounts. Never share them.\n',
+  ], `superhero-wallet-${firstAddr.slice(0, 10) || 'backup'}.txt`, { type: 'text/plain' }), [firstAddr, backupMnemonic]);
 
   const downloadBackup = useCallback(() => {
     const url = URL.createObjectURL(backupFile());
@@ -1058,18 +1055,17 @@ const WalletOnboarding = ({
                     onClick={createWithPasskey}
                   />
 
-                  {/* Under a passkey `entry` this screen is only ever the fallback
-                      after a failed ceremony, so it offers the retry and the
-                      restore — the other ways in live on the modal that opened it. */}
-                  {entry !== 'passkey' && (
-                    <OptionCard
-                      icon={KeyRound}
-                      title="Use a recovery phrase"
-                      body="Twelve words you write down and keep yourself. Works on any device, with or without biometrics."
-                      cta="Create with a phrase"
-                      onClick={startCreate}
-                    />
-                  )}
+                  {/* Also offered under a passkey `entry`, where this screen is the
+                      fallback after a failed ceremony: the error above tells the
+                      user to use a recovery phrase instead, and the modal behind
+                      this flow has no phrase option of its own. */}
+                  <OptionCard
+                    icon={KeyRound}
+                    title="Use a recovery phrase"
+                    body="Twelve words you write down and keep yourself. Works on any device, with or without biometrics."
+                    cta="Create with a phrase"
+                    onClick={startCreate}
+                  />
                   {importAllowed && entry !== 'passkey' && (
                     <AeButton variant="ghost" fullWidth onClick={() => { setError(''); setImportText(''); setStep('import-enter'); }}>Import an existing wallet</AeButton>
                   )}
@@ -1378,25 +1374,38 @@ const WalletOnboarding = ({
                 </AeCard>
                 )}
 
-                {step === 'passkey-key' && (
+                {step === 'passkey-mnemonic' && (
                 <AeCard variant="glass" hover={false} className="ui-panel w-full p-6">
                   <IconChip icon={Wallet} />
                   <h2 className={heading}>Wallet</h2>
                   <p className={description}>
-                    Your passkey generated this wallet. If you lose the passkey, you lose the
-                    wallet, so make sure it is saved in the right password manager (iCloud
-                    Keychain or Google Password Manager). You can also back up the private key
-                    and import it into the Superhero Wallet app on iOS or Android. The next page
-                    shows how.
+                    Your passkey generated this wallet. If you lose the passkey and skip this
+                    backup, you lose the wallet, so make sure the passkey is saved in the right
+                    password manager (iCloud Keychain or Google Password Manager). Your 12-word
+                    recovery phrase restores this wallet in the Superhero Wallet app on iOS or
+                    Android, even without the passkey.
                   </p>
                   <div className="mb-3 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
                     <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
-                    <span>Anyone with this key controls your wallet and its funds. Never share it.</span>
+                    <span>
+                      Anyone with these words can access your wallet and all its accounts.
+                      Never share them.
+                    </span>
                   </div>
-                  {keyRevealed ? (
-                    <p className="rounded-xl border border-border bg-muted/60 px-3 py-3 font-mono text-xs break-all text-foreground mb-2" data-testid="main-key">
-                      {mainKey}
-                    </p>
+                  <p className="mb-2 text-sm font-medium text-foreground">12-word recovery phrase</p>
+                  {mnemonicRevealed ? (
+                    <ol
+                      className="grid grid-cols-2 gap-2 mb-2 sm:grid-cols-3"
+                      aria-label="Recovery phrase"
+                      data-testid="backup-mnemonic"
+                    >
+                      {backupMnemonic.split(' ').map((word, index) => (
+                        <li key={word + String(index)} className="min-w-0 rounded-lg border border-border bg-muted/60 px-2 py-2 text-sm text-foreground">
+                          <span className="mr-1 text-muted-foreground">{index + 1}</span>
+                          <span className="break-all">{word}</span>
+                        </li>
+                      ))}
+                    </ol>
                   ) : (
                     <div className="mb-2 flex items-center justify-center gap-2 rounded-xl border border-border bg-muted/60 px-3 py-5 text-sm text-muted-foreground">
                       <EyeOff className="h-4 w-4" />
@@ -1404,21 +1413,21 @@ const WalletOnboarding = ({
                     </div>
                   )}
                   <div className="mb-4 flex gap-2">
-                    <AeButton variant="ghost" fullWidth onClick={() => setKeyRevealed((v) => !v)}>
-                      {keyRevealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      {keyRevealed ? 'Hide' : 'Reveal'}
+                    <AeButton variant="ghost" fullWidth onClick={() => setMnemonicRevealed((v) => !v)}>
+                      {mnemonicRevealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {mnemonicRevealed ? 'Hide' : 'Reveal'}
                     </AeButton>
                     <AeButton
                       variant="ghost"
                       fullWidth
                       onClick={() => {
-                        navigator.clipboard?.writeText(mainKey)
-                          .then(() => setKeyCopied(true))
-                          .catch(() => setError('Couldn’t copy — download the key instead.'));
+                        navigator.clipboard?.writeText(backupMnemonic)
+                          .then(() => setMnemonicCopied(true))
+                          .catch(() => setError('Couldn’t copy — write down the phrase or download the backup instead.'));
                       }}
                     >
-                      {keyCopied ? <CircleCheck className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
-                      {keyCopied ? 'Copied' : 'Copy'}
+                      {mnemonicCopied ? <CircleCheck className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+                      {mnemonicCopied ? 'Copied' : 'Copy phrase'}
                     </AeButton>
                   </div>
                   <ErrorNote error={error} />
@@ -1456,7 +1465,7 @@ const WalletOnboarding = ({
                       <ol className="list-decimal space-y-1 pl-4">
                         <li>Install Superhero Wallet on iOS or Android.</li>
                         <li>Choose Import wallet.</li>
-                        <li>Paste the private key from your backup file.</li>
+                        <li>Enter the 12 words from your recovery phrase backup in order.</li>
                       </ol>
                     </div>
                   )}

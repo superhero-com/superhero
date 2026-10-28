@@ -1,16 +1,11 @@
-/* eslint-disable */
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { DexTokenDto } from '../../../api/generated';
-import { useAccount, useAeSdk } from '../../../hooks';
+import { useAccount } from '../../../hooks';
 import { CONFIG } from '../../../config';
 import { fromAettos } from '../../../libs/dex';
-import { TokenBalance, WrapBalances } from '../types/dex';
 
 export function useTokenBalances(tokenIn: DexTokenDto | null, tokenOut: DexTokenDto | null) {
   const { balance, aex9Balances } = useAccount();
-  const { activeAccount, sdk } = useAeSdk();
-  const [_balances, setBalances] = useState<TokenBalance>({});
-  const [_wrapBalances, setWrapBalances] = useState<WrapBalances>({});
 
   const balances = useMemo(() => ({
     in: fromAettos(tokenIn?.address === 'AE' ? balance : aex9Balances.find(

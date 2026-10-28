@@ -39,15 +39,6 @@ export interface Transaction {
   logIndex: number;
 }
 
-export interface ExploreState {
-  active: 'Tokens' | 'Pairs' | 'Transactions';
-  tokens: Token[];
-  pairs: Pair[];
-  transactions: Transaction[];
-  loading: boolean;
-  error: string | null;
-}
-
 export interface TokenListState {
   tokens: Token[];
   search: string;
@@ -87,15 +78,4 @@ export interface TransactionListState {
   setType: (type: 'all' | 'swap' | 'add' | 'remove') => void;
   setWindow: (window: '24h' | '7d') => void;
   refresh: () => void;
-}
-
-export interface SortConfig<T> {
-  key: keyof T;
-  asc: boolean;
-}
-
-export interface FilterConfig {
-  search: string;
-  type?: string;
-  window?: string;
 }

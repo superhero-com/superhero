@@ -1,7 +1,7 @@
 import {
   beforeEach, describe, expect, it, vi,
 } from 'vitest';
-import { fetchLeaderboard } from '../api/leaderboard';
+import { fetchLeaderboard, isRoiMeaningful } from '../api/leaderboard';
 import { SuperheroApi } from '../../../api/backend';
 
 vi.mock('../../../api/backend', () => ({
@@ -125,5 +125,24 @@ describe('leaderboard API', () => {
     expect(result.meta.currentPage).toBe(1);
     expect(result.meta.totalPages).toBe(1);
     expect(result.meta.totalItems).toBe(1);
+  });
+});
+
+describe('isRoiMeaningful', () => {
+  it('hides ROI computed from an almost-empty starting portfolio', () => {
+    // $1.51 profit reported as +16469795374043.36% => starting value ~1e-13 USD
+    expect(isRoiMeaningful(1.51, 16469795374043.36)).toBe(false);
+  });
+
+  it('keeps ordinary ROI values', () => {
+    expect(isRoiMeaningful(13.33, 9.17)).toBe(true);
+    expect(isRoiMeaningful(-4, -12.5)).toBe(true);
+    expect(isRoiMeaningful(0, 0)).toBe(true);
+    expect(isRoiMeaningful(394.6, 1200.83)).toBe(true);
+  });
+
+  it('rejects non-finite ROI', () => {
+    expect(isRoiMeaningful(1, Infinity)).toBe(false);
+    expect(isRoiMeaningful(1, NaN)).toBe(false);
   });
 });

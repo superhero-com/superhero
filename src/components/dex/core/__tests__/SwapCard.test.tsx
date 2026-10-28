@@ -64,6 +64,17 @@ describe('swap card controls', () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
+  it('warns when the slippage tolerance is too high or very low', () => {
+    render(<SwapInlineSettings id="settings" onClose={vi.fn()} />);
+    const slippage = screen.getByLabelText(/Custom slippage/);
+    fireEvent.change(slippage, { target: { value: '12' } });
+    expect(screen.getByText(/Slippage above 5% \(12%\) is high/)).toBeInTheDocument();
+    fireEvent.change(slippage, { target: { value: '0' } });
+    expect(screen.getByText(/Slippage below 0.1% \(0%\) is very low/)).toBeInTheDocument();
+    fireEvent.change(slippage, { target: { value: '1' } });
+    expect(screen.queryByText(/Slippage (above|below)/)).not.toBeInTheDocument();
+  });
+
   it('uses the router output for minimum received and token decimals for reserves', () => {
     render(<SwapInfoDisplay
       tokenIn={input}

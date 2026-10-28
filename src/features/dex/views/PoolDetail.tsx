@@ -7,6 +7,7 @@ import {
   PoolStatsOverview,
   PoolTransactions,
 } from '../components/PoolDetail';
+import { usePairChainState } from '../hooks/usePairChainState';
 
 const PoolDetail = () => {
   const { poolAddress, id } = useParams();
@@ -20,6 +21,9 @@ const PoolDetail = () => {
     queryKey: ['DexPairService.getPairByAddress', address],
     enabled: !!address,
   });
+
+  // Reserves and token order come from the pair contract; indexed values are the fallback.
+  const chainPair = usePairChainState(pairData);
 
   const {
     data: pairSummary, isPending: summaryLoading, isError: summaryFailed, refetch: refetchSummary,
@@ -42,7 +46,8 @@ const PoolDetail = () => {
       <>
         <PoolStatsOverview
           key={address}
-          pairData={pairData}
+          pairData={chainPair?.pair ?? pairData}
+          aligned={!!chainPair}
           pairSummary={pairSummary}
           loading={summaryLoading}
           failed={summaryFailed}

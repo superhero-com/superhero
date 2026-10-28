@@ -25,6 +25,9 @@ export function useRoomsConfig() {
     queryKey: roomsQueryKeys.config,
     queryFn: async () => {
       const config = await RoomsService.getRoomConfig();
+      if (!config.relay_url?.trim()) {
+        throw new Error('Token-gated chat is not configured on this server. Please try again later.');
+      }
       // Reject an insecure or off-allowlist relay URL up front rather than at connect time.
       const relayUrl = ensureSecureRelayUrl(config.relay_url);
       if (!isAllowedRelayOrigin(relayUrl)) {

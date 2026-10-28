@@ -199,6 +199,7 @@
       "chainNameClaimStarted": "申领已提交。正在等待赞助和转移…",
       "chainNameClaimPending": "申领状态：{{status}}",
       "chainNameClaimCompleted": ".chain 名称申领成功。",
+      "chainNameClaimProcessing": "正在链上注册你的名称，可能需要几分钟。你可以关闭此窗口，完成后个人资料会自动更新。",
       "chainNameClaimWalletUnavailable": "钱包消息签名当前不可用。请重试。",
       "chainNameClaimNameTaken": "该 .chain 名称已被占用。请尝试其他名称。",
       "chainNameClaimNameInProgress": "该 .chain 名称正在被他人申领。请尝试其他名称。",
@@ -258,7 +259,11 @@
       "profitLoss": "盈亏：",
       "loadingPortfolio": "正在加载投资组合数据...",
       "noDataAvailable": "暂无投资组合数据",
-      "valueTooltipDescription": "投资组合价值显示此钱包中持有的 AE 余额和趋势代币的总价值。图表追踪该价值随时间的变化。"
+      "valueTooltipDescription": "投资组合价值显示此钱包中持有的 AE 余额和趋势代币的总价值。图表追踪该价值随时间的变化。",
+      "changeSources": "AE 余额 {{ae}} · 代币 {{tokens}}",
+      "tokenValuation": "趋势代币按当前联合曲线价格估值，而不是按卖出后实际可得的金额。卖出会使价格沿曲线下降，因此即使一笔卖出是盈利的，剩余代币的价值也可能随之下降；全部卖出所得也会低于该数值。",
+      "aeDenomination": "以 AE 计价时，只有 AE 余额变化（交易、转账、手续费）或代币重新定价才会改变价值。AE/USD 汇率不会影响它，只会影响 USD 视图。",
+      "pnlPercentage": "交易盈亏百分比是相对于购买代币所花费金额的收益。"
     },
     "account": {
       "firstBlockchainActivity": "加入时间：",
@@ -279,7 +284,8 @@
       "txLabel": "交易：",
       "txTypeCreated": "已创建",
       "txTypeTrade": "交易",
-      "noTransactionsFound": "未找到符合条件的交易。",
+      "noActivity": "暂无活动",
+      "noActivityDescription": "此用户尚未买入、卖出或创建任何 Trendminer 代币。",
       "loadingTrades": "正在加载交易…",
       "aeBalance": "AE 余额",
       "claimAeVerifyX": "验证你的 X 账号即可领取 100 AE。",
@@ -287,6 +293,8 @@
       "tokenHoldings": "代币持仓：",
       "moreTokens": "+ {{count}} 更多…",
       "noPostsYet": "暂无帖子",
+      "noPostsYetDescription": "此用户尚未发布任何内容。",
+      "noHoldings": "暂无代币持仓",
       "xVerifiedTitle": "X 账户已验证：@{{username}}",
       "xVerified": "X 账户已验证",
       "linkXCtaTitle": "关联你的 X 账户",
@@ -377,6 +385,8 @@
     },
     "views": {
       "wallet": {
+        "pageTitle": "多链钱包 – Superhero",
+        "pageDescription": "Superhero 钱包是你通往 DAO、代币、DeFi 工具等一切的钥匙。",
         "hero": {
           "badge": "多链钱包",
           "subtitle": "**Superhero**——不止是钱包，更是你通往去中心化世界的**钥匙**！访问、创建、参与。Superhero 是通向 DAO、代币、DeFi 工具等一切的钥匙。"
@@ -690,6 +700,8 @@
         }
       },
       "privacy": {
+        "pageTitle": "隐私政策 – Superhero",
+        "pageDescription": "Superhero 如何处理你的数据。",
         "title": "隐私政策",
         "lastUpdated": "本隐私政策最近一次更新于 2025 年 9 月 29 日。",
         "introHeading": "I. 引言",
@@ -727,6 +739,8 @@
         "contactP1": "如需就本政策或与你使用本网站相关的 Superhero.com 信息收集和传播做法向我们提出疑问或意见，请发送电子邮件至 superherowallet@protonmail.com 联系我们。"
       },
       "landing": {
+        "pageTitle": "链上注意力市场 – Superhero",
+        "pageDescription": "在 Superhero 上发现、交易并治理你看好的趋势。",
         "heroBadge": "注意力市场的全新范式变革",
         "heroTitleLine1": "追随趋势",
         "heroTitleLine2": "有了全新的含义",
@@ -805,6 +819,8 @@
         }
       },
       "branding": {
+        "pageTitle": "品牌套件 – Superhero",
+        "pageDescription": "Superhero 的品牌色彩、字体、徽标和素材模板。",
         "brandKit": "Superhero 品牌套件",
         "heroTitle": "品牌识别指南",
         "heroDescription": "欢迎来到官方 Superhero 资源中心。本指南详细介绍了我们的品牌色彩、字体、徽标和数字资产模板，帮助你制作素材。",
@@ -867,6 +883,8 @@
         }
       },
       "terms": {
+        "pageTitle": "使用条款 – Superhero",
+        "pageDescription": "使用 Superhero 的条款。",
         "title": "使用条款",
         "lastUpdated": "本使用条款（\"条款\"）最近一次更新于 2025 年 9 月 29 日。",
         "section1Title": "I. 公司信息",
@@ -916,6 +934,8 @@
         "inviteAndEarn": "邀请赚奖励"
       },
       "tokenDetail": {
+        "pageTitle": "代币详情 – Superhero DEX",
+        "pageDescription": "查看该代币在 Superhero DEX 上的价格表现、资金池和供应量。",
         "loadingTokenDetails": "正在加载代币详情…",
         "detailsAndStatistics": "代币详情与统计数据",
         "pools": "资金池（{{count}}）",
@@ -946,6 +966,110 @@
       "dexSwap": {
         "pageTitle": "兑换 AE 和代币 – Superhero DEX",
         "pageDescription": "在 Superhero DEX 上进行去信任兑换，配有实时图表和近期活动。"
+      },
+      "invite": {
+        "pageTitle": "邀请赚奖励 – Superhero",
+        "pageDescription": "邀请好友加入 Superhero，分享你的邀请链接，随着社区壮大领取奖励。"
+      },
+      "trendCloud": {
+        "pageTitle": "趋势云 – Superhero",
+        "pageDescription": "一眼看清当下热门，将你关注的话题代币化。"
+      },
+      "daos": {
+        "pageTitle": "DAO 列表 – Superhero",
+        "pageDescription": "探索 Superhero 上的社区 DAO，代币持有者在这里共同管理资金库。"
+      },
+      "dao": {
+        "pageTitle": "DAO – Superhero",
+        "pageDescription": "在 Superhero 上查看 DAO 详情、提案和投票。"
+      },
+      "daoVote": {
+        "pageTitle": "DAO 投票 – Superhero",
+        "pageDescription": "查看提案详情，在 Superhero 上发出你的声音。"
+      },
+      "accounts": {
+        "pageTitle": "顶级账户 – Superhero",
+        "pageDescription": "发现 Superhero 上的顶级交易者和创作者，按链上活跃度排名。"
+      },
+      "accountDetails": {
+        "pageTitle": "账户动态 – Superhero",
+        "pageDescription": "查看该账户在 Superhero 上持有和创建的代币及其交易。"
+      },
+      "createToken": {
+        "pageTitle": "将趋势代币化 – Superhero",
+        "pageDescription": "在 Superhero 上将任何趋势变成代币，并围绕它建立社区。"
+      },
+      "txQueue": {
+        "pageTitle": "交易状态 – Superhero",
+        "pageDescription": "在 Superhero 上追踪你的交易状态。"
+      },
+      "chat": {
+        "pageTitle": "聊天 – Superhero",
+        "pageDescription": "在 Superhero 上与好友和代币社区聊天。"
+      },
+      "chatRelays": {
+        "pageTitle": "Nostr 中继 – Superhero",
+        "pageDescription": "选择你的 Superhero 聊天读取和写入的 Nostr 中继。"
+      },
+      "chatDm": {
+        "pageTitle": "私信 – Superhero",
+        "pageDescription": "你在 Superhero 上的私密对话。"
+      },
+      "chatRoom": {
+        "pageTitle": "社区聊天 – Superhero",
+        "pageDescription": "在 Superhero 的社区聊天室中与其他代币持有者交流。"
+      },
+      "chatRoomInfo": {
+        "pageTitle": "聊天室信息 – Superhero",
+        "pageDescription": "查看 Superhero 上这个社区聊天室的成员和详情。"
+      },
+      "meet": {
+        "pageTitle": "会议 – Superhero",
+        "pageDescription": "加入 Superhero 会议。"
+      },
+      "governance": {
+        "pageTitle": "治理 – Superhero",
+        "pageDescription": "在 Superhero 上通过社区投票塑造生态系统的未来。"
+      },
+      "faq": {
+        "pageTitle": "常见问题 – Superhero",
+        "pageDescription": "关于 Superhero 最常见问题的解答。"
+      },
+      "whitepaper": {
+        "pageTitle": "白皮书 – Superhero",
+        "pageDescription": "了解 Superhero 的运作方式：链上帖子、社区代币、DAO 以及 æternity 上的治理。"
+      },
+      "dexWrap": {
+        "pageTitle": "封装 AE – Superhero DEX",
+        "pageDescription": "在 Superhero DEX 上按精确的 1:1 比例在 AE 和 WAE 之间转换。"
+      },
+      "dexPool": {
+        "pageTitle": "提供流动性 – Superhero DEX",
+        "pageDescription": "在 Superhero DEX 上为代币对添加流动性并管理你的仓位。"
+      },
+      "dexAddTokens": {
+        "pageTitle": "添加代币 – Superhero DEX",
+        "pageDescription": "在 Superhero DEX 上找到你钱包中的代币，为其创建资金池或添加流动性。"
+      },
+      "dexExploreTokens": {
+        "pageTitle": "探索代币 – Superhero DEX",
+        "pageDescription": "浏览 Superhero DEX 上的所有代币，比较价格和流动性。"
+      },
+      "dexExplorePools": {
+        "pageTitle": "探索资金池 – Superhero DEX",
+        "pageDescription": "在 Superhero DEX 上查找代币对，比较交易活跃度和交易量。"
+      },
+      "dexPoolDetail": {
+        "pageTitle": "资金池详情 – Superhero DEX",
+        "pageDescription": "查看该资金池在 Superhero DEX 上的价格图表、储备和近期交易。"
+      },
+      "dexExploreTransactions": {
+        "pageTitle": "交易记录 – Superhero DEX",
+        "pageDescription": "关注 Superhero DEX 上最新的兑换和流动性活动。"
+      },
+      "dexExplore": {
+        "pageTitle": "探索 – Superhero DEX",
+        "pageDescription": "在 Superhero DEX 上探索代币、资金池和交易。"
       }
     },
     "removeLiquidity": {
@@ -1277,119 +1401,15 @@
     "swap": {
       "title": "兑换代币",
       "description": "在 æternity 区块链上安全高效地兑换 AEX-9 代币。",
-      "from": "从",
-      "to": "到",
-      "quoting": "报价中…",
-      "swapTokens": "兑换代币",
       "confirmInWallet": "在钱包中确认…",
-      "connectWallet": "连接钱包",
       "settings": "设置",
       "swapSettings": "兑换设置",
       "insufficientBalance": "{{symbol}} 余额不足。你需要 {{needed}}，但只有 {{have}}"
     },
     "bridge": {
-      "title": "跨链桥 ETH ⇆ AE",
-      "description": "跨链桥支持在 Ethereum 与 æternity 之间安全地转移代币和原生资产。它支持常见的 ERC‑20/AEX‑9 代币以及原生 ETH 和 AE。请在下方选择方向，连接你的钱包，几分钟即可完成跨链。",
-      "direction": {
-        "aeToEth": "AE → ETH",
-        "ethToAe": "ETH → AE"
-      },
-      "tokenAddressCopied": "已复制代币地址",
-      "failedToCopy": "复制失败",
-      "mainnetWarning": "⚠️ 已配置为 Ethereum 主网。请确保你的钱包处于主网。",
-      "fromNetwork": "源网络",
-      "ethereumAccount": "Ethereum 账户",
-      "refresh": "刷新",
-      "networks": {
-        "aeternity": "æternity",
-        "aeternityTestnet": "测试网",
-        "ethereum": "Ethereum",
-        "ethereumSepoliaTestnet": "Sepolia 测试网"
-      },
-      "from": "从",
-      "to": "到",
-      "loadingBalance": "正在加载余额...",
-      "balance": "余额：{{balance}}",
-      "bridgeTo": "跨链至 {{network}}",
-      "connectEthereumWalletFirst": "请先连接你的 Ethereum 钱包",
-      "bridgeDirection": {
-        "aeternityToEthereum": "æternity → Ethereum",
-        "ethereumToAeternity": "Ethereum → æternity"
-      },
-      "destinationAddressLabel": "目标 {{network}} 地址",
-      "useConnectedAccount": "使用已连接的账户",
-      "invalidAddressFormat": "地址格式无效",
-      "transactionStatus": "交易状态",
-      "approvingToken": "1️⃣ 正在授权代币",
-      "executingBridge": "2️⃣ 正在执行跨链",
-      "processing": "处理中...",
-      "preparingTransaction": "正在准备交易...",
-      "approving": "授权中...",
-      "bridging": "跨链中...",
-      "bridgeTransactionSubmitted": "跨链交易已提交",
-      "successfullySubmitted": "提交成功",
-      "bridgeTransactionSubmittedDescription": "你的跨链交易已提交到区块链",
-      "directionLabel": "方向：",
-      "amount": "数量：",
-      "destinationStatusLabel": "目标：",
-      "allowanceTransaction": "授权交易：",
-      "bridgeTransaction": "跨链交易：",
-      "viewOn": "在 {{explorer}} 上查看 →",
-      "aescan": "ÆScan",
-      "etherscan": "Etherscan",
-      "processingTime": "⏳ 处理时间",
-      "processingTimeDescription": "交易确认并处理完成后，你的代币将在目标网络上可用（通常需要 5-15 分钟）。",
-      "tokensAutoAppear": "💡 收到的代币应会自动出现在你的 Superhero Wallet 中。如果 15 分钟后仍未显示，请尝试刷新或前往",
-      "forum": "论坛",
-      "switchNetwork": "请切换到 {{network}}",
-      "invalidDestination": "目标地址无效！",
-      "invalidAmount": "金额无效！",
-      "aeternityWalletNotConnected": "Aeternity 钱包未连接！",
-      "insufficientBalanceBridge": "{{symbol}} 余额不足，无法完成此交易。",
-      "bridgeContractInsufficientBalance": "Ethereum 跨链合约余额不足，无法完成此交易。",
-      "smartContractDisabled": "⚠️ 此网络的智能合约已被禁用。",
-      "bridgeOperatorInsufficientFunds": "⚠️ 跨链运营方资金不足。请稍后再试。",
-      "connectEthereumWallet": "连接 Ethereum 钱包",
-      "failedToOpenWallet": "打开钱包连接失败",
-      "failedToDisconnect": "断开钱包连接失败",
-      "bridgeUsageLimit": "每 {{hours}} 小时仅允许 1 笔交易。请稍后再试。",
-      "checkingTokenAllowance": "正在检查代币授权额度...",
-      "confirmTokenAllowance": "请在钱包中确认代币授权额度...",
-      "confirmTokenAllowanceUpdate": "请在钱包中确认代币授权额度更新...",
-      "confirmBridgeTransaction": "请在钱包中确认跨链交易...",
-      "waitingForBridgeConfirmation": "正在等待跨链确认...",
-      "waitingLongerThanExpected": "耗时比预期更长。请勿关闭页面。",
-      "bridgeTransactionConfirmed": "跨链交易已确认！",
-      "allowanceTransactionSubmitted": "授权交易已提交。",
-      "approvalTransactionSubmitted": "批准交易已提交。",
-      "confirmTokenApproval": "请在钱包中确认代币批准...",
-      "waitingForApprovalConfirmation": "正在等待批准确认...",
-      "approvalConfirmed": "批准已确认！",
-      "allowanceCheckFailed": "授权额度检查失败，正在继续进行批准...",
-      "insufficientEthForGas": "ETH 不足以支付 gas 费",
-      "failedToConnectTokenContract": "连接代币合约失败。请检查网络后重试。",
-      "transactionRejectedByUser": "交易已被用户拒绝",
-      "transactionFailedTokenRestrictions": "交易失败。代币合约可能存在限制。",
-      "insufficientFundsForTransaction": "交易资金不足",
-      "transactionWouldFail": "交易将失败。请检查代币余额和网络。",
-      "failedToCheckOrApproveAllowance": "检查或批准代币授权额度失败",
-      "genericBridgeError": "跨链交易失败",
-      "viewTransaction": "查看交易",
       "selectToken": "选择代币",
       "selectAToken": "选择一个代币",
-      "token": "代币",
-      "onBlockchain": "在 {{network}} 区块链上",
-      "aeternity": "Aeternity",
-      "ethereum": "Ethereum",
-      "tryAdjustingSearchTerm": "请尝试调整你的搜索词",
-      "bridgeTokensDescription": "在 Aeternity 与 Ethereum 网络之间跨链代币",
-      "placeholderAddressAe": "ak_...",
-      "placeholderAddressEth": "0x...",
-      "close": "关闭",
-      "addTokenToWalletIntro": "如果你没有看到代币，可以",
-      "addTokenToWalletLink": "将 {{symbol}} 添加到你的钱包",
-      "noEthereumAccountConnected": "未连接 Ethereum 账户",
-      "insufficientBalanceAvailable": "余额不足。可用：{{balance}} {{symbol}}"
+      "token": "代币"
     },
     "transactions": {
       "swapExactTokensForTokens": {
@@ -1429,8 +1449,6 @@
       "openInExplorer": "在浏览器中打开",
       "genericDescription": "交易"
     },
-    "viewPair": "查看交易对：",
-    "searchTokenPlaceholder": "按名称、符号或地址搜索",
     "filterPools": "筛选资金池",
     "filterBySymbolAddress": "按符号/地址筛选",
     "createNewPoolAndLiquidity": "创建新资金池并添加流动性",
@@ -1443,43 +1461,14 @@
       "title": "DEX 设置",
       "slippageTolerance": "滑点容差",
       "transactionDeadline": "交易截止时间",
-      "slippageHint": "如果价格的不利变化超过此百分比，你的交易将被回滚。",
-      "deadlineHint": "如果交易待处理时间超过此时长，交易将被取消。",
       "cancel": "取消",
       "save": "保存"
     },
     "activity": {
-      "pending": "待处理",
-      "failed": "失败",
-      "unknown": "未知",
-      "clearAll": "清除所有活动",
-      "viewOnExplorer": "在浏览器中查看",
-      "swap": "兑换",
-      "wrap": "封装",
-      "unwrap": "解封",
-      "bridge": "ETH 跨链桥",
-      "addLiquidity": "添加流动性",
-      "removeLiquidity": "移除流动性",
-      "justNow": "刚刚",
-      "minutesAgo": "{{count}} 分钟前",
-      "hoursAgo": "{{count}} 小时前",
-      "daysAgo": "{{count}} 天前",
-      "recentActivity": "最近活动",
-      "noRecentActivities": "暂无最近活动",
-      "defiTransactionsAppearHere": "你的 DeFi 交易将显示在这里",
-      "moreActivities": "更多活动",
-      "confirmed": "已确认",
-      "confirmations": "{{count}} 次确认"
+      "addLiquidity": "添加流动性"
     },
     "noTokensFound": "未找到代币",
-    "showDetails": "显示详情",
-    "hideDetails": "隐藏详情",
     "protocolTokenReward": "协议代币奖励",
-    "wrapping": "封装中…",
-    "unwrapping": "解封中…",
-    "wrapAeToWae": "封装 AE → WAE",
-    "unwrapWaeToAe": "解封 WAE → AE",
-    "avgTokenPrice": "平均代币价格",
     "allowedSlippage": "允许滑点",
     "priceImpact": "价格影响",
     "placeOrder": "下单",
@@ -1487,22 +1476,7 @@
     "sold": "已卖出",
     "addLiquidityForm": {
       "title": "添加流动性",
-      "cancel": "✕ 取消",
-      "settings": "⚙️ 设置",
-      "addingTo": "正在添加到",
-      "position": "仓位",
-      "provideLiquidityHint": "提供流动性以从兑换中赚取交易手续费",
-      "tokenA": "代币 A",
-      "tokenB": "代币 B",
-      "addLiquidityButton": "添加流动性",
-      "insufficientBalanceBoth": "{{symbolA}} 和 {{symbolB}} 余额均不足",
-      "insufficientBalanceNeed": "{{symbol}} 余额不足。你需要 {{needed}}，但只有 {{have}}"
-    },
-    "candlestickChart": {
-      "failedToLoadChartData": "加载图表数据失败",
-      "retry": "重试",
-      "flipTradingPair": "翻转交易对",
-      "loadingChartData": "正在加载图表数据…"
+      "addLiquidityButton": "添加流动性"
     },
     "tokenSelector": {
       "searchPlaceholder": "按代币搜索或粘贴地址",
@@ -1513,45 +1487,22 @@
       "nativeToken": "原生代币",
       "noTokensAvailable": "无可用代币",
       "tryAddingCustomToken": "请尝试通过地址添加自定义代币",
-      "tokenNotFoundHint": "找不到你要找的代币？请尝试输入铸造地址或查看下方的代币列表设置。"
+      "tokenNotFoundHint": "找不到你要找的代币？请尝试输入铸造地址或查看下方的代币列表设置。",
+      "tokenNotFound": "该地址下未找到 AEX-9 代币。",
+      "showAllTokens": "显示全部",
+      "showActiveOnly": "仅显示活跃",
+      "verified": "已验证代币"
     },
     "exploreTransactions": {
-      "txTypes": {
-        "all": "所有类型",
-        "swapExactTokensForTokens": "代币兑代币（精确投入）",
-        "swapTokensForExactTokens": "代币兑代币（精确产出）",
-        "swapExactAeForTokens": "AE 兑代币（精确投入）",
-        "swapExactTokensForAe": "代币兑 AE（精确投入）",
-        "swapTokensForExactAe": "代币兑 AE（精确产出）",
-        "swapAeForExactTokens": "AE 兑代币（精确产出）",
-        "addLiquidity": "添加流动性（代币对）",
-        "addLiquidityAe": "添加流动性（AE 对）",
-        "removeLiquidity": "移除流动性（代币对）",
-        "removeLiquidityAe": "移除流动性（AE 对）"
-      },
       "title": "高级交易浏览器",
-      "description": "通过高级控件筛选并浏览 DEX 交易。",
-      "advancedFilters": "高级筛选",
-      "refineSearch": "优化你的交易搜索",
-      "transactionType": "交易类型",
-      "selectTransactionType": "选择交易类型",
-      "pairAddress": "交易对地址",
-      "enterPairAddress": "输入交易对合约地址",
-      "accountAddress": "账户地址",
-      "enterAccountAddress": "输入账户地址",
-      "noTransactionsMatching": "未找到符合你条件的交易。"
+      "description": "通过高级控件筛选并浏览 DEX 交易。"
     },
     "pool": {
-      "yourLiquidityPositions": "你的流动性仓位",
-      "manageDescription": "管理你的流动性仓位并追踪收益",
-      "positions": "仓位",
-      "feesEarned": "已赚取手续费",
-      "activePositions": "活跃仓位",
       "refreshing": "刷新中…",
       "refresh": "刷新",
-      "loadingPositions": "正在加载你的仓位…",
-      "noPositionsFound": "未找到流动性仓位",
-      "noPositionsHint": "通过向交易对提供流动性开始赚取手续费"
+      "bannerTitle": "提供流动性，赚取交易手续费",
+      "bannerSubtitle": "向池中存入两种代币即可获得 LP 代币。每笔经过该池的兑换都会支付手续费，由流动性提供者共享。你可以随时提取你的份额。",
+      "bannerCta": "浏览资金池"
     },
     "swapConfirmation": {
       "confirmSwap": "确认兑换",
@@ -1584,40 +1535,16 @@
       "next": "下一页 →",
       "previousPage": "上一页",
       "nextPage": "下一页",
-      "ofPages": "共 {{pages}} 页",
-      "tryAdjustingSearch": "请尝试调整你的搜索条件"
+      "ofPages": "共 {{pages}} 页"
     },
-    "wrapFailedShort": "封装代币失败",
-    "unwrapFailedShort": "解封代币失败",
     "wrapUnwrap": {
       "title": "（解）封装 AE",
-      "wrap": "封装",
-      "unwrap": "解封",
-      "description": "将 AE 封装为 WAE（以及解封），以兼容 DeFi 协议。",
-      "aeBalance": "AE 余额",
-      "waeBalance": "WAE 余额",
-      "amountTo": "{{action}}数量",
-      "balanceLabel": "余额："
+      "description": "将 AE 封装为 WAE（以及解封），以兼容 DeFi 协议。"
     },
-    "liquidityPreview": {
-      "ratioWarning": "⚠️ 比例警告",
-      "poolPreview": "资金池预览",
-      "newPool": "新资金池",
-      "rate": "汇率",
-      "poolShare": "资金池份额",
-      "lpTokens": "LP 代币",
-      "suggestedOptimalAmounts": "💡 建议的最佳数量",
-      "use": "使用 {{amount}} {{symbol}}"
-    },
-    "tradeToken": "交易代币",
     "buy": "买入",
     "sell": "卖出",
-    "settingsTitle": "设置",
-    "slippageTolerancePercent": "滑点容差（%）",
     "done": "完成",
     "poolHeader": {
-      "detailsAndStatistics": "流动性资金池详情与统计数据",
-      "viewToken": "查看 {{symbol}}",
       "back": "返回资金池",
       "overview": "资金池概览",
       "liquidityPool": "流动性池",
@@ -1631,23 +1558,8 @@
       "failed": "无法加载资金池详情"
     },
     "noLiquidity": {
-      "insufficientTitle": "流动性不足",
-      "insufficientDescription": "请求的数量超出了资金池中的可用流动性。最大可用：",
       "reduceAmount": "• 将你的输入数量减少至 {{amount}} {{symbol}} 或更少",
-      "noLiquidityTitle": "无可用流动性",
-      "noLiquidityForPair": "未找到以下交易对的流动性：",
-      "pairCannotComplete": "对。此兑换目前无法完成。",
-      "tryDifferentPair": "• 尝试不同的代币对",
       "addLiquidity": "添加流动性"
-    },
-    "tokenInput": {
-      "balanceLabel": "余额："
-    },
-    "liquidityPositionCard": {
-      "lpTokens": "LP 代币",
-      "poolShare": "资金池份额",
-      "add": "+ 添加",
-      "remove": "移除"
     },
     "tokenPricePerformance": {
       "selectChartType": "选择图表类型",
@@ -1700,14 +1612,11 @@
       "explore": "探索",
       "addTokens": "添加代币"
     },
-    "tokenFallback": "代币",
     "poolComposition": {
       "title": "资金池构成"
     },
     "poolReserves": {
-      "reserve": "储备",
-      "lpTokenSupply": "LP 代币供应量",
-      "lpTokensInCirculation": "流通中的 LP 代币"
+      "lpTokenSupply": "LP 代币供应量"
     },
     "poolStats": {
       "totalVolume": "总成交量",
@@ -1725,6 +1634,7 @@
       "allTime": "全部时间",
       "balances": "资金池余额",
       "currentReserves": "当前储备",
+      "poolValue": "资金池价值",
       "exchangeRate": "兑换汇率",
       "rateHint": "当前储备比例，未计入兑换手续费和价格影响。",
       "rateUnavailable": "储备为空或未知时无法计算汇率",
@@ -1849,6 +1759,7 @@
       "description": "存入两种代币，分享交易手续费。",
       "deposit": "存入 {{symbol}}",
       "linked": "按资金池比例联动",
+      "suggested": "根据 AE 资金池价格建议，可自行修改。",
       "selectFirst": "选择第一种存入代币",
       "selectSecond": "选择第二种存入代币",
       "ratioHint": "金额按资金池比例联动，可编辑任意一项。",
@@ -2137,9 +2048,19 @@
       "copyFailed": "无法复制。请选中地址进行复制。",
       "actions": "代币操作",
       "pools": "流动性池"
+    },
+    "slippageWarning": {
+      "high": "滑点高于 5%（{{slippagePct}}%）过高。您的交易可能被抢跑，实际到账可能远低于报价。",
+      "low": "滑点低于 0.1%（{{slippagePct}}%）过低。价格变动时交易可能失败。"
     }
   },
   "social": {
+    "originalPost": "原帖",
+    "newPosts": {
+      "show_one": "显示 {{count}} 条新帖子",
+      "show_other": "显示 {{count}} 条新帖子"
+    },
+    "translatePost": "翻译",
     "share": "分享",
     "sharePost": "分享帖子",
     "shareComment": "分享评论",
@@ -2462,18 +2383,6 @@
     }
   },
   "trending": {
-    "market": {
-      "layout": "市场布局",
-      "table": "表格",
-      "cards": "卡片",
-      "history": "价格走势",
-      "noHistory": "暂无价格历史",
-      "supply": "供应量",
-      "rank": "排名",
-      "details": "代币详情",
-      "capShort": "市值",
-      "markets": "代币市场"
-    },
     "noCreatedTokens": "无已创建代币",
     "noCreatedTokensDescription": "此用户尚未创建任何 Trendminer 代币。",
     "success": "成功",
@@ -2526,27 +2435,7 @@
         "unknownError": "未知错误"
       },
       "rewards": {
-        "title": "领取你的奖励",
-        "descriptionPart1": "随着你的直接受邀者参与代币销售，奖励会不断累积。当",
-        "descriptionPart2": "每人累计花费至少",
-        "descriptionPart3": "后，你即可提取。",
-        "directInvitees": "{{count}} 名直接受邀者",
-        "note": "注意：资格和奖励取决于链上活动，无法保证。",
-        "progressToRewards": "奖励进度",
-        "reachedCount": "已达成 {{reached}}/{{total}}",
-        "eligibleToWithdraw": "🎉 符合提取资格",
-        "moreInviteesNeeded": "还需 {{count}} 名受邀者达到 {{minSpent}} AE",
-        "stillAccumulating_one": "{{count}} 名受邀者仍在累积",
-        "stillAccumulating_other": "{{count}} 名受邀者仍在累积",
-        "reached": "已达成",
-        "andMore": "+{{count}} 更多",
-        "availableRewards": "可用奖励",
-        "withdrawing": "提取中…",
-        "notEligibleYet": "尚不符合资格",
-        "noRewardsYet": "暂无奖励",
-        "collectRewards": "领取奖励",
-        "notEligibleDetail": "尚不符合资格：你需要 {{minInvitees}} 名直接受邀者，且每人在代币销售中至少花费 {{minSpent}} AE。",
-        "collectError": "领取奖励时发生错误。"
+        "title": "领取你的奖励"
       }
     },
     "tokenName": "代币名称",
@@ -2572,11 +2461,10 @@
     },
     "tokenList": {
       "sortBy": "排序方式",
-      "clearSearch": "清除搜索",
-      "exploreSections": "探索分类",
       "tabTokens": "代币",
       "tabUsers": "用户",
       "tabPosts": "帖子",
+      "tabAll": "全部",
       "sortMarketCap": "市值",
       "sortTrending": "热门",
       "sortPrice": "价格",
@@ -2589,13 +2477,12 @@
       "fallbackPosts": "未找到匹配的帖子。改为显示热门帖子。",
       "loading": "加载中...",
       "searchingTrends": "正在搜索趋势...",
-      "loadingMore": "正在加载更多结果...",
       "searchError": "目前无法加载搜索结果。请重试。",
       "inputAria": "搜索代币、用户和帖子",
       "searchPlaceholder": "搜索趋势、用户或帖子",
       "resultsCount_one": "{{count}} 个结果",
       "resultsCount_other": "{{count}} 个结果",
-      "showLess": "收起",
+      "noCategoryResults": "未找到与“{{query}}”相关的结果。",
       "viewAll": "查看全部",
       "pageTitle": "Superhero.com – 搜索趋势、用户和帖子",
       "pageDescription": "在 Superhero 上搜索代币化趋势、创作者、交易者和帖子。",
@@ -2614,10 +2501,8 @@
     },
     "createToken": {
       "oops": "哎呀！",
-      "collection": "合集",
       "trendTokenName": "趋势代币名称",
       "charactersCount": "{{count}}/{{max}} 个字符",
-      "invalidCharacters": "无效字符",
       "unsupportedBadge": "不支持",
       "unsupportedCharacters": "暂不支持这些字符",
       "allowedCharsHint": "允许：A–Z、0–9 和 -",
@@ -2674,7 +2559,6 @@
         "feesBody": "创建代币时，你可以设定一个初始购买金额。系统会收取少量协议费用（1%），用于支持平台和协议代币奖励。其余部分进入联合曲线，从一开始就确保公平的价格发现。"
       },
       "errors": {
-        "allowedCharsRange": "仅允许范围 \"{{chars}}\" 内的字符。",
         "unknownError": "未知错误",
         "somethingWentWrong": "哎呀，出错了。\n{{message}}"
       }
@@ -2689,12 +2573,6 @@
       "createTokenToUnlock": "创建代币以解锁此功能",
       "tokenDeployedSuccessfully": "代币部署成功！",
       "tokenNowLive": "你的代币现已在区块链上线。",
-      "badgeNotCreated": "未创建",
-      "badgeRank": "排名 #{{rank}}",
-      "badgeOwned": "已拥有",
-      "showLess": "收起",
-      "showMore": "展开",
-      "tokenNotCreatedHeaderHint": "该代币尚未创建。你可以成为第一个创建它并分享它内涵的人！",
       "tokenNotCreatedYet": "代币尚未创建",
       "tokenNotCreatedYetHint": "该代币尚不存在。成为第一个创建它并开始建立社区的人！",
       "createThisToken": "创建此代币",
@@ -2776,7 +2654,6 @@
     },
     "inviteView": {
       "title": "邀请赚奖励",
-      "subtitle": "建立你的人脉，赚取奖励",
       "dismiss": "关闭",
       "howItWorks": "运作方式",
       "step1": "为每个邀请注资一次性 AE 奖励以生成邀请链接",
@@ -2853,7 +2730,8 @@
       "buys": "买入：",
       "sells": "卖出：",
       "created": "已创建：",
-      "viewProfile": "查看资料"
+      "viewProfile": "查看资料",
+      "roiNotMeaningful": "无参考意义：该投资组合在本周期开始时价值几乎为零。"
     },
     "leaderboardFilters": {
       "chooseFromCalendar": "从日历中选择{{label}}",
@@ -2883,19 +2761,12 @@
       "sell": "卖出"
     },
     "feedTab": {
-      "popular": "热门",
-      "latest": "最新",
       "postsForHashtag": "#{{name}} 的帖子",
       "hideGraphs": "隐藏图表",
       "trade": "交易",
       "holdersOnly": "仅限持有者",
       "allPosts": "所有帖子"
     },
-    "assetInput": {
-      "balanceLabel": "余额：",
-      "max": "最大"
-    },
-    "newBadge": "新",
     "performanceTimeframe": {
       "closeMenu": "关闭时间范围菜单"
     },
@@ -2960,7 +2831,6 @@
       },
       "status": {
         "completed": "已完成",
-        "inProgress": "进行中",
         "step": "第 {{current}} / {{total}} 步",
         "postsProgress": "{{current}} / {{total}} 条帖子",
         "locked": "已锁定"
@@ -2999,7 +2869,9 @@
         "currentStreak": "当前连续天数：{{days}}/{{total}} 天",
         "openingWallet": "正在打开钱包…",
         "postOnX": "在 X 上发帖",
-        "streakInfo": "每篇符合条件的帖子都将根据您的关注者等级获得相应的 AE 代币。连续 10 天每日发帖将额外获得 50 AE，请保持发帖并积极参与社区互动。",
+        "streakInfo": "每篇符合条件的帖子都将根据您的关注者等级获得相应的 AE 代币。连续 10 天每天至少发帖一次，即可额外获得 50 AE，请保持发帖并积极参与社区互动。",
+        "streakRule": "连续天数按 UTC 时间计算（当前 {{time}} UTC）。只有包含您推荐链接的帖子才计入。任何一个 UTC 日没有此类帖子，连续天数将重置为 0。",
+        "streakNone": "当前没有连续记录。发布带有推荐链接的帖子即可开始。",
         "complete": "里程碑完成——已获得 {{amount}} AE"
       }
     },
@@ -3010,31 +2882,12 @@
       "step1": "关联您的 X 账户",
       "step2": "发布关于 Superhero 的帖子，获得 50 AE",
       "progress": "已完成 {{done}}/{{total}} 个步骤",
-      "continue": "继续设置",
       "connectX": "连接 X",
       "postOnX": "发帖赚取",
-      "done": "全部完成！"
+      "dismiss": "隐藏设置步骤"
     },
     "users": {
-      "list": "列表",
-      "cards": "卡片",
-      "layout": "用户显示方式",
-      "title": "顶尖交易者",
-      "subtitle": "按 7 天盈亏排名 · USD",
-      "leaderboard": "查看排行榜",
-      "trader": "交易者",
-      "pnl": "盈亏 · 7天",
-      "roi": "收益率 · 7天",
-      "aum": "资产规模",
-      "rank": "排名 {{rank}}",
-      "profile": "查看个人资料: {{name}}",
-      "empty": "暂无交易者",
-      "emptyCopy": "排行榜可用时，将显示交易活动。",
-      "error": "无法加载交易者",
-      "errorCopy": "请重试以查看最新排名。",
-      "retry": "重试",
-      "loading": "正在加载交易者",
-      "refreshError": "无法刷新交易者"
+      "title": "顶尖交易者"
     },
     "overview": {
       "back": "返回探索",
@@ -3158,6 +3011,8 @@
     "insufficientOutputAmount": "由于价格变动，未达到最低输出。{{hint}}",
     "slippageHint": " 请增加滑点（当前为 {{slippagePct}}%）或减小交易规模。",
     "slippageHintGeneric": " 请增加滑点或减小交易规模。",
+    "slippageOnlyHint": " 请增加滑点（当前为 {{slippagePct}}%）后重试。",
+    "slippageOnlyHintGeneric": " 请增加滑点后重试。",
     "deadlineReached": "已到达交易截止时间。{{hint}}",
     "deadlineHint": " 请增加截止时间（当前为 {{deadlineMins}} 分钟）后重试。",
     "deadlineHintGeneric": " 请增加截止时间后重试。",
@@ -3165,8 +3020,6 @@
     "invalidRecipient": "此交易的收款人无效。",
     "pairExists": "资金池已存在。",
     "tokenNotApproved": "代币未获批准用于支出。请批准该代币后重试。",
-    "insufficientEthBalance": "ETH 余额不足。你至少需要 {{amount}} ETH 才能完成此跨链操作。",
-    "insufficientEthBalanceGeneric": "ETH 余额不足，无法完成此跨链操作。",
     "insufficientBalance": "余额不足，无法完成此操作。",
     "networkError": "网络连接出现问题。请检查你的网络连接后重试。",
     "contractError": "合约交互失败。请重试，如果问题持续存在请联系客服。",
@@ -3179,50 +3032,76 @@
     "wrapFailed": "封装失败。请重试。",
     "unwrapFailed": "解封失败。请重试。",
     "genericError": "出了点问题。请重试。",
-    "nameNotAllowedChar": "此代币名称使用了所选集合不允许的字符。请仅使用允许的字母、数字或符号选择其他名称。"
+    "nameNotAllowedChar": "此代币名称使用了所选集合不允许的字符。请仅使用允许的字母、数字或符号选择其他名称。",
+    "dexContract": {
+      "AedexV2Library_IDENTICAL_ADDRESSES": "路由合约无法将代币兑换为其自身：所选的两个代币相同。请选择两个不同的代币。",
+      "AedexV2Library_INSUFFICIENT_AMOUNT": "金额为零，路由合约无法计算价格。请输入大于零的金额。",
+      "AedexV2Library_INSUFFICIENT_LIQUIDITY": "该池尚无流动性（两侧储备均为零），无法报价。请先添加流动性或选择其他交易对。",
+      "AedexV2Library_NO_PAIR_FOUND": "路由合约未找到此路径中某一步的流动性池。请选择其他交易对或路径。",
+      "AedexV2Library_INSUFFICIENT_INPUT_AMOUNT": "输入金额为零，路由合约拒绝了交易。请增加支付金额。",
+      "AedexV2Library_INSUFFICIENT_OUTPUT_AMOUNT": "您将收到零个代币，路由合约拒绝了交易。请增加金额。",
+      "AedexV2Library_INVALID_PATH": "兑换路径至少需要两个代币。请重新选择代币后重试。",
+      "AedexV2Library_INTERNAL_ERROR_AMOUNTS_VOID": "路由合约在计算路径金额时出现内部错误。请刷新报价后重试。",
+      "AedexV2Library_INTERNAL_ERROR_PATH_VOID": "路由合约在计算路径金额时出现内部错误。请刷新报价后重试。",
+      "AedexV2Router_AMOUNT_LIST_IS_SHORTER": "路由合约在计算路径金额时出现内部错误。请刷新报价后重试。",
+      "AedexV2Router_DIFFERENT_WAE_ADDRESSES": "路由合约配置错误（WAE 地址不一致）。这不是您的交易导致的，请反馈此问题。",
+      "AedexV2Router_INSUFFICIENT_A_AMOUNT": "池价格已变动：第一个代币的数量将低于您设置的最小值。{{hint}}",
+      "AedexV2Router_INSUFFICIENT_B_AMOUNT": "池价格已变动：第二个代币的数量将低于您设置的最小值。{{hint}}",
+      "AedexV2Router_EXCESSIVE_INPUT_AMOUNT": "价格已变动：此交易所需的输入超过了您允许的最大值。{{hint}}",
+      "AedexV2Router_INVALID_PATH_LAST": "兑换为 AE 的路径必须以 WAE 结尾，而此路径并非如此。请重新选择代币后重试。",
+      "AedexV2Router_INVALID_PATH_FIRST": "从 AE 兑换的路径必须以 WAE 开头，而此路径并非如此。请重新选择代币后重试。",
+      "AedexV2Router_INSUFFICIENT_OUTPUT_AMOUNT": "价格已变动：您将收到的数量低于滑点设置的最小值。{{hint}}",
+      "AedexV2Router_EXPIRED": "交易在被打包前已超过截止时间，路由合约拒绝了它。{{hint}}",
+      "WAE_LOW_BALANCE": "您的 WAE 余额不足以完成此转账。请降低金额或包装更多 AE。",
+      "WAE_LOW_ALLOWANCE": "已授权的 WAE 数量低于此交易所需。请授权更高数量后重试。",
+      "WAE_ALLOWANCE_NOT_EXISTENT": "此账户尚未授权 DEX 使用 WAE。请授权后重试。",
+      "WAE_NON_NEGATIVE_VALUE_REQUIRED": "发送给 WAE 合约的某个金额为负数。请输入正数金额。",
+      "WAE_ALLOWANCE_ALREADY_EXISTENT": "此账户已存在 WAE 授权，无法再创建新的授权。请重试以更新现有授权。",
+      "AedexV2Factory_FORBIDDEN": "只有工厂合约管理员可以调用此功能，您的账户不是管理员。",
+      "AedexV2Factory_IDENTICAL_ADDRESSES": "流动性池需要两个不同的代币，但所选代币相同。请选择两个不同的代币。",
+      "AedexV2Factory_PAIR_EXISTS": "这两个代币的流动性池已存在，无法重复创建。请向现有池添加流动性。",
+      "AedexV2Pair_NEGATIVE_VALUE_ON_TRANSFER": "流动性池拒绝了负数金额的转账。请输入正数金额。",
+      "AedexV2Pair_NOT_DEBUG_MODE": "此池操作仅在调试模式下允许，在当前网络中已禁用。",
+      "AedexV2Pair_LP": "流动性池检测到负余额或负储备，已终止交易。请刷新后重试。",
+      "AedexV2Pair_INSUFFICIENT_LIQUIDITY_MINTED": "您的存入金额太小，无法铸造任何 LP 代币。请增加两侧金额。",
+      "AedexV2Pair_INSUFFICIENT_OUTPUT_AMOUNT": "两侧输出金额均为零，流动性池拒绝了兑换。请增加输入金额。",
+      "AedexV2Pair_INSUFFICIENT_LIQUIDITY": "流动性池中的代币不足以满足您请求的数量。请尝试更小的金额。",
+      "AedexV2Pair_INVALID_TO": "接收地址不能是池中代币的合约地址。请使用您的钱包地址作为接收方。",
+      "AedexV2Pair_INSUFFICIENT_INPUT_AMOUNT": "流动性池未收到此次兑换的输入代币。请增加金额后重试。",
+      "AedexV2Pair_INSUFFICIENT_BALANCE": "流动性池未收到足够的代币。请检查余额和授权后重试。",
+      "AedexV2Pair_INSUFFICIENT_LIQUIDITY_BURNED": "要移除的流动性太少，无法返还任何代币。请增加数量。",
+      "AedexV2Pair_INSUFFICIENT_BALANCE_FOR_TRANSFER": "您持有的 LP 代币不足以完成此转账。请降低数量。",
+      "AedexV2Pair_BALANCE_ACCOUNT_NOT_EXISTENT": "此账户从未向该池提供流动性，没有可移除的内容。",
+      "AedexV2Pair_INSUFFICIENT_ALLOWANCE": "路由合约获得的 LP 代币授权不足。请授权更高数量后重试。",
+      "AedexV2Pair_ALLOWANCE_NOT_EXISTENT": "您的 LP 代币尚未授权给路由合约。请授权后重试。",
+      "AedexV2Pair_INSUFFICIENT_TOTAL_SUPPLY": "池的总供应量低于要移除的流动性（池内部错误）。请刷新后重试。",
+      "AedexV2Pair_INSUFFICIENT_BALANCE_FOR_BURNING": "池的总供应量低于要移除的流动性。请刷新您的仓位并尝试更小的数量。"
+    },
+    "dexContractFallback": "DEX 合约拒绝了此交易：{{code}}。"
   },
   "landing": {
     "hero": {
-      "tagline": "掌控你的在线身份",
       "title": "你的社交、你的钱包、你的规则——一个面向所有人的<b>去中心化</b>网络",
-      "description": "用钱包登录，在各个应用间保留一个可携带的身份。当你想要可验证、带时间戳的想法时，在链上发帖——并即时打赏创作者。它简单、友好，由 æternity 区块链驱动。",
-      "getStarted": "开始使用",
-      "appPreview": "Superhero 应用预览"
+      "description": "用钱包登录，在各个应用间保留一个可携带的身份。当你想要可验证、带时间戳的想法时，在链上发帖——并即时打赏创作者。它简单、友好，由 æternity 区块链驱动。"
     },
     "privacy": {
-      "badge": "隐私优先",
       "title": "分享你的故事——",
-      "title2": "并保留你的身份",
       "description": "通过基于钱包的身份，你可以决定分享什么、保留什么。你的账号和声誉在 æternity 生态系统中可携带，当你需要作者证明和永久性时，你的帖子可以存于链上——或在你偏好速度和轻量时存于链下。无论哪种方式，主动权都在你手中。"
     },
     "features": {
       "decentralized": {
         "title": "完全去中心化",
-        "description": "天生点对点。在你和你关注的人之间没有任何中介。你的身份和帖子可以存于链上，因此价值直接流向创作者。",
-        "alt": "去中心化"
+        "description": "天生点对点。在你和你关注的人之间没有任何中介。你的身份和帖子可以存于链上，因此价值直接流向创作者。"
       },
       "posting": {
         "title": "去中心化发帖"
       }
     },
     "valueProposition": {
-      "badge": "为什么选择链上身份和帖子？",
-      "title": "钱包登录让你的身份<b>可携带</b>。链上帖子<b>可证明</b>且<b>可二次创作</b>。",
-      "points": {
-        "walletIdentity": "用钱包登录——一个身份畅行各个应用",
-        "socialGraph": "拥有你的社交图谱和可携带的声誉",
-        "verifiablePosts": "可验证、带时间戳的帖子（链上选项）",
-        "openSource": "开源且社区驱动"
-      }
+      "title": "钱包登录让你的身份<b>可携带</b>。链上帖子<b>可证明</b>且<b>可二次创作</b>。"
     },
     "tipping": {
-      "badge": "打赏",
-      "title": "<b>发送加密货币</b>从未如此<b>简单</b>",
-      "description1": "Superhero 的原生钱包无缝融入你的日常生活，让你几乎零成本地即时打赏内容和创作者。",
-      "description2": "创建邀请链接、追踪你的历史记录等等——尽在一处。",
-      "walletMockup": "钱包样机",
-      "appStoreAlt": "在 App Store 下载",
-      "googlePlayAlt": "在 Google Play 获取"
+      "title": "<b>发送加密货币</b>从未如此<b>简单</b>"
     },
     "powerFeatures": {
       "title": "充满<b>强大功能</b>",
@@ -3238,21 +3117,13 @@
         },
         "button": {
           "title": "Superhero Button",
-          "description": "在你的网站或博客上添加一个简单、可自定义的打赏按钮，让人们奖励你的工作。",
-          "learnMore": "了解更多"
+          "description": "在你的网站或博客上添加一个简单、可自定义的打赏按钮，让人们奖励你的工作。"
         }
       }
     },
     "openSource": {
-      "badge": "开源",
       "title": "Superhero",
-      "title2": "是开源的",
-      "description": "深入了解、使用代码、fork 它，或在本地运行。加入推动生态系统前进的全球社区。",
-      "githubAlt": "GitHub",
-      "cta": "在 GitHub 上贡献"
-    },
-    "cta": {
-      "becomeToday": "立即成为 Superhero"
+      "description": "深入了解、使用代码、fork 它，或在本地运行。加入推动生态系统前进的全球社区。"
     }
   },
   "forms": {
@@ -3377,10 +3248,6 @@
     "bannerA": {
       "title": "链上发帖。",
       "description": "分享在链上结算的帖子。读者可内联打赏；创作者自动获得收据。",
-      "chips": [
-        "内联打赏",
-        "链上收据"
-      ],
       "primaryButton": "开始发帖",
       "secondaryButton": "工作原理",
       "eyebrow": "链上社交",
@@ -3391,25 +3258,16 @@
     "bannerC": {
       "title": "从信号 → 金库：",
       "description": "对 #trends 的买入手续费自动为 DAO 注入资金，让最优秀的想法获得预算和里程碑。",
-      "chips": [
-        "手续费 → 金库",
-        "创作者分成"
-      ],
-      "primaryButton": "创建目的型 DAO",
-      "secondaryButton": "查看 DAO",
+      "primaryButton": "探索 DAO",
+      "secondaryButton": "发起 #trend",
       "eyebrow": "社区 DAO",
       "titleAccent": "目的型 DAO。",
       "metaMain": "代币持有者",
       "metaAccent": "社区治理"
     },
-    "keyFeatures": "主要功能",
     "bannerB": {
       "title": "代币化 #trends。",
       "description": "#Trends 即市场。做多文化，让价格揭示真正重要的东西。",
-      "chips": [
-        "热度信号",
-        "联合曲线"
-      ],
       "primaryButton": "发起 #trend",
       "secondaryButton": "探索 #trends",
       "eyebrow": "趋势市场",
@@ -3525,7 +3383,6 @@
     "volume": "交易量",
     "tvl": "总锁仓价值",
     "fees": "手续费",
-    "createdTrends": "已创建趋势",
     "feed": "动态",
     "ownedTrends": "拥有的趋势",
     "transactions": "交易",
@@ -3578,23 +3435,15 @@
     "amountOut": "转出金额",
     "transaction": "交易",
     "explorePools": "探索资金池",
-    "explorePoolsDescription": "探索 DEX 上的交易对及其性能指标。",
     "createdAt": "创建于",
-    "show": "显示：",
-    "searchPoolsPlaceholder": "搜索资金池…",
-    "poolsCount_one": "{{count}} 个资金池",
-    "poolsCount_other": "{{count}} 个资金池",
-    "tvlShort": "TVL",
     "chart": "图表",
     "showingPoolsRange": "正在显示 {{total}} 个资金池中的第 {{from}}-{{to}} 个",
     "first": "首页",
     "firstPage": "第一页",
     "prev": "上一页",
     "previousPage": "上一页",
-    "ofPages": "共 {{total}} 页",
     "next": "下一页",
     "nextPage": "下一页",
-    "last": "末页",
     "lastPage": "最后一页",
     "tokenListTable": {
       "loadingTokens": "正在加载代币…",
@@ -3666,13 +3515,13 @@
   "faq": {
     "welcome": "欢迎",
     "heroTitle": "Superhero — 一站式社交 + 加密应用",
-    "heroDescription": "发现趋势、铸造社区代币、在联合曲线上交易、实时聊天并治理金库——与 Quali.chat 合作呈现。",
+    "heroDescription": "发现趋势、铸造社区代币、在联合曲线上交易、实时聊天并治理金库。",
     "badgeCreate": "创建",
     "badgeTrade": "交易",
     "badgeVote": "投票",
     "badgeEarn": "赚取",
     "onThisPage": "本页内容",
-    "tip": "提示：从“入门指南”开始，然后探索 Trendminer 和 DAO 与治理。",
+    "tip": "提示：从“入门指南”开始，然后探索“交易”和 DAO 与治理。",
     "gettingStartedCardTitle": "入门指南",
     "gettingStartedIntro": "新来的？这是简短版本：",
     "gettingStartedLi1": "安装 Superhero Wallet 并充值少量 AE。",
@@ -3704,10 +3553,6 @@
     "collapse": "−",
     "qWhatIsSuperheroTitle": "什么是 Superhero？",
     "qWhatIsSuperheroAnswer": "Superhero 是 aeternity 区块链上的社交 + 加密应用。你可以发现内容、创建帖子、打赏、交易社区代币，并参与链上治理——尽在一处。",
-    "qChatPoweredByQualiTitle": "这里的聊天由谁提供支持？",
-    "qChatPoweredByQualiAnswer": "我们与 Quali.chat 合作——一款为加密人群打造的优质聊天应用。可享受实时对话、审核工具和加密友好的用户体验。每个代币都有一个公开房间；持有人可以更快地协调。",
-    "qWhatIsTrendingTitle": "什么是 Trendminer？",
-    "qWhatIsTrendingAnswer": "Trendminer 让你将热门想法代币化。创作者在联合曲线上发行社区代币。价格随买卖而调整；没有订单簿，只有数学。每笔交易的小额手续费流入代币金库（DAO），用于资助社区计划。",
     "qQuickStartTitle": "快速开始：我该如何起步？",
     "qQuickStartLi1": "安装 Superhero Wallet 并充值少量 AE。",
     "qQuickStartLi2": "打开“热门”并按市值排序以查看成熟的社区。",
@@ -3724,7 +3569,7 @@
     "qGovernanceTitle": "投票部分是什么？",
     "qGovernanceAnswer": "投票页面提供统一界面，用于浏览投票、表决、管理委托并查看你的链上治理活动。所有治理功能都可通过单个页面内的标签页访问。",
     "qSocialTitle": "有社交动态吗？",
-    "qSocialAnswer": "有。你可以浏览帖子、评论并探索社区。评论和代币聊天由 Quali.chat 提供支持——为加密原生社区打造的实时房间。",
+    "qSocialAnswer": "有。你可以浏览帖子、评论并探索社区。聊天内置于 Superhero 网页版和移动应用中，基于 Nostr 运行。",
     "qAccountsTitle": "我在“账户”页面能看到什么？",
     "qAccountsAnswer": "账户资料显示拥有的代币、创建的代币和活动。排行榜突出显示最活跃的创作者和交易者。",
     "qInvitesTitle": "什么是邀请？",
@@ -3766,19 +3611,12 @@
     "heroTitle": "为 Superhero 购买或赚取 AE",
     "heroDescription": "AE 是 aeternity 区块链的原生币。你用它来支付网络手续费、打赏、交易趋势代币，并参与 Superhero 上的链上活动。",
     "badgeBuy": "购买",
-    "badgeBridge": "跨链",
     "badgeEarn": "赚取",
     "onThisPage": "本页内容",
     "tip": "可用性和交易对可能会变化。发送资金前请务必向服务提供商确认详情。",
-    "whatIsAeTitle": "什么是 AE？",
-    "whatIsAeDescription": "AE 为 aeternity 区块链提供动力。它用于交易手续费、智能合约交互、打赏，以及在 Superhero 上买卖社区代币。",
-    "waysTitle": "获取 AE 的方式",
     "gateTitle": "在 Gate.io 上兑换或购买",
     "gateDescription": "Gate.io 提供 AE/USDT 市场，是 AE 流动性的主要中心化交易所选项之一。",
     "gateAction": "打开 Gate.io AE/USDT",
-    "bridgeTitle": "从其他资产跨链或兑换",
-    "bridgeDescription": "如果你已持有加密货币，请在路径可用时使用 Superhero DeFi 工具或受支持的跨链桥和兑换，将价值转移到 AE。",
-    "bridgeAction": "打开 Superhero DeFi",
     "referTitle": "使用“推荐赚取”",
     "referDescription": "Superhero 邀请有助于发展网络，并在受邀人变得活跃时解锁奖励。使用邀请页面创建链接并追踪奖励。",
     "referAction": "打开“推荐赚取”",
@@ -3789,47 +3627,6 @@
     "safetyLi1": "确认代币、网络、存款地址、提现手续费和最低提现金额。",
     "safetyLi2": "在转移大额资金前，先进行小额测试交易。",
     "safetyLi3": "尽可能将资产自托管在你自己的钱包中，切勿分享私钥或助记词。",
-    "buyAeWidget": {
-      "crossChain": "跨链",
-      "description": "将原生 ETH 从 Ethereum 跨链到 æternity 成为 æETH，然后自动兑换为 AE 代币。",
-      "toEstimated": "至（预估）",
-      "balanceLabel": "余额",
-      "maxLabel": "最大",
-      "ethereum": "Ethereum",
-      "insufficientBalanceAvailable": "余额不足。可用：",
-      "bridgeStatus": "跨链状态",
-      "insufficientLiquidity": "流动性不足",
-      "exceedsLiquidityPrefix": "请求的数量超出了可用流动性。最大可用：",
-      "exceedsLiquiditySuffix": "请减少数量或向资金池添加流动性。",
-      "bridgingShort": "跨链中…",
-      "waitingForAeeth": "等待 æETH…",
-      "swappingShort": "兑换中…",
-      "processingShort": "处理中…",
-      "failedToFetchEthBalance": "获取 ETH 余额失败",
-      "failedToLoadTokenData": "加载代币数据失败",
-      "bridgeCompleted": "ETH→AE 跨链已成功完成！",
-      "viewEthTransaction": "查看 ETH 交易",
-      "viewAeSwapTransaction": "查看 AE 兑换交易",
-      "bridgeOperationFailed": "跨链操作失败",
-      "status": {
-        "connecting": "正在连接钱包",
-        "bridging": "跨链中 ETH → æETH",
-        "waiting": "等待 æETH 存入",
-        "swapping": "兑换中 æETH → AE",
-        "completed": "已成功完成",
-        "failed": "失败",
-        "processing": "处理中"
-      }
-    },
-    "connectEthWallet": {
-      "failedToConnect": "连接钱包失败",
-      "failedToDisconnect": "断开钱包连接失败",
-      "ethereumWallet": "Ethereum 钱包",
-      "connected": "已连接",
-      "switch": "切换",
-      "disconnect": "断开连接",
-      "connectEthereumWallet": "连接 Ethereum 钱包"
-    },
     "earnSectionTitle": "赚取 AE",
     "earnSectionDescription": "从 Superhero 原生方式开始，通过壮大社区和参与奖励计划来赚取 AE。",
     "buySectionTitle": "从外部第三方购买",
@@ -3854,18 +3651,22 @@
       "stepDotLabel": "第 {{number}} 步",
       "ios": {
         "step1": {
-          "title": "点按 ⋯ 菜单",
-          "description": "点按 Safari 右上角的三点菜单（⋯）。"
+          "title": "打开“共享”菜单",
+          "description": "在 iOS 26 上，点按地址栏旁的 •••，然后点按“共享”。在较早的版本上，点按工具栏中的“共享”按钮。"
         },
         "step2": {
-          "title": "添加到主屏幕",
-          "description": "向下滚动并在菜单中点按“添加到主屏幕”。"
+          "title": "点按“添加到主屏幕”",
+          "description": "如果看到“查看更多”，请先点按它，然后向下滚动列表并点按“添加到主屏幕”。"
         },
         "step3": {
-          "title": "点按“添加”",
-          "description": "点按右上角的“添加”确认——应用图标会出现在主屏幕上。"
+          "title": "保持“作为网页 App 打开”开启",
+          "description": "保持此开关开启，Superhero 就会像 App 一样全屏打开。在较早的 iOS 版本上，直接进行下一步即可。"
         },
         "step4": {
+          "title": "点按“添加”",
+          "description": "点按右上角的“添加”——Superhero 图标会出现在主屏幕上。"
+        },
+        "step5": {
           "title": "从主屏幕打开",
           "description": "通过主屏幕图标启动——位置共享和离线模式现已可用。"
         }
@@ -3898,7 +3699,6 @@
     "axisPrice": "价格（mAE）",
     "play": "播放",
     "pause": "暂停",
-    "replay": "重播",
     "step0Label": "启动——供应量为零",
     "step0Desc": "启动时价格接近于零。此处曲线几乎是平的，这是有意为之——这是可能的最低入场点。早期的信仰者拿到最好的价格。",
     "step1Label": "早期买家——1000 万代币",

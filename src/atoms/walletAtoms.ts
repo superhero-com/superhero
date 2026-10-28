@@ -1,7 +1,8 @@
 import { CurrencyCode } from '@/utils/types';
-import { safeLocalJSONStorage } from '@/utils/jotaiSafeLocalStorage';
+import type { PreferredChainNames } from '@/utils/preferredChainName';
+import { getSafeLocalStringStorage, safeLocalJSONStorage } from '@/utils/jotaiSafeLocalStorage';
 import { atom } from 'jotai';
-import { atomWithStorage } from 'jotai/utils';
+import { atomWithStorage, createJSONStorage } from 'jotai/utils';
 import { WalletInfo } from 'node_modules/@aeternity/aepp-sdk/es/aepp-wallet-communication/rpc/types';
 
 // Types from rootSlice
@@ -25,6 +26,16 @@ export const profileAtom = atom<Record<string, any>>({});
 export const pinnedItemsAtom = atom<any[]>([]);
 export const chainNamesAtom = atomWithStorage<Record<string, string>>('wallet:chainNames', {}, safeLocalJSONStorage);
 export const chainNameLookupCheckedAtAtom = atomWithStorage<Record<string, number>>('wallet:chainNames:checkedAt', {}, safeLocalJSONStorage);
+/**
+ * Display .chain name per account as the API resolves it (the linked preferred
+ * name first), plus names the user just picked or claimed that the API has not
+ * indexed yet. Overrides `chainNamesAtom`, which holds the newest owned name.
+ */
+export const preferredChainNamesAtom = atomWithStorage<PreferredChainNames>(
+  'wallet:preferredChainNames',
+  {},
+  createJSONStorage<PreferredChainNames>(getSafeLocalStringStorage),
+);
 /** Profile display names (public_name from /api/profile). Used for author labels in feed. */
 export const profileDisplayNamesAtom = atom<Record<string, string>>({});
 export const verifiedUrlsAtom = atom<string[]>([]);

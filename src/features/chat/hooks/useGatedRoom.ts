@@ -9,7 +9,7 @@
  * readable without an unlocked identity; posting and private-room reads need one.
  */
 import {
-  useCallback, useEffect, useMemo, useRef, useState,
+  useCallback, useEffect, useRef, useState,
 } from 'react';
 
 import {
@@ -120,12 +120,15 @@ export function useGatedRoom(
 ) {
   const { isPrivate = false, readable = false, includeSystem = false } = options;
   const { identity, pubkey, isUnlocked } = useRoomSession();
-  const { relayUrl } = useRoomsConfig();
+  const { relayUrl, error: configError, refetch: refetchConfig } = useRoomsConfig();
   const [messages, setMessages] = useState<GatedMessage[]>([]);
   const [metadata, setMetadata] = useState<GroupMetadata | null>(null);
   const [access, setAccess] = useState<GatedRoomAccess>('loading');
   const [isLoadingEarlier, setIsLoadingEarlier] = useState(false);
   const [hasEarlier, setHasEarlier] = useState(true);
+  const [isReady, setIsReady] = useState(false);
+  const [connectionError, setError] = useState<Error | null>(null);
+  const [attempt, setAttempt] = useState(0);
   const clientRef = useRef<GatedRoomClient | null>(null);
   const relayPubkeyRef = useRef<string | null>(null);
 
@@ -146,13 +149,15 @@ export function useGatedRoom(
   );
 
   useEffect(() => {
+    setMessages([]);
+    setIsReady(false);
+    setError(null);
     if (!saleAddress || !relayUrl) {
       setAccess('loading');
       return undefined;
     }
     let cancelled = false;
     let closer: { close: () => void } | null = null;
-    setMessages([]);
     setMetadata(null);
     setAccess(readable ? 'ok' : 'not-member');
     setIsLoadingEarlier(false);
@@ -162,25 +167,42 @@ export function useGatedRoom(
     let client: GatedRoomClient;
     try {
       client = new GatedRoomClient(identity, relayUrl);
-    } catch {
-      // Insecure/invalid relay URL — surface as not-ready rather than crashing.
+    } catch (cause) {
       setAccess('loading');
+      setError(cause instanceof Error ? cause : new Error('Invalid room relay configuration.'));
       return undefined;
     }
     clientRef.current = client;
+    const onError = (cause: unknown) => {
+      if (cancelled) return;
+      const failure = cause instanceof Error ? cause : new Error('Unable to connect to this room.');
+      setError(failure);
+      setIsReady(false);
+      if (failure instanceof GatedRoomPublishError) {
+        if (failure.isAuthRequired) setAccess('auth-required');
+        else if (failure.isNotMember) setAccess('not-member');
+      }
+    };
 
     (async () => {
+      if (isPrivate && !isUnlocked) return;
       const meta = await client.getGroupMetadata(saleAddress).catch(() => null);
+      if (cancelled) return;
       relayPubkeyRef.current = client.relayPubkey;
       if (!cancelled && meta) setMetadata(meta);
+      // Denied access still surfaces. A slow or failed backfill must not block the
+      // live room, whose subscription delivers the stored messages as well.
       const history = await client
         .fetchRoomHistory(saleAddress, {
           limit: HISTORY_PAGE_SIZE,
-          isPrivate,
           includeSystem,
         })
-        .catch(() => [] as NostrEvent[]);
-      if (!cancelled) {
+        .catch((cause: unknown) => {
+          if (cause instanceof GatedRoomPublishError) throw cause;
+          return null;
+        });
+      if (cancelled) return;
+      if (history) {
         history.forEach(upsertEvent);
         if (history.length < HISTORY_PAGE_SIZE) setHasEarlier(false);
       }
@@ -189,18 +211,15 @@ export function useGatedRoom(
         (event) => {
           if (!cancelled) upsertEvent(event);
         },
-        { isPrivate, includeSystem },
+        { includeSystem, onError },
       );
       if (cancelled) {
         sub.close();
         return;
       }
       closer = sub;
-    })().catch(() => {
-      if (cancelled) return;
-      // A read rejection on a private room means we couldn't AUTH in.
-      if (isPrivate) setAccess('auth-required');
-    });
+      setIsReady(true);
+    })().catch(onError);
 
     return () => {
       cancelled = true;
@@ -208,7 +227,7 @@ export function useGatedRoom(
       client.close();
       clientRef.current = null;
     };
-  }, [saleAddress, identity, relayUrl, isPrivate, readable, includeSystem, upsertEvent]);
+  }, [saleAddress, identity, relayUrl, isPrivate, isUnlocked, readable, includeSystem, upsertEvent, attempt]);
 
   const loadEarlier = useCallback(async () => {
     const client = clientRef.current;
@@ -226,9 +245,9 @@ export function useGatedRoom(
       const older = await client.fetchRoomHistory(saleAddress, {
         until,
         limit: HISTORY_PAGE_SIZE,
-        isPrivate,
         includeSystem,
       });
+      if (clientRef.current !== client) return;
       const fresh = older.filter(
         (e) => !messages.some((m) => m.eventId === e.id),
       );
@@ -239,11 +258,10 @@ export function useGatedRoom(
     } catch {
       // Best-effort paging — leave hasEarlier set so the user can retry.
     } finally {
-      setIsLoadingEarlier(false);
+      if (clientRef.current === client) setIsLoadingEarlier(false);
     }
   }, [
     saleAddress,
-    isPrivate,
     includeSystem,
     isLoadingEarlier,
     hasEarlier,
@@ -255,10 +273,11 @@ export function useGatedRoom(
     async (content: string) => {
       const trimmed = content.trim();
       const client = clientRef.current;
-      if (!saleAddress || !client || !trimmed) return;
+      if (!saleAddress || !client || !isReady) throw new Error('Room is not connected. Please retry.');
+      if (!trimmed) return;
       if (!canPost) {
         setAccess('not-member');
-        return;
+        throw new Error('You are not eligible to post in this room.');
       }
 
       const optimisticId = `opt_${Date.now()}_${Math.random()
@@ -276,9 +295,15 @@ export function useGatedRoom(
 
       try {
         const eventId = await client.sendRoomMessage(saleAddress, trimmed);
-        setMessages((prev) => prev.map((m) => (m.id === optimisticId ? { ...m, eventId, status: 'sent' } : m)));
+        // Relay echoes can arrive before OK. Replace the optimistic entry and
+        // remove that echo so a successful send is rendered exactly once.
+        if (clientRef.current !== client) return;
+        setMessages((prev) => prev
+          .filter((m) => m.id === optimisticId || m.eventId !== eventId)
+          .map((m) => (m.id === optimisticId ? { ...m, eventId, status: 'sent' } : m)));
         setAccess('ok');
       } catch (error) {
+        if (clientRef.current !== client) throw error;
         if (error instanceof GatedRoomPublishError) {
           if (error.isAuthRequired) setAccess('auth-required');
           else if (error.isNotMember) setAccess('not-member');
@@ -287,10 +312,13 @@ export function useGatedRoom(
         throw error;
       }
     },
-    [saleAddress, canPost, pubkey],
+    [saleAddress, canPost, pubkey, isReady],
   );
 
-  const isReady = useMemo(() => !!relayUrl, [relayUrl]);
+  const retry = useCallback(() => {
+    refetchConfig();
+    setAttempt((value) => value + 1);
+  }, [refetchConfig]);
 
   return {
     name: metadata?.name,
@@ -299,6 +327,8 @@ export function useGatedRoom(
     messages,
     sendMessage,
     isReady,
+    error: configError ?? connectionError,
+    retry,
     access,
     canPost,
     /** True when the user may post but the room session is locked (must unlock). */

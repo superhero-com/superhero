@@ -9,7 +9,6 @@ import {
 
 import { AppService } from '../api/generated';
 import { activeFactorySchemaAtom } from '../atoms/factoryAtoms';
-import { ensureSdkInitializeContract } from '../libs/initializeContractTyped';
 import { ICommunityFactorySchema, ICollectionData } from '../utils/types';
 import { mergedCollectionNameCharsPattern } from '../utils/collectionNameChars';
 import { useAeSdk } from './useAeSdk';
@@ -74,10 +73,7 @@ export function useCommunityFactory() {
       throw new Error('SDK not available');
     }
 
-    return initCommunityFactory(
-      ensureSdkInitializeContract(targetSdk as AeSdkAepp | AeSdk),
-      newFactorySchema.address,
-    );
+    return initCommunityFactory(targetSdk, newFactorySchema.address);
   }, [sdk, activeFactorySchema, loadFactorySchema]);
 
   const getAffiliationTreasury = useCallback(async (

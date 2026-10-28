@@ -93,17 +93,12 @@ export const MentionSuggestionList = ({
                 </div>
               </>
             ) : (
-              <>
-                <div className="w-6 h-6 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-[11px] font-bold text-[var(--neon-blue)] flex-shrink-0">
-                  #
-                </div>
-                <div className="min-w-0">
-                  <div className="text-sm text-white truncate">{`#${item.name}`}</div>
-                  {item.symbol && item.symbol.toLowerCase() !== item.name.toLowerCase() && (
-                  <div className="text-[11px] text-white/50 truncate">{item.symbol}</div>
-                  )}
-                </div>
-              </>
+              <div className="min-w-0">
+                <div className="text-sm text-white truncate">{`#${item.name}`}</div>
+                {item.symbol && item.symbol.toLowerCase() !== item.name.toLowerCase() && (
+                  <div className="text-[11px] text-white/50 truncate">{`#${item.symbol}`}</div>
+                )}
+              </div>
             )}
           </button>
         );

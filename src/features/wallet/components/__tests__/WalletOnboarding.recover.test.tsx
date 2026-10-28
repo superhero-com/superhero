@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  render, screen, act, fireEvent,
+  render, screen, act, fireEvent, within,
 } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import {
@@ -70,7 +70,6 @@ vi.mock('../../wallet-lifecycle', () => ({
 
 vi.mock('../../derivation', () => ({
   deriveAccount: () => ({ address: 'ak_recovered123' }),
-  deriveSecretKey: () => 'sk_recovered_main_key',
 }));
 
 const { default: WalletOnboarding } = await import('../WalletOnboarding');
@@ -79,7 +78,7 @@ const MATERIAL = {
   credentialId: new Uint8Array([1]),
   prfOutput: new Uint8Array(32).fill(7),
   rpId: 'superhero.com',
-  mnemonic: 'a b c',
+  mnemonic: `${'abandon '.repeat(11)}about`,
   address: 'ak_recovered123',
 };
 const RECORD = { factors: [{ type: 'webauthn-prf' }] };
@@ -160,6 +159,10 @@ describe('WalletOnboarding — passkey recovery', () => {
     expect(mocks.addRecoveryCodeFactor).not.toHaveBeenCalled();
     expect(await screen.findByText(/your passkey generated this wallet/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /skip for now/i })).toBeEnabled();
+    expect(screen.queryByRole('list', { name: 'Recovery phrase' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Reveal' }));
+    const words = within(screen.getByRole('list', { name: 'Recovery phrase' })).getAllByRole('listitem');
+    expect(words.map((word) => word.lastElementChild?.textContent).join(' ')).toBe(MATERIAL.mnemonic);
   });
 
   it('a slow check from an abandoned ceremony cannot verdict the next one', async () => {

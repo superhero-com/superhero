@@ -110,7 +110,7 @@ const RelaySettingsView = () => {
   };
 
   return (
-    <div className="ui-page chat-page mx-auto w-full max-w-2xl px-4 py-6">
+    <div className="ui-page chat-page chat-detail-page">
       <header className="mb-4 flex items-center gap-2">
         <Link to="/chat" aria-label="Back to chat" className="text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-5 w-5" />

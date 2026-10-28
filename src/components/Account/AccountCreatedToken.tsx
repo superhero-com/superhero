@@ -1,9 +1,11 @@
 import { TokensService } from '@/api/generated/services/TokensService';
 import { useQuery } from '@tanstack/react-query';
+import { Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import TokenListTable from '@/features/trending/components/TokenListTable';
 import { DataTablePagination } from '@/features/shared/components/DataTable/DataTablePagination';
+import AccountEmptyState from './AccountEmptyState';
 
 interface AccountCreatedTokenProps {
   address: string;
@@ -48,17 +50,19 @@ const AccountCreatedToken = ({
     // background refetch that still has cached tokens keeps showing them.
     throwOnError: (_error, query) => query.state.data === undefined,
   });
+  if (!loadingCreated && (createdResp?.items?.length ?? 0) === 0) {
+    return (
+      <AccountEmptyState
+        icon={Sparkles}
+        title={t('noCreatedTokens')}
+        description={t('noCreatedTokensDescription')}
+        className="mt-4"
+      />
+    );
+  }
+
   return (
     <div className="mt-4">
-      {!loadingCreated && ((createdResp?.items?.length ?? 0) === 0) && (
-        <div className="text-center py-12 px-6 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xl">
-          <div className="text-4xl mb-3 opacity-30">✨</div>
-          <div className="text-white font-semibold mb-1">{t('noCreatedTokens')}</div>
-          <div className="text-white/60 text-sm">
-            {t('noCreatedTokensDescription')}
-          </div>
-        </div>
-      )}
       <TokenListTable
         pages={createdResp ? [{ items: (createdResp.items || []) as any[] }] : [{ items: [] }]}
         loading={loadingCreated}

@@ -232,7 +232,7 @@ const RungLadderDialog = ({
           {symbol.slice(0, 2)}
         </span>
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-bold text-white truncate">{symbol}</div>
+          <div className="text-sm font-bold text-white truncate">{`#${symbol}`}</div>
           <div className="text-[11px] text-white/45">{ts('howItAppears')}</div>
         </div>
         <button
@@ -525,8 +525,7 @@ const TokenTagOptionsBar = ({
               onFocus={() => beginHighlight(tag, false)}
               onBlur={() => endHighlight(tag)}
             >
-              <span className="text-primary-400">#</span>
-              <span className="max-w-[120px] truncate">{tag.symbol}</span>
+              <span className="max-w-[120px] truncate">{`#${tag.symbol}`}</span>
               <span className="text-white/45 font-normal">·</span>
               <span className="text-white/70">{describeChip(tag.options)}</span>
               <span aria-hidden className="text-white/40">{isOpen ? '⌃' : '⌄'}</span>

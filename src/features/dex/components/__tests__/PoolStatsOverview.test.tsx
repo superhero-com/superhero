@@ -110,4 +110,13 @@ describe('Pool activity and balances', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Exchange rate' }));
     expect(screen.getByText('Exchange rate unavailable for empty or unknown reserves')).toBeInTheDocument();
   });
+  it('shows the pool value only once the reserves come from the pair contract', () => {
+    const aePair = { ...pair, token0: { ...token, is_ae: true } };
+    const { rerender } = setup({ pairData: aePair });
+    expect(screen.queryByText('5.00 AE')).not.toBeInTheDocument();
+    rerender(
+      <PoolStatsOverview pairData={aePair} aligned pairSummary={summary} onRetry={vi.fn()} />,
+    );
+    expect(screen.getByText('5.00 AE')).toBeInTheDocument();
+  });
 });

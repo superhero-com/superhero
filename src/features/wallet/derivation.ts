@@ -35,12 +35,3 @@ export function deriveAccount(mnemonic: string, index: number): DerivedAccount {
   const account = new AccountMnemonicFactory(mnemonic).initializeSync(index);
   return { address: account.address };
 }
-
-/**
- * The account's private key (`sk_…`) for `index` — the same key the extension and
- * native wallet derive for this mnemonic + index. Used ONLY to show/download a
- * passkey wallet's main key at onboarding; never persisted or cached here.
- */
-export function deriveSecretKey(mnemonic: string, index: number): string {
-  return new AccountMnemonicFactory(mnemonic).initializeSync(index).secretKey;
-}

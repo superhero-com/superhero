@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  render, screen, act, fireEvent, waitFor,
+  render, screen, act, fireEvent, waitFor, within,
 } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import {
@@ -78,7 +78,6 @@ vi.mock('../../vault-record', () => ({
 
 vi.mock('../../derivation', () => ({
   deriveAccount: () => ({ address: 'ak_test1234' }),
-  deriveSecretKey: () => 'sk_test_main_key',
 }));
 
 const { default: WalletOnboarding } = await import('../WalletOnboarding');
@@ -388,9 +387,9 @@ describe('WalletOnboarding — no step is a dead end', () => {
   });
 
   describe('the passkey create path', () => {
-    it('shows the passkey-generated wallet key instead of a recovery code', async () => {
+    it('reveals the existing passkey mnemonic in order, and removes it from the DOM when hidden', async () => {
       mocks.createWalletFromPasskey.mockResolvedValue({
-        record: FAKE_RECORD, dek: {} as CryptoKey, mnemonic: 'a b c',
+        record: FAKE_RECORD, dek: {} as CryptoKey, mnemonic: VALID_MNEMONIC,
       });
       const onComplete = vi.fn();
       await mount({ onComplete });
@@ -402,14 +401,41 @@ describe('WalletOnboarding — no step is a dead end', () => {
       expect(mocks.addRecoveryCodeFactor).not.toHaveBeenCalled();
       expect(screen.queryByText(/save your recovery code/i)).not.toBeInTheDocument();
       // Hidden until the user asks to see it.
-      expect(screen.queryByText('sk_test_main_key')).not.toBeInTheDocument();
+      expect(screen.queryByRole('list', { name: 'Recovery phrase' })).not.toBeInTheDocument();
+      expect(screen.queryByText('about')).not.toBeInTheDocument();
       fireEvent.click(screen.getByRole('button', { name: /reveal/i }));
-      expect(screen.getByText('sk_test_main_key')).toBeInTheDocument();
+      const words = within(screen.getByRole('list', { name: 'Recovery phrase' })).getAllByRole('listitem');
+      expect(words.map((word) => word.lastElementChild?.textContent).join(' ')).toBe(VALID_MNEMONIC);
+      expect(words.map((word) => word.firstElementChild?.textContent)).toEqual(
+        Array.from({ length: 12 }, (_, i) => String(i + 1)),
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'Hide' }));
+      expect(screen.queryByRole('list', { name: 'Recovery phrase' })).not.toBeInTheDocument();
+      expect(screen.queryByText('about')).not.toBeInTheDocument();
+    });
+
+    it('copies the complete phrase, including while its display is hidden', async () => {
+      mocks.createWalletFromPasskey.mockResolvedValue({
+        record: FAKE_RECORD, dek: {} as CryptoKey, mnemonic: VALID_MNEMONIC,
+      });
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      const clipboard = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
+      Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+      try {
+        await mount({ entry: 'passkey' });
+        fireEvent.click(await screen.findByRole('button', { name: 'Copy phrase' }));
+        await screen.findByRole('button', { name: 'Copied' });
+        expect(writeText).toHaveBeenCalledWith(VALID_MNEMONIC);
+        expect(screen.queryByRole('list', { name: 'Recovery phrase' })).not.toBeInTheDocument();
+      } finally {
+        if (clipboard) Object.defineProperty(navigator, 'clipboard', clipboard);
+        else Reflect.deleteProperty(navigator, 'clipboard');
+      }
     });
 
     it('can skip the download and still finish', async () => {
       mocks.createWalletFromPasskey.mockResolvedValue({
-        record: FAKE_RECORD, dek: {} as CryptoKey, mnemonic: 'a b c',
+        record: FAKE_RECORD, dek: {} as CryptoKey, mnemonic: VALID_MNEMONIC,
       });
       const onComplete = vi.fn();
       await mount({ onComplete });
@@ -418,15 +444,17 @@ describe('WalletOnboarding — no step is a dead end', () => {
       });
 
       fireEvent.click(await screen.findByRole('button', { name: /skip for now/i }));
+      expect(screen.queryByRole('list', { name: 'Recovery phrase' })).not.toBeInTheDocument();
+      expect(screen.queryByText('about')).not.toBeInTheDocument();
       fireEvent.click(await screen.findByRole('button', { name: /open wallet/i }));
       expect(onComplete).toHaveBeenCalledWith(FAKE_RECORD, 'ak_test1234');
     });
 
-    it('downloads the key, then finishes', async () => {
+    it('downloads the complete recovery phrase with matching import instructions, then finishes', async () => {
       mocks.createWalletFromPasskey.mockResolvedValue({
-        record: FAKE_RECORD, dek: {} as CryptoKey, mnemonic: 'a b c',
+        record: FAKE_RECORD, dek: {} as CryptoKey, mnemonic: VALID_MNEMONIC,
       });
-      const createObjectURL = vi.fn(() => 'blob:key');
+      const createObjectURL = vi.fn<typeof URL.createObjectURL>().mockReturnValue('blob:phrase');
       const revokeObjectURL = vi.fn();
       Object.assign(URL, { createObjectURL, revokeObjectURL });
       await mount();
@@ -436,7 +464,17 @@ describe('WalletOnboarding — no step is a dead end', () => {
 
       fireEvent.click(await screen.findByRole('button', { name: /download backup file/i }));
       expect(createObjectURL).toHaveBeenCalledTimes(1);
-      expect(revokeObjectURL).toHaveBeenCalledWith('blob:key');
+      const file = createObjectURL.mock.calls[0][0] as File;
+      const contents = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.readAsText(file);
+      });
+      expect(contents).toContain(`Recovery phrase: ${VALID_MNEMONIC}`);
+      expect(contents).toContain('choose Import wallet, and enter the recovery phrase');
+      expect(contents).not.toContain('Private key:');
+      expect(contents).not.toContain('sk_');
+      expect(revokeObjectURL).toHaveBeenCalledWith('blob:phrase');
       expect(await screen.findByRole('button', { name: /open wallet/i })).toBeInTheDocument();
     });
   });
@@ -518,6 +556,41 @@ describe('WalletOnboarding — no step is a dead end', () => {
       expect(screen.queryByRole('button', { name: /import an existing wallet/i })).toBeNull();
       expect(await screen.findByRole('button', { name: /continue with passkey/i })).toBeEnabled();
       expect(screen.getByRole('button', { name: /create with a phrase/i })).toBeEnabled();
+    });
+  });
+
+  describe('opened from the sign-in card', () => {
+    it('falls back to a recovery phrase when the passkey create fails', async () => {
+      // The error tells the user to use a recovery phrase instead, and the modal
+      // behind this flow has no phrase option of its own (#730).
+      mocks.standalone = false;
+      mocks.createWalletFromPasskey.mockRejectedValue(new Error('PRF unsupported on this device'));
+
+      await mount({ entry: 'passkey', onCancel: vi.fn() });
+
+      expect(await screen.findByText(/PRF unsupported on this device/)).toBeInTheDocument();
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: /create with a phrase/i }));
+      });
+      expect(screen.getByRole('heading', { name: /write down your recovery phrase/i })).toBeInTheDocument();
+    });
+
+    it('opens straight onto a new phrase with the `phrase` entry', async () => {
+      // A device that can't create a passkey: the card's tap was the choice.
+      mocks.standalone = false;
+      await mount({ entry: 'phrase', onCancel: vi.fn() });
+
+      expect(await screen.findByRole('heading', { name: /write down your recovery phrase/i })).toBeInTheDocument();
+      expect(mocks.createWalletFromPasskey).not.toHaveBeenCalled();
+    });
+
+    it('backs out of the new phrase to the modal that opened it', async () => {
+      const onCancel = vi.fn();
+      await mount({ entry: 'phrase', onCancel });
+      await screen.findByRole('heading', { name: /write down your recovery phrase/i });
+
+      fireEvent.click(screen.getByRole('button', { name: /back/i }));
+      expect(onCancel).toHaveBeenCalled();
     });
   });
 });

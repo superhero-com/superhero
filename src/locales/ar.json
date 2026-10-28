@@ -199,6 +199,7 @@
       "chainNameClaimStarted": "تم إرسال المطالبة. في انتظار الرعاية والنقل…",
       "chainNameClaimPending": "حالة المطالبة: {{status}}",
       "chainNameClaimCompleted": "تمت المطالبة باسم ‎.chain بنجاح.",
+      "chainNameClaimProcessing": "جارٍ تسجيل اسمك على السلسلة. قد يستغرق ذلك بضع دقائق؛ يمكنك إغلاق هذه النافذة وسيتم تحديث ملفك الشخصي تلقائيًا عند الانتهاء.",
       "chainNameClaimWalletUnavailable": "توقيع الرسائل في المحفظة غير متاح حالياً. يرجى المحاولة مرة أخرى.",
       "chainNameClaimNameTaken": "اسم ‎.chain هذا محجوز بالفعل. جرّب اسماً آخر.",
       "chainNameClaimNameInProgress": "تجري المطالبة باسم ‎.chain هذا حالياً. جرّب اسماً آخر.",
@@ -258,7 +259,11 @@
       "profitLoss": "الربح/الخسارة:",
       "loadingPortfolio": "جارٍ تحميل بيانات المحفظة...",
       "noDataAvailable": "لا تتوفر بيانات للمحفظة",
-      "valueTooltipDescription": "تُظهر قيمة المحفظة القيمة المجمّعة لرصيد AE ورموز الترند المحتفظ بها في هذه المحفظة. يتتبّع الرسم البياني كيف تتغيّر هذه القيمة مع الوقت."
+      "valueTooltipDescription": "تُظهر قيمة المحفظة القيمة المجمّعة لرصيد AE ورموز الترند المحتفظ بها في هذه المحفظة. يتتبّع الرسم البياني كيف تتغيّر هذه القيمة مع الوقت.",
+      "changeSources": "رصيد AE {{ae}} · الرموز {{tokens}}",
+      "tokenValuation": "تُقيَّم رموز الترند بسعرها الحالي على منحنى الربط، وليس بما ستحصل عليه عند بيعها. البيع يخفض السعر على المنحنى، لذلك قد تنخفض قيمة الرموز المتبقية مباشرة بعد بيع مربح، وبيع كل الرموز سيعيد مبلغاً أقل من هذه القيمة.",
+      "aeDenomination": "عند العرض بعملة AE، تتغير القيمة فقط عندما يتغير رصيد AE (صفقات، تحويلات، رسوم) أو يُعاد تسعير رموزك. سعر صرف AE/USD لا يؤثر عليها، بل يغيّر عرض USD فقط.",
+      "pnlPercentage": "نسبة أرباح التداول هي الربح مقارنةً بالمبلغ المنفق على شراء الرموز."
     },
     "account": {
       "firstBlockchainActivity": "تاريخ الانضمام:",
@@ -279,7 +284,8 @@
       "txLabel": "المعاملة:",
       "txTypeCreated": "أُنشئ",
       "txTypeTrade": "تداول",
-      "noTransactionsFound": "لم يُعثر على معاملات مطابقة لبحثك.",
+      "noActivity": "لا يوجد نشاط بعد",
+      "noActivityDescription": "لم يشترِ هذا المستخدم أو يبع أو ينشئ أي رموز Trendminer بعد.",
       "loadingTrades": "جارٍ تحميل الصفقات...",
       "aeBalance": "رصيد AE",
       "claimAeVerifyX": "احصل على 100 AE عبر توثيق حسابك على X.",
@@ -287,6 +293,8 @@
       "tokenHoldings": "ممتلكات الرموز:",
       "moreTokens": "+ {{count}} المزيد...",
       "noPostsYet": "لا توجد منشورات بعد",
+      "noPostsYetDescription": "لم ينشر هذا المستخدم أي شيء بعد.",
+      "noHoldings": "لا توجد ممتلكات رموز",
       "xVerifiedTitle": "تم التحقق من حساب X: @{{username}}",
       "xVerified": "تم التحقق من حساب X",
       "linkXCtaTitle": "اربط حسابك على X",
@@ -377,6 +385,8 @@
     },
     "views": {
       "wallet": {
+        "pageTitle": "محفظة متعددة السلاسل – Superhero",
+        "pageDescription": "محفظة Superhero هي مفتاحك إلى منظمات DAO والرموز وأدوات DeFi والمزيد.",
         "hero": {
           "badge": "محفظة متعددة السلاسل",
           "subtitle": "**Superhero** — أكثر من مجرّد محفظة، إنها **مفتاحك** إلى العالم اللامركزي! ادخل وأنشئ وتفاعل. Superhero هي المفتاح إلى DAOs والرموز وأدوات DeFi والمزيد."
@@ -690,6 +700,8 @@
         }
       },
       "privacy": {
+        "pageTitle": "سياسة الخصوصية – Superhero",
+        "pageDescription": "كيف يتعامل Superhero مع بياناتك.",
         "title": "سياسة الخصوصية",
         "lastUpdated": "تم آخر تحديث لسياسة الخصوصية هذه في 29 سبتمبر 2025.",
         "introHeading": "I. مقدمة",
@@ -727,6 +739,8 @@
         "contactP1": "للتواصل معنا بأسئلتك أو تعليقاتك بخصوص هذه السياسة أو ممارسات Superhero.com في جمع المعلومات ونشرها المتعلقة باستخدامك للموقع، يرجى مراسلتنا عبر البريد الإلكتروني على superherowallet@protonmail.com."
       },
       "landing": {
+        "pageTitle": "سوق الانتباه على السلسلة – Superhero",
+        "pageDescription": "اكتشف الترندات التي تؤمن بها وتداولها وشارك في حوكمتها على Superhero.",
         "heroBadge": "نقلة نوعية جديدة في أسواق الانتباه",
         "heroTitleLine1": "متابعة الترندات",
         "heroTitleLine2": "أصبح لها معنى جديد",
@@ -805,6 +819,8 @@
         }
       },
       "branding": {
+        "pageTitle": "حزمة الهوية – Superhero",
+        "pageDescription": "ألوان Superhero وخطوطها وشعاراتها وقوالب أصولها.",
         "brandKit": "حزمة هوية Superhero",
         "heroTitle": "إرشادات الهوية البصرية",
         "heroDescription": "مرحبًا بك في مركز موارد Superhero الرسمي. يفصّل هذا الدليل ألوان علامتنا التجارية والخطوط والشعارات وقوالب الأصول الرقمية لمساعدتك في إنشاء المواد.",
@@ -867,6 +883,8 @@
         }
       },
       "terms": {
+        "pageTitle": "شروط الاستخدام – Superhero",
+        "pageDescription": "شروط استخدام Superhero.",
         "title": "شروط الاستخدام",
         "lastUpdated": "تم آخر تحديث لشروط الاستخدام الحالية (\"الشروط\") في 29 سبتمبر 2025.",
         "section1Title": "I. معلومات الشركة",
@@ -916,6 +934,8 @@
         "inviteAndEarn": "ادعُ واكسب"
       },
       "tokenDetail": {
+        "pageTitle": "تفاصيل الرمز – Superhero DEX",
+        "pageDescription": "أداء السعر والتجمّعات والمعروض لهذا الرمز على Superhero DEX.",
         "loadingTokenDetails": "جارٍ تحميل تفاصيل الرمز...",
         "detailsAndStatistics": "تفاصيل الرمز وإحصاءاته",
         "pools": "التجمّعات ({{count}})",
@@ -946,6 +966,110 @@
       "dexSwap": {
         "pageTitle": "تبديل AE والرموز – Superhero DEX",
         "pageDescription": "تبديل دون الحاجة إلى ثقة على Superhero DEX مع رسوم بيانية مباشرة ونشاط حديث."
+      },
+      "invite": {
+        "pageTitle": "ادعُ واكسب – Superhero",
+        "pageDescription": "ادعُ أصدقاءك إلى Superhero وشارك روابطك واجمع المكافآت مع نمو مجتمعك."
+      },
+      "trendCloud": {
+        "pageTitle": "سحابة الترندات – Superhero",
+        "pageDescription": "اطّلع على الرائج بنظرة واحدة وحوّل المواضيع التي تهمك إلى رموز."
+      },
+      "daos": {
+        "pageTitle": "DAOs – Superhero",
+        "pageDescription": "استكشف منظمات DAO المجتمعية على Superhero، حيث يدير حاملو الرموز خزائنهم معًا."
+      },
+      "dao": {
+        "pageTitle": "DAO – Superhero",
+        "pageDescription": "اعرض تفاصيل DAO والمقترحات والتصويتات على Superhero."
+      },
+      "daoVote": {
+        "pageTitle": "تصويت DAO – Superhero",
+        "pageDescription": "راجع المقترح وأسمِع صوتك على Superhero."
+      },
+      "accounts": {
+        "pageTitle": "أبرز الحسابات – Superhero",
+        "pageDescription": "اكتشف أبرز المتداولين والمبدعين على Superhero، مرتّبين حسب النشاط على السلسلة."
+      },
+      "accountDetails": {
+        "pageTitle": "نشاط الحساب – Superhero",
+        "pageDescription": "اطّلع على الرموز التي يملكها هذا الحساب والتي أنشأها، إلى جانب معاملاته، على Superhero."
+      },
+      "createToken": {
+        "pageTitle": "تحويل ترند إلى رمز – Superhero",
+        "pageDescription": "حوّل أي ترند إلى رمز وابنِ مجتمعًا حوله على Superhero."
+      },
+      "txQueue": {
+        "pageTitle": "حالة المعاملة – Superhero",
+        "pageDescription": "تابع حالة معاملتك على Superhero."
+      },
+      "chat": {
+        "pageTitle": "الدردشة – Superhero",
+        "pageDescription": "دردش مع أصدقائك ومجتمعات الرموز على Superhero."
+      },
+      "chatRelays": {
+        "pageTitle": "مرحّلات Nostr – Superhero",
+        "pageDescription": "اختر مرحّلات Nostr التي تقرأ منها دردشة Superhero وتكتب إليها."
+      },
+      "chatDm": {
+        "pageTitle": "رسالة مباشرة – Superhero",
+        "pageDescription": "محادثتك الخاصة على Superhero."
+      },
+      "chatRoom": {
+        "pageTitle": "دردشة المجتمع – Superhero",
+        "pageDescription": "دردش مع حاملي الرموز الآخرين في غرفة هذا المجتمع على Superhero."
+      },
+      "chatRoomInfo": {
+        "pageTitle": "معلومات الغرفة – Superhero",
+        "pageDescription": "اطّلع على أعضاء وتفاصيل دردشة هذا المجتمع على Superhero."
+      },
+      "meet": {
+        "pageTitle": "اجتماع – Superhero",
+        "pageDescription": "انضم إلى اجتماع على Superhero."
+      },
+      "governance": {
+        "pageTitle": "الحوكمة – Superhero",
+        "pageDescription": "شكّل مستقبل المنظومة من خلال تصويتات المجتمع على Superhero."
+      },
+      "faq": {
+        "pageTitle": "الأسئلة الشائعة – Superhero",
+        "pageDescription": "إجابات على أكثر الأسئلة شيوعًا حول Superhero."
+      },
+      "whitepaper": {
+        "pageTitle": "الورقة البيضاء – Superhero",
+        "pageDescription": "كيف يعمل Superhero: منشورات على السلسلة ورموز المجتمعات ومنظمات DAO والحوكمة على æternity."
+      },
+      "dexWrap": {
+        "pageTitle": "تغليف AE – Superhero DEX",
+        "pageDescription": "حوّل AE إلى WAE وبالعكس بنسبة 1:1 تمامًا على Superhero DEX."
+      },
+      "dexPool": {
+        "pageTitle": "توفير السيولة – Superhero DEX",
+        "pageDescription": "أضف السيولة إلى أزواج الرموز وأدِر مراكزك على Superhero DEX."
+      },
+      "dexAddTokens": {
+        "pageTitle": "إضافة الرموز – Superhero DEX",
+        "pageDescription": "اعثر على الرموز في محفظتك وأنشئ لها تجمّعات أو أضف لها السيولة على Superhero DEX."
+      },
+      "dexExploreTokens": {
+        "pageTitle": "استكشاف الرموز – Superhero DEX",
+        "pageDescription": "تصفّح جميع الرموز على Superhero DEX وقارن الأسعار والسيولة."
+      },
+      "dexExplorePools": {
+        "pageTitle": "استكشاف التجمّعات – Superhero DEX",
+        "pageDescription": "اعثر على أزواج الرموز وقارن نشاط التداول والحجم على Superhero DEX."
+      },
+      "dexPoolDetail": {
+        "pageTitle": "تفاصيل التجمّع – Superhero DEX",
+        "pageDescription": "مخطط السعر والاحتياطيات وأحدث المعاملات لهذا التجمّع على Superhero DEX."
+      },
+      "dexExploreTransactions": {
+        "pageTitle": "المعاملات – Superhero DEX",
+        "pageDescription": "تابع أحدث عمليات التبديل ونشاط السيولة على Superhero DEX."
+      },
+      "dexExplore": {
+        "pageTitle": "استكشاف – Superhero DEX",
+        "pageDescription": "استكشف الرموز والتجمّعات والمعاملات على Superhero DEX."
       }
     },
     "removeLiquidity": {
@@ -1277,119 +1401,15 @@
     "swap": {
       "title": "مبادلة الرموز",
       "description": "بادل رموز AEX-9 على بلوكشين æternity بأمان وكفاءة.",
-      "from": "من",
-      "to": "إلى",
-      "quoting": "جارٍ التسعير…",
-      "swapTokens": "مبادلة الرموز",
       "confirmInWallet": "أكّد في المحفظة…",
-      "connectWallet": "ربط المحفظة",
       "settings": "الإعدادات",
       "swapSettings": "إعدادات المبادلة",
       "insufficientBalance": "رصيد {{symbol}} غير كافٍ. تحتاج إلى {{needed}} لكن لديك {{have}} فقط"
     },
     "bridge": {
-      "title": "جسر ETH ⇆ AE",
-      "description": "يتيح الجسر تحويلات آمنة للرموز والأصول الأصلية بين Ethereum و æternity. يدعم رموز ERC‑20/AEX‑9 الشهيرة بالإضافة إلى ETH و AE الأصليين. اختر اتجاهاً أدناه، واربط محافظك، وأكمل الجسر في دقائق.",
-      "direction": {
-        "aeToEth": "AE → ETH",
-        "ethToAe": "ETH → AE"
-      },
-      "tokenAddressCopied": "تم نسخ عنوان الرمز",
-      "failedToCopy": "فشل النسخ",
-      "mainnetWarning": "⚠️ مهيأ لشبكة Ethereum الرئيسية. تأكد من أن محفظتك على الشبكة الرئيسية.",
-      "fromNetwork": "من الشبكة",
-      "ethereumAccount": "حساب Ethereum",
-      "refresh": "تحديث",
-      "networks": {
-        "aeternity": "æternity",
-        "aeternityTestnet": "شبكة الاختبار",
-        "ethereum": "Ethereum",
-        "ethereumSepoliaTestnet": "شبكة اختبار Sepolia"
-      },
-      "from": "من",
-      "to": "إلى",
-      "loadingBalance": "جارٍ تحميل الرصيد...",
-      "balance": "الرصيد: {{balance}}",
-      "bridgeTo": "الجسر إلى {{network}}",
-      "connectEthereumWalletFirst": "يرجى ربط محفظة Ethereum الخاصة بك أولاً",
-      "bridgeDirection": {
-        "aeternityToEthereum": "æternity → Ethereum",
-        "ethereumToAeternity": "Ethereum → æternity"
-      },
-      "destinationAddressLabel": "عنوان الوجهة على {{network}}",
-      "useConnectedAccount": "استخدام الحساب المتصل",
-      "invalidAddressFormat": "تنسيق العنوان غير صالح",
-      "transactionStatus": "حالة المعاملة",
-      "approvingToken": "1️⃣ جارٍ الموافقة على الرمز",
-      "executingBridge": "2️⃣ جارٍ تنفيذ الجسر",
-      "processing": "جارٍ المعالجة...",
-      "preparingTransaction": "جارٍ تحضير المعاملة...",
-      "approving": "جارٍ الموافقة...",
-      "bridging": "جارٍ الجسر...",
-      "bridgeTransactionSubmitted": "تم إرسال معاملة الجسر",
-      "successfullySubmitted": "تم الإرسال بنجاح",
-      "bridgeTransactionSubmittedDescription": "تم إرسال معاملة الجسر الخاصة بك إلى البلوكشين",
-      "directionLabel": "الاتجاه:",
-      "amount": "المبلغ:",
-      "destinationStatusLabel": "الوجهة:",
-      "allowanceTransaction": "معاملة السماح:",
-      "bridgeTransaction": "معاملة الجسر:",
-      "viewOn": "عرض على {{explorer}} →",
-      "aescan": "ÆScan",
-      "etherscan": "Etherscan",
-      "processingTime": "⏳ وقت المعالجة",
-      "processingTimeDescription": "ستكون رموزك متاحة في شبكة الوجهة بعد تأكيد المعاملة ومعالجتها (عادةً من 5 إلى 15 دقيقة).",
-      "tokensAutoAppear": "💡 ينبغي أن تظهر الرموز المستلمة تلقائياً في محفظة Superhero الخاصة بك. إذا لم تظهر بعد 15 دقيقة، جرّب التحديث أو تواصل عبر",
-      "forum": "المنتدى",
-      "switchNetwork": "يرجى التبديل إلى {{network}}",
-      "invalidDestination": "وجهة غير صالحة!",
-      "invalidAmount": "مبلغ غير صالح!",
-      "aeternityWalletNotConnected": "محفظة Aeternity غير متصلة!",
-      "insufficientBalanceBridge": "رصيد {{symbol}} غير كافٍ لإتمام هذه المعاملة.",
-      "bridgeContractInsufficientBalance": "رصيد عقد الجسر على Ethereum غير كافٍ لإتمام هذه المعاملة.",
-      "smartContractDisabled": "⚠️ تم تعطيل العقد الذكي لهذه الشبكة.",
-      "bridgeOperatorInsufficientFunds": "⚠️ مشغّل الجسر لا يملك أموالاً كافية. يرجى المحاولة لاحقاً.",
-      "connectEthereumWallet": "ربط محفظة Ethereum",
-      "failedToOpenWallet": "فشل فتح اتصال المحفظة",
-      "failedToDisconnect": "فشل قطع اتصال المحفظة",
-      "bridgeUsageLimit": "يُسمح بمعاملة واحدة فقط كل {{hours}} ساعة. يرجى المحاولة لاحقاً.",
-      "checkingTokenAllowance": "جارٍ التحقق من سماح الرمز...",
-      "confirmTokenAllowance": "يرجى تأكيد سماح الرمز في محفظتك...",
-      "confirmTokenAllowanceUpdate": "يرجى تأكيد تحديث سماح الرمز في محفظتك...",
-      "confirmBridgeTransaction": "يرجى تأكيد معاملة الجسر في محفظتك...",
-      "waitingForBridgeConfirmation": "في انتظار تأكيد الجسر...",
-      "waitingLongerThanExpected": "يستغرق الأمر وقتاً أطول من المتوقع. لا تغلق الصفحة.",
-      "bridgeTransactionConfirmed": "تم تأكيد معاملة الجسر!",
-      "allowanceTransactionSubmitted": "تم إرسال معاملة السماح.",
-      "approvalTransactionSubmitted": "تم إرسال معاملة الموافقة.",
-      "confirmTokenApproval": "يرجى تأكيد الموافقة على الرمز في محفظتك...",
-      "waitingForApprovalConfirmation": "في انتظار تأكيد الموافقة...",
-      "approvalConfirmed": "تم تأكيد الموافقة!",
-      "allowanceCheckFailed": "فشل التحقق من السماح، جارٍ المتابعة بالموافقة...",
-      "insufficientEthForGas": "رصيد ETH غير كافٍ لرسوم الغاز",
-      "failedToConnectTokenContract": "فشل الاتصال بعقد الرمز. يرجى التحقق من الشبكة والمحاولة مرة أخرى.",
-      "transactionRejectedByUser": "تم رفض المعاملة من قبل المستخدم",
-      "transactionFailedTokenRestrictions": "فشلت المعاملة. قد يكون لعقد الرمز قيود.",
-      "insufficientFundsForTransaction": "أموال غير كافية للمعاملة",
-      "transactionWouldFail": "ستفشل المعاملة. تحقق من رصيد الرمز والشبكة.",
-      "failedToCheckOrApproveAllowance": "فشل التحقق من سماح الرمز أو الموافقة عليه",
-      "genericBridgeError": "فشلت معاملة الجسر",
-      "viewTransaction": "عرض المعاملة",
       "selectToken": "اختيار الرمز",
       "selectAToken": "اختر رمزاً",
-      "token": "الرمز",
-      "onBlockchain": "على بلوكشين {{network}}",
-      "aeternity": "Aeternity",
-      "ethereum": "Ethereum",
-      "tryAdjustingSearchTerm": "حاول تعديل مصطلح البحث",
-      "bridgeTokensDescription": "جسر الرموز بين شبكتي Aeternity و Ethereum",
-      "placeholderAddressAe": "ak_...",
-      "placeholderAddressEth": "0x...",
-      "close": "إغلاق",
-      "addTokenToWalletIntro": "إذا لم تظهر الرموز، يمكنك",
-      "addTokenToWalletLink": "إضافة {{symbol}} إلى محفظتك",
-      "noEthereumAccountConnected": "لا يوجد حساب Ethereum متصل",
-      "insufficientBalanceAvailable": "رصيد غير كافٍ. المتاح: {{balance}} {{symbol}}"
+      "token": "الرمز"
     },
     "transactions": {
       "swapExactTokensForTokens": {
@@ -1429,8 +1449,6 @@
       "openInExplorer": "فتح في المستكشف",
       "genericDescription": "معاملة"
     },
-    "viewPair": "عرض الزوج:",
-    "searchTokenPlaceholder": "ابحث بالاسم أو الرمز أو العنوان",
     "filterPools": "تصفية المجمّعات",
     "filterBySymbolAddress": "تصفية حسب الرمز/العنوان",
     "createNewPoolAndLiquidity": "إنشاء مجمّع جديد وإضافة سيولة",
@@ -1443,43 +1461,14 @@
       "title": "إعدادات DEX",
       "slippageTolerance": "نسبة الانزلاق المسموحة",
       "transactionDeadline": "مهلة المعاملة",
-      "slippageHint": "ستُلغى معاملتك إذا تغيّر السعر بشكل غير ملائم بأكثر من هذه النسبة المئوية.",
-      "deadlineHint": "ستُلغى معاملتك إذا ظلت معلّقة لفترة أطول من هذه المدة.",
       "cancel": "إلغاء",
       "save": "حفظ"
     },
     "activity": {
-      "pending": "قيد الانتظار",
-      "failed": "فشلت",
-      "unknown": "غير معروف",
-      "clearAll": "مسح جميع الأنشطة",
-      "viewOnExplorer": "عرض على المستكشف",
-      "swap": "مبادلة",
-      "wrap": "تغليف",
-      "unwrap": "فك التغليف",
-      "bridge": "جسر ETH",
-      "addLiquidity": "إضافة سيولة",
-      "removeLiquidity": "إزالة سيولة",
-      "justNow": "الآن",
-      "minutesAgo": "قبل {{count}} د",
-      "hoursAgo": "قبل {{count}} س",
-      "daysAgo": "قبل {{count}} ي",
-      "recentActivity": "النشاط الأخير",
-      "noRecentActivities": "لا توجد أنشطة حديثة",
-      "defiTransactionsAppearHere": "ستظهر معاملات DeFi الخاصة بك هنا",
-      "moreActivities": "أنشطة إضافية",
-      "confirmed": "مؤكدة",
-      "confirmations": "{{count}} تأكيد"
+      "addLiquidity": "إضافة سيولة"
     },
     "noTokensFound": "لم يُعثر على رموز",
-    "showDetails": "عرض التفاصيل",
-    "hideDetails": "إخفاء التفاصيل",
     "protocolTokenReward": "مكافأة رمز البروتوكول",
-    "wrapping": "جارٍ التغليف…",
-    "unwrapping": "جارٍ فك التغليف…",
-    "wrapAeToWae": "تغليف AE → WAE",
-    "unwrapWaeToAe": "فك تغليف WAE → AE",
-    "avgTokenPrice": "متوسط سعر الرمز",
     "allowedSlippage": "الانزلاق المسموح",
     "priceImpact": "تأثير السعر",
     "placeOrder": "تنفيذ الأمر",
@@ -1487,22 +1476,7 @@
     "sold": "تم البيع",
     "addLiquidityForm": {
       "title": "إضافة سيولة",
-      "cancel": "✕ إلغاء",
-      "settings": "⚙️ الإعدادات",
-      "addingTo": "الإضافة إلى",
-      "position": "مركز",
-      "provideLiquidityHint": "وفّر السيولة لكسب رسوم التداول من عمليات المبادلة",
-      "tokenA": "الرمز A",
-      "tokenB": "الرمز B",
-      "addLiquidityButton": "إضافة سيولة",
-      "insufficientBalanceBoth": "رصيد غير كافٍ لكلٍّ من {{symbolA}} و {{symbolB}}",
-      "insufficientBalanceNeed": "رصيد {{symbol}} غير كافٍ. تحتاج إلى {{needed}} لكن لديك {{have}} فقط"
-    },
-    "candlestickChart": {
-      "failedToLoadChartData": "فشل تحميل بيانات الرسم البياني",
-      "retry": "إعادة المحاولة",
-      "flipTradingPair": "قلب زوج التداول",
-      "loadingChartData": "جارٍ تحميل بيانات الرسم البياني..."
+      "addLiquidityButton": "إضافة سيولة"
     },
     "tokenSelector": {
       "searchPlaceholder": "ابحث بالرمز أو الصق العنوان",
@@ -1513,45 +1487,22 @@
       "nativeToken": "الرمز الأصلي",
       "noTokensAvailable": "لا توجد رموز متاحة",
       "tryAddingCustomToken": "حاول إضافة رمز مخصّص عبر العنوان",
-      "tokenNotFoundHint": "لا تجد الرمز الذي تبحث عنه؟ حاول إدخال عنوان السكّ أو تحقّق من إعدادات قائمة الرموز أدناه."
+      "tokenNotFoundHint": "لا تجد الرمز الذي تبحث عنه؟ حاول إدخال عنوان السكّ أو تحقّق من إعدادات قائمة الرموز أدناه.",
+      "tokenNotFound": "لم يتم العثور على رمز AEX-9 بهذا العنوان.",
+      "showAllTokens": "عرض الكل",
+      "showActiveOnly": "النشطة فقط",
+      "verified": "رمز موثّق"
     },
     "exploreTransactions": {
-      "txTypes": {
-        "all": "جميع الأنواع",
-        "swapExactTokensForTokens": "تبديل رمز برمز (محدّد)",
-        "swapTokensForExactTokens": "تبديل رمز برمز (لمحدّد)",
-        "swapExactAeForTokens": "تبديل AE برمز (محدّد)",
-        "swapExactTokensForAe": "تبديل رمز بـ AE (محدّد)",
-        "swapTokensForExactAe": "تبديل رمز بـ AE (لمحدّد)",
-        "swapAeForExactTokens": "تبديل AE برمز (لمحدّد)",
-        "addLiquidity": "إضافة سيولة (أزواج رموز)",
-        "addLiquidityAe": "إضافة سيولة (أزواج AE)",
-        "removeLiquidity": "إزالة سيولة (أزواج رموز)",
-        "removeLiquidityAe": "إزالة سيولة (أزواج AE)"
-      },
       "title": "مستكشف المعاملات المتقدّم",
-      "description": "صفِّ واستكشف معاملات DEX بأدوات تحكّم متقدّمة.",
-      "advancedFilters": "عوامل تصفية متقدّمة",
-      "refineSearch": "حسّن بحثك عن المعاملات",
-      "transactionType": "نوع المعاملة",
-      "selectTransactionType": "اختر نوع المعاملة",
-      "pairAddress": "عنوان الزوج",
-      "enterPairAddress": "أدخل عنوان عقد الزوج",
-      "accountAddress": "عنوان الحساب",
-      "enterAccountAddress": "أدخل عنوان الحساب",
-      "noTransactionsMatching": "لم يُعثر على معاملات مطابقة لمعاييرك."
+      "description": "صفِّ واستكشف معاملات DEX بأدوات تحكّم متقدّمة."
     },
     "pool": {
-      "yourLiquidityPositions": "مراكز السيولة الخاصة بك",
-      "manageDescription": "أدِر مراكز السيولة الخاصة بك وتتبّع الأرباح",
-      "positions": "المراكز",
-      "feesEarned": "الرسوم المكتسبة",
-      "activePositions": "المراكز النشطة",
       "refreshing": "جارٍ التحديث...",
       "refresh": "تحديث",
-      "loadingPositions": "جارٍ تحميل مراكزك...",
-      "noPositionsFound": "لم يُعثر على مراكز سيولة",
-      "noPositionsHint": "ابدأ بكسب الرسوم عبر توفير السيولة لأزواج التداول"
+      "bannerTitle": "وفّر السيولة واكسب رسوم التداول",
+      "bannerSubtitle": "أضف رمزين إلى مجمع لتحصل على رموز LP. كل عملية مبادلة عبر المجمع تدفع رسومًا تُوزَّع على مزوّدي السيولة. يمكنك سحب حصتك في أي وقت.",
+      "bannerCta": "استكشف المجمعات"
     },
     "swapConfirmation": {
       "confirmSwap": "تأكيد التبديل",
@@ -1584,40 +1535,16 @@
       "next": "التالي →",
       "previousPage": "الصفحة السابقة",
       "nextPage": "الصفحة التالية",
-      "ofPages": "من {{pages}}",
-      "tryAdjustingSearch": "حاول تعديل معايير بحثك"
+      "ofPages": "من {{pages}}"
     },
-    "wrapFailedShort": "فشل تغليف الرموز",
-    "unwrapFailedShort": "فشل فكّ تغليف الرموز",
     "wrapUnwrap": {
       "title": "تغليف/فكّ تغليف AE",
-      "wrap": "تغليف",
-      "unwrap": "فكّ التغليف",
-      "description": "غلّف AE إلى WAE (وفكّ التغليف) للتوافق مع بروتوكولات DeFi.",
-      "aeBalance": "رصيد AE",
-      "waeBalance": "رصيد WAE",
-      "amountTo": "المبلغ المراد {{action}}",
-      "balanceLabel": "الرصيد:"
+      "description": "غلّف AE إلى WAE (وفكّ التغليف) للتوافق مع بروتوكولات DeFi."
     },
-    "liquidityPreview": {
-      "ratioWarning": "⚠️ تحذير النسبة",
-      "poolPreview": "معاينة التجمّع",
-      "newPool": "تجمّع جديد",
-      "rate": "السعر",
-      "poolShare": "حصّة التجمّع",
-      "lpTokens": "رموز LP",
-      "suggestedOptimalAmounts": "💡 المبالغ المثلى المقترحة",
-      "use": "استخدم {{amount}} {{symbol}}"
-    },
-    "tradeToken": "تداول الرمز",
     "buy": "شراء",
     "sell": "بيع",
-    "settingsTitle": "الإعدادات",
-    "slippageTolerancePercent": "حدّ تحمّل الانزلاق (%)",
     "done": "تم",
     "poolHeader": {
-      "detailsAndStatistics": "تفاصيل تجمّع السيولة وإحصاءاته",
-      "viewToken": "عرض {{symbol}}",
       "back": "العودة إلى المجمعات",
       "overview": "نظرة عامة على المجمع",
       "liquidityPool": "مجمع السيولة",
@@ -1631,23 +1558,8 @@
       "failed": "تعذر تحميل تفاصيل المجمع"
     },
     "noLiquidity": {
-      "insufficientTitle": "سيولة غير كافية",
-      "insufficientDescription": "المبلغ المطلوب يتجاوز السيولة المتاحة في التجمّع. الحد الأقصى المتاح:",
       "reduceAmount": "• قلّل مبلغ إدخالك إلى {{amount}} {{symbol}} أو أقل",
-      "noLiquidityTitle": "لا توجد سيولة متاحة",
-      "noLiquidityForPair": "لم يُعثر على سيولة لزوج",
-      "pairCannotComplete": "لا يمكن إتمام هذا التبديل في الوقت الحالي.",
-      "tryDifferentPair": "• جرّب زوج رموز مختلف",
       "addLiquidity": "إضافة سيولة"
-    },
-    "tokenInput": {
-      "balanceLabel": "الرصيد:"
-    },
-    "liquidityPositionCard": {
-      "lpTokens": "رموز LP",
-      "poolShare": "حصّة التجمّع",
-      "add": "+ إضافة",
-      "remove": "إزالة"
     },
     "tokenPricePerformance": {
       "selectChartType": "اختر نوع الرسم البياني",
@@ -1700,14 +1612,11 @@
       "explore": "استكشاف",
       "addTokens": "إضافة رموز"
     },
-    "tokenFallback": "الرمز",
     "poolComposition": {
       "title": "تركيب التجمّع"
     },
     "poolReserves": {
-      "reserve": "الاحتياطي",
-      "lpTokenSupply": "معروض رموز LP",
-      "lpTokensInCirculation": "رموز LP المتداولة"
+      "lpTokenSupply": "معروض رموز LP"
     },
     "poolStats": {
       "totalVolume": "إجمالي الحجم",
@@ -1725,6 +1634,7 @@
       "allTime": "كل الفترات",
       "balances": "أرصدة المجمّع",
       "currentReserves": "الاحتياطيات الحالية",
+      "poolValue": "قيمة المجمع",
       "exchangeRate": "سعر الصرف",
       "rateHint": "نسبة الاحتياطيات الحالية، قبل رسوم المبادلة وتأثير السعر.",
       "rateUnavailable": "سعر الصرف غير متاح للاحتياطيات الفارغة أو غير المعروفة",
@@ -1849,6 +1759,7 @@
       "description": "أودع العملتين للحصول على حصة من رسوم التداول.",
       "deposit": "إيداع {{symbol}}",
       "linked": "مرتبط بنسبة المجمع",
+      "suggested": "مقترح وفق أسعار مجمعات AE. يمكنك تعديله.",
       "selectFirst": "اختيار عملة الإيداع الأولى",
       "selectSecond": "اختيار عملة الإيداع الثانية",
       "ratioHint": "المبالغ مرتبطة بنسبة المجمع. يمكنك تعديل أي منهما.",
@@ -2141,9 +2052,23 @@
       "copyFailed": "تعذر النسخ. حدد العنوان لنسخه.",
       "actions": "إجراءات الرمز",
       "pools": "المجمعات"
+    },
+    "slippageWarning": {
+      "high": "انزلاق السعر أعلى من 5% ({{slippagePct}}%) مرتفع. قد تتعرض صفقتك للاستباق وتحصل على أقل بكثير من السعر المعروض.",
+      "low": "انزلاق السعر أقل من 0.1% ({{slippagePct}}%) منخفض جدًا. قد تفشل معاملتك إذا تغيّر السعر."
     }
   },
   "social": {
+    "originalPost": "المنشور الأصلي",
+    "newPosts": {
+      "show_zero": "عرض {{count}} منشور جديد",
+      "show_one": "عرض منشور جديد واحد",
+      "show_two": "عرض منشورين جديدين",
+      "show_few": "عرض {{count}} منشورات جديدة",
+      "show_many": "عرض {{count}} منشورًا جديدًا",
+      "show_other": "عرض {{count}} منشور جديد"
+    },
+    "translatePost": "ترجمة",
     "share": "مشاركة",
     "sharePost": "مشاركة المنشور",
     "shareComment": "مشاركة التعليق",
@@ -2466,18 +2391,6 @@
     }
   },
   "trending": {
-    "market": {
-      "layout": "طريقة عرض السوق",
-      "table": "جدول",
-      "cards": "بطاقات",
-      "history": "سجل السعر",
-      "noHistory": "سجل السعر غير متاح",
-      "supply": "المعروض",
-      "rank": "الترتيب",
-      "details": "تفاصيل الرمز",
-      "capShort": "القيمة",
-      "markets": "أسواق الرموز"
-    },
     "noCreatedTokens": "لا توجد رموز منشأة",
     "noCreatedTokensDescription": "لم ينشئ هذا المستخدم أي رموز Trendminer بعد.",
     "success": "تم بنجاح",
@@ -2530,27 +2443,7 @@
         "unknownError": "خطأ غير معروف"
       },
       "rewards": {
-        "title": "اجمع مكافآتك",
-        "descriptionPart1": "تتراكم المكافآت مع مشاركة مدعوّيك المباشرين في مبيعات الرموز. يمكنك السحب بمجرد أن",
-        "descriptionPart2": "ينفق كل منهم ما لا يقل عن",
-        "descriptionPart3": "(تراكميًا).",
-        "directInvitees": "{{count}} مدعوّ مباشر",
-        "note": "ملاحظة: تعتمد الأهلية والمكافآت على النشاط على السلسلة وغير مضمونة.",
-        "progressToRewards": "التقدّم نحو المكافآت",
-        "reachedCount": "{{reached}}/{{total}} تحقّق",
-        "eligibleToWithdraw": "🎉 مؤهّل للسحب",
-        "moreInviteesNeeded": "يحتاج {{count}} مدعوّ إضافي للوصول إلى {{minSpent}} AE",
-        "stillAccumulating_one": "{{count}} مدعوّ لا يزال يتراكم",
-        "stillAccumulating_other": "{{count}} مدعوّ لا يزالون يتراكمون",
-        "reached": "تحقّق",
-        "andMore": "+{{count}} المزيد",
-        "availableRewards": "المكافآت المتاحة",
-        "withdrawing": "جارٍ السحب...",
-        "notEligibleYet": "غير مؤهّل بعد",
-        "noRewardsYet": "لا توجد مكافآت بعد",
-        "collectRewards": "اجمع المكافآت",
-        "notEligibleDetail": "غير مؤهّل بعد: تحتاج إلى {{minInvitees}} مدعوّ مباشر أنفق كل منهم ما لا يقل عن {{minSpent}} AE في مبيعات الرموز.",
-        "collectError": "حدث خطأ أثناء جمع المكافآت."
+        "title": "اجمع مكافآتك"
       }
     },
     "tokenName": "اسم الرمز",
@@ -2576,11 +2469,10 @@
     },
     "tokenList": {
       "sortBy": "ترتيب حسب",
-      "clearSearch": "مسح البحث",
-      "exploreSections": "أقسام الاستكشاف",
       "tabTokens": "الرموز",
       "tabUsers": "المستخدمون",
       "tabPosts": "المنشورات",
+      "tabAll": "الكل",
       "sortMarketCap": "القيمة السوقية",
       "sortTrending": "الرائج",
       "sortPrice": "السعر",
@@ -2593,13 +2485,12 @@
       "fallbackPosts": "لم يُعثر على منشورات مطابقة. عرض المنشورات الشائعة بدلاً منها.",
       "loading": "جارٍ التحميل...",
       "searchingTrends": "جارٍ البحث في الترندات...",
-      "loadingMore": "جارٍ تحميل المزيد من النتائج...",
       "searchError": "تعذّر تحميل نتائج البحث الآن. يرجى المحاولة مرة أخرى.",
       "inputAria": "ابحث في الرموز والمستخدمين والمنشورات",
       "searchPlaceholder": "ابحث عن ترندات أو مستخدمين أو منشورات",
       "resultsCount_one": "{{count}} نتيجة",
       "resultsCount_other": "{{count}} نتيجة",
-      "showLess": "عرض أقل",
+      "noCategoryResults": "لم يُعثر على نتائج لـ “{{query}}”.",
       "viewAll": "عرض الكل",
       "pageTitle": "Superhero.com – ابحث في الترندات والمستخدمين والمنشورات",
       "pageDescription": "ابحث في الترندات المُرمَّزة والمبدعين والمتداولين والمنشورات عبر Superhero.",
@@ -2618,10 +2509,8 @@
     },
     "createToken": {
       "oops": "عذرًا!",
-      "collection": "المجموعة",
       "trendTokenName": "اسم رمز الترند",
       "charactersCount": "{{count}}/{{max}} حرف",
-      "invalidCharacters": "أحرف غير صالحة",
       "unsupportedBadge": "غير مدعوم",
       "unsupportedCharacters": "هذه الأحرف غير مدعومة بعد",
       "allowedCharsHint": "المسموح: A–Z و0–9 و-",
@@ -2678,7 +2567,6 @@
         "feesBody": "عند إنشاء رمز، يمكنك تحديد مبلغ شراء أولي. تُطبَّق رسوم بروتوكول صغيرة (1%) لدعم المنصّة ومكافآت رمز البروتوكول. ويذهب الباقي إلى منحنى الترابط، مما يضمن اكتشافًا عادلًا للسعر منذ البداية."
       },
       "errors": {
-        "allowedCharsRange": "يُسمح فقط بالأحرف ضمن النطاق \"{{chars}}\".",
         "unknownError": "خطأ غير معروف",
         "somethingWentWrong": "عذرًا، حدث خطأ ما. \n{{message}}"
       }
@@ -2693,12 +2581,6 @@
       "createTokenToUnlock": "أنشئ الرمز لفتح هذه الميزة",
       "tokenDeployedSuccessfully": "تم نشر الرمز بنجاح!",
       "tokenNowLive": "رمزك الآن مباشر على البلوكتشين.",
-      "badgeNotCreated": "غير منشأ",
-      "badgeRank": "المرتبة #{{rank}}",
-      "badgeOwned": "مملوك",
-      "showLess": "عرض أقل",
-      "showMore": "عرض المزيد",
-      "tokenNotCreatedHeaderHint": "لم يُنشأ هذا الرمز بعد. يمكنك أن تكون أول من ينشئه ويشارك ماهيّته!",
       "tokenNotCreatedYet": "لم يُنشأ الرمز بعد",
       "tokenNotCreatedYetHint": "هذا الرمز غير موجود بعد. كن أول من ينشئه ويبدأ ببناء مجتمع!",
       "createThisToken": "أنشئ هذا الرمز",
@@ -2780,7 +2662,6 @@
     },
     "inviteView": {
       "title": "ادعُ واكسب",
-      "subtitle": "ابنِ شبكتك، واكسب المكافآت",
       "dismiss": "إخفاء",
       "howItWorks": "كيف يعمل",
       "step1": "أنشئ روابط دعوة عبر تمويل مكافأة AE لمرة واحدة لكل دعوة",
@@ -2857,7 +2738,8 @@
       "buys": "المشتريات:",
       "sells": "المبيعات:",
       "created": "أُنشئ:",
-      "viewProfile": "عرض الملف الشخصي"
+      "viewProfile": "عرض الملف الشخصي",
+      "roiNotMeaningful": "غير ذي دلالة: كانت قيمة المحفظة شبه معدومة في بداية هذه الفترة."
     },
     "leaderboardFilters": {
       "chooseFromCalendar": "اختر {{label}} من التقويم",
@@ -2887,19 +2769,12 @@
       "sell": "بيع"
     },
     "feedTab": {
-      "popular": "الأكثر شيوعًا",
-      "latest": "الأحدث",
       "postsForHashtag": "منشورات لـ #{{name}}",
       "hideGraphs": "إخفاء الرسوم البيانية",
       "trade": "تداول",
       "holdersOnly": "المالكون فقط",
       "allPosts": "جميع المنشورات"
     },
-    "assetInput": {
-      "balanceLabel": "الرصيد:",
-      "max": "الحد الأقصى"
-    },
-    "newBadge": "جديد",
     "performanceTimeframe": {
       "closeMenu": "إغلاق قائمة الإطار الزمني"
     },
@@ -2964,7 +2839,6 @@
       },
       "status": {
         "completed": "مكتمل",
-        "inProgress": "قيد التنفيذ",
         "step": "الخطوة {{current}} من {{total}}",
         "postsProgress": "{{current}} من {{total}} منشورات",
         "locked": "مقفل"
@@ -3003,7 +2877,9 @@
         "currentStreak": "التسلسل الحالي: {{days}}/{{total}} يوم",
         "openingWallet": "جارٍ فتح المحفظة…",
         "postOnX": "انشر على X",
-        "streakInfo": "لكل منشور يستوفي المعايير، ستكسب رموز AE بناءً على مستوى متابعيك. النشر يومياً لمدة 10 أيام متتالية سيمنحك 50 AE إضافياً، لذا واصل النشر والتفاعل مع المجتمع.",
+        "streakInfo": "لكل منشور يستوفي المعايير، ستكسب رموز AE بناءً على مستوى متابعيك. انشر مرة واحدة على الأقل يومياً لمدة 10 أيام متتالية لتحصل على 50 AE إضافياً، لذا واصل النشر والتفاعل مع المجتمع.",
+        "streakRule": "تُحسب أيام التسلسل بتوقيت UTC (الآن {{time}} UTC). لا تُحتسب إلا المنشورات التي تحتوي على رابط الإحالة الخاص بك. أي يوم بتوقيت UTC بدون منشور كهذا يعيد التسلسل إلى 0.",
+        "streakNone": "لا يوجد تسلسل نشط. انشر مع رابط الإحالة الخاص بك لتبدأ واحداً.",
         "complete": "المرحلة مكتملة — تم كسب {{amount}} AE"
       }
     },
@@ -3014,31 +2890,12 @@
       "step1": "اربط حساب X الخاص بك",
       "step2": "انشر عن Superhero لكسب 50 AE",
       "progress": "{{done}} من {{total}} خطوات مكتملة",
-      "continue": "متابعة الإعداد",
       "connectX": "توصيل X",
       "postOnX": "انشر واكسب",
-      "done": "جاهز تماماً!"
+      "dismiss": "إخفاء خطوات الإعداد"
     },
     "users": {
-      "list": "قائمة",
-      "cards": "بطاقات",
-      "layout": "طريقة عرض المستخدمين",
-      "title": "أفضل المتداولين",
-      "subtitle": "مرتّبون حسب الربح والخسارة خلال ٧ أيام · USD",
-      "leaderboard": "عرض الترتيب",
-      "trader": "المتداول",
-      "pnl": "الربح · ٧ أيام",
-      "roi": "العائد · ٧ أيام",
-      "aum": "الأصول المُدارة",
-      "rank": "الترتيب {{rank}}",
-      "profile": "عرض الملف الشخصي: {{name}}",
-      "empty": "لا يوجد متداولون بعد",
-      "emptyCopy": "سيظهر النشاط عند توفر لوحة الترتيب.",
-      "error": "تعذّر تحميل المتداولين",
-      "errorCopy": "حاول مجددًا لعرض أحدث ترتيب.",
-      "retry": "حاول مجددًا",
-      "loading": "جارٍ تحميل المتداولين",
-      "refreshError": "تعذّر تحديث المتداولين"
+      "title": "أفضل المتداولين"
     },
     "overview": {
       "back": "العودة إلى الاستكشاف",
@@ -3168,6 +3025,8 @@
     "insufficientOutputAmount": "لم يتحقق الحد الأدنى للمخرج بسبب تحرك السعر.{{hint}}",
     "slippageHint": " زِد نسبة الانزلاق (حالياً {{slippagePct}}%) أو قلّل حجم الصفقة.",
     "slippageHintGeneric": " زِد نسبة الانزلاق أو قلّل حجم الصفقة.",
+    "slippageOnlyHint": " زِد نسبة الانزلاق (حالياً {{slippagePct}}%) وحاول مرة أخرى.",
+    "slippageOnlyHintGeneric": " زِد نسبة الانزلاق وحاول مرة أخرى.",
     "deadlineReached": "تم الوصول إلى مهلة المعاملة.{{hint}}",
     "deadlineHint": " زِد المهلة (حالياً {{deadlineMins}} دقيقة) وحاول مرة أخرى.",
     "deadlineHintGeneric": " زِد المهلة وحاول مرة أخرى.",
@@ -3175,8 +3034,6 @@
     "invalidRecipient": "مستلم غير صالح لهذه المعاملة.",
     "pairExists": "المجمّع موجود بالفعل.",
     "tokenNotApproved": "الرمز غير معتمد للإنفاق. يرجى الموافقة على الرمز والمحاولة مرة أخرى.",
-    "insufficientEthBalance": "رصيد ETH غير كافٍ. تحتاج إلى {{amount}} ETH على الأقل لإتمام عملية الجسر هذه.",
-    "insufficientEthBalanceGeneric": "رصيد ETH غير كافٍ لإتمام عملية الجسر هذه.",
     "insufficientBalance": "الرصيد غير كافٍ لإتمام هذه العملية.",
     "networkError": "مشكلة في اتصال الشبكة. يرجى التحقق من اتصالك والمحاولة مرة أخرى.",
     "contractError": "فشل التفاعل مع العقد. يرجى المحاولة مرة أخرى أو التواصل مع الدعم إذا استمرت المشكلة.",
@@ -3189,50 +3046,76 @@
     "wrapFailed": "فشل التغليف. حاول مرة أخرى.",
     "unwrapFailed": "فشل فك التغليف. حاول مرة أخرى.",
     "genericError": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
-    "nameNotAllowedChar": "يستخدم اسم الرمز هذا أحرفاً غير مسموح بها للمجموعة المحددة. اختر اسماً مختلفاً باستخدام الأحرف أو الأرقام أو الرموز المسموح بها فقط."
+    "nameNotAllowedChar": "يستخدم اسم الرمز هذا أحرفاً غير مسموح بها للمجموعة المحددة. اختر اسماً مختلفاً باستخدام الأحرف أو الأرقام أو الرموز المسموح بها فقط.",
+    "dexContract": {
+      "AedexV2Library_IDENTICAL_ADDRESSES": "لا يمكن للموجّه مبادلة رمز بنفسه: الرمزان المحددان متطابقان. اختر رمزين مختلفين.",
+      "AedexV2Library_INSUFFICIENT_AMOUNT": "تعذّر على الموجّه تسعير هذه الصفقة لأن المبلغ صفر. أدخل مبلغًا أكبر من الصفر.",
+      "AedexV2Library_INSUFFICIENT_LIQUIDITY": "لا توجد سيولة في هذا المجمع بعد (كلا الاحتياطيين صفر)، لذا لا يمكن تحديد سعر. أضف سيولة أولًا أو اختر زوجًا آخر.",
+      "AedexV2Library_NO_PAIR_FOUND": "لم يجد الموجّه مجمعًا لإحدى خطوات هذا المسار. اختر زوجًا أو مسارًا آخر.",
+      "AedexV2Library_INSUFFICIENT_INPUT_AMOUNT": "رفض الموجّه الصفقة لأن مبلغ الإدخال صفر. زِد المبلغ الذي تدفعه.",
+      "AedexV2Library_INSUFFICIENT_OUTPUT_AMOUNT": "رفض الموجّه الصفقة لأنك ستتلقى صفر رموز. زِد المبلغ.",
+      "AedexV2Library_INVALID_PATH": "يجب أن يحتوي مسار المبادلة على رمزين على الأقل. أعد اختيار الرموز وحاول مرة أخرى.",
+      "AedexV2Library_INTERNAL_ERROR_AMOUNTS_VOID": "واجه الموجّه خطأ داخليًا أثناء حساب مبالغ المسار. حدّث عرض السعر وحاول مرة أخرى.",
+      "AedexV2Library_INTERNAL_ERROR_PATH_VOID": "واجه الموجّه خطأ داخليًا أثناء حساب مبالغ المسار. حدّث عرض السعر وحاول مرة أخرى.",
+      "AedexV2Router_AMOUNT_LIST_IS_SHORTER": "واجه الموجّه خطأ داخليًا أثناء حساب مبالغ المسار. حدّث عرض السعر وحاول مرة أخرى.",
+      "AedexV2Router_DIFFERENT_WAE_ADDRESSES": "الموجّه مُعدّ بشكل خاطئ (عناوين WAE غير متطابقة). هذا ليس بسبب معاملتك؛ يُرجى الإبلاغ عنه.",
+      "AedexV2Router_INSUFFICIENT_A_AMOUNT": "تغيّر سعر المجمع: ستقل كمية الرمز الأول عن الحد الأدنى الذي حددته.{{hint}}",
+      "AedexV2Router_INSUFFICIENT_B_AMOUNT": "تغيّر سعر المجمع: ستقل كمية الرمز الثاني عن الحد الأدنى الذي حددته.{{hint}}",
+      "AedexV2Router_EXCESSIVE_INPUT_AMOUNT": "تغيّر السعر: تتطلب هذه الصفقة الآن مدخلات أكثر من الحد الأقصى الذي سمحت به.{{hint}}",
+      "AedexV2Router_INVALID_PATH_LAST": "يجب أن تنتهي المبادلة إلى AE بـ AE المغلّف (WAE)، وهذا المسار لا ينتهي به. أعد اختيار الرموز.",
+      "AedexV2Router_INVALID_PATH_FIRST": "يجب أن تبدأ المبادلة من AE بـ AE المغلّف (WAE)، وهذا المسار لا يبدأ به. أعد اختيار الرموز.",
+      "AedexV2Router_INSUFFICIENT_OUTPUT_AMOUNT": "تغيّر السعر: ستتلقى أقل من الحد الأدنى المحدد بالانزلاق السعري.{{hint}}",
+      "AedexV2Router_EXPIRED": "انقضت المهلة النهائية للمعاملة قبل تعدينها، لذا رفضها الموجّه.{{hint}}",
+      "WAE_LOW_BALANCE": "رصيدك من AE المغلّف (WAE) منخفض جدًا لهذا التحويل. خفّض المبلغ أو غلّف مزيدًا من AE.",
+      "WAE_LOW_ALLOWANCE": "مبلغ WAE المعتمد أقل مما تحتاجه هذه المعاملة. اعتمد مبلغًا أعلى وحاول مرة أخرى.",
+      "WAE_ALLOWANCE_NOT_EXISTENT": "لم يتم اعتماد WAE للمنصة على هذا الحساب. اعتمده وحاول مرة أخرى.",
+      "WAE_NON_NEGATIVE_VALUE_REQUIRED": "أحد المبالغ المرسلة إلى عقد WAE سالب. أدخل مبلغًا موجبًا.",
+      "WAE_ALLOWANCE_ALREADY_EXISTENT": "يوجد اعتماد WAE لهذا الحساب بالفعل، لذا لا يمكن إنشاء اعتماد جديد. أعد المحاولة لتحديث الاعتماد الحالي.",
+      "AedexV2Factory_FORBIDDEN": "يمكن لمسؤول المصنع فقط استدعاء هذه الوظيفة، وحسابك ليس المسؤول.",
+      "AedexV2Factory_IDENTICAL_ADDRESSES": "يحتاج المجمع إلى رمزين مختلفين، والرمزان المحددان متطابقان. اختر رمزين مختلفين.",
+      "AedexV2Factory_PAIR_EXISTS": "يوجد مجمع لهذين الرمزين بالفعل، لذا لا يمكن إنشاؤه مرة أخرى. أضف السيولة إلى المجمع الحالي بدلًا من ذلك.",
+      "AedexV2Pair_NEGATIVE_VALUE_ON_TRANSFER": "رفض المجمع تحويل مبلغ سالب. أدخل مبلغًا موجبًا.",
+      "AedexV2Pair_NOT_DEBUG_MODE": "هذا الإجراء مسموح به في وضع التصحيح فقط وهو معطّل على هذه الشبكة.",
+      "AedexV2Pair_LP": "اكتشف المجمع رصيدًا أو احتياطيًا سالبًا وأوقف المعاملة. حدّث الصفحة وحاول مرة أخرى.",
+      "AedexV2Pair_INSUFFICIENT_LIQUIDITY_MINTED": "إيداعك صغير جدًا لسكّ أي رموز مجمع. زِد كلا المبلغين.",
+      "AedexV2Pair_INSUFFICIENT_OUTPUT_AMOUNT": "رفض المجمع المبادلة لأن كلا مبلغي الإخراج صفر. زِد مبلغ الإدخال.",
+      "AedexV2Pair_INSUFFICIENT_LIQUIDITY": "لا يحتوي المجمع على رموز كافية للمبلغ المطلوب. جرّب مبلغًا أصغر.",
+      "AedexV2Pair_INVALID_TO": "لا يمكن أن يكون عنوان المستلم أحد عقود رموز المجمع. استخدم عنوان محفظتك كمستلم.",
+      "AedexV2Pair_INSUFFICIENT_INPUT_AMOUNT": "لم يتلقَّ المجمع أي رموز إدخال لهذه المبادلة. زِد المبلغ وحاول مرة أخرى.",
+      "AedexV2Pair_INSUFFICIENT_BALANCE": "لم يتلقَّ المجمع رموزًا كافية لهذه المعاملة. تحقق من رصيدك والاعتماد ثم حاول مرة أخرى.",
+      "AedexV2Pair_INSUFFICIENT_LIQUIDITY_BURNED": "مقدار السيولة المراد سحبها صغير جدًا لإرجاع أي رموز. زِد المقدار.",
+      "AedexV2Pair_INSUFFICIENT_BALANCE_FOR_TRANSFER": "لا تملك رموز مجمع كافية لهذا التحويل. خفّض المقدار.",
+      "AedexV2Pair_BALANCE_ACCOUNT_NOT_EXISTENT": "لم يقدّم هذا الحساب سيولة لهذا المجمع مطلقًا، لذا لا يوجد ما يُسحب.",
+      "AedexV2Pair_INSUFFICIENT_ALLOWANCE": "الموجّه غير معتمد لنقل كمية كافية من رموز المجمع لديك. اعتمد مبلغًا أعلى وحاول مرة أخرى.",
+      "AedexV2Pair_ALLOWANCE_NOT_EXISTENT": "لم يتم اعتماد رموز المجمع لديك للموجّه. اعتمدها وحاول مرة أخرى.",
+      "AedexV2Pair_INSUFFICIENT_TOTAL_SUPPLY": "إجمالي معروض المجمع أقل من السيولة المراد سحبها (خطأ داخلي في المجمع). حدّث وحاول مرة أخرى.",
+      "AedexV2Pair_INSUFFICIENT_BALANCE_FOR_BURNING": "إجمالي معروض المجمع أقل من السيولة المراد سحبها. حدّث مركزك وجرّب مقدارًا أصغر."
+    },
+    "dexContractFallback": "رفض عقد المنصة هذه المعاملة: {{code}}."
   },
   "landing": {
     "hero": {
-      "tagline": "امتلك هويتك الإلكترونية",
       "title": "تواصلك الاجتماعي، ومحفظتك، وقواعدك — شبكة <b>لا مركزية</b> للجميع",
-      "description": "سجّل الدخول بمحفظتك واحتفظ بهوية واحدة قابلة للنقل عبر التطبيقات. انشر على السلسلة عندما تريد أفكاراً قابلة للتحقق ومؤرّخة — وأكرِم المبدعين فوراً. الأمر بسيط وودود ومدعوم ببلوكشين æternity.",
-      "getStarted": "ابدأ الآن",
-      "appPreview": "معاينة تطبيق Superhero"
+      "description": "سجّل الدخول بمحفظتك واحتفظ بهوية واحدة قابلة للنقل عبر التطبيقات. انشر على السلسلة عندما تريد أفكاراً قابلة للتحقق ومؤرّخة — وأكرِم المبدعين فوراً. الأمر بسيط وودود ومدعوم ببلوكشين æternity."
     },
     "privacy": {
-      "badge": "الخصوصية أولاً",
       "title": "شارك قصتك —",
-      "title2": "واحتفظ بهويتك",
       "description": "مع الهوية القائمة على المحفظة، أنت من يقرر ما تشاركه وما تحتفظ به. اسمك وسمعتك قابلان للنقل عبر منظومة æternity، ويمكن أن تعيش منشوراتك على السلسلة عندما تريد إثبات التأليف والديمومة — أو خارج السلسلة عندما تفضّل السرعة والخفة. أنت المتحكم في كلتا الحالتين."
     },
     "features": {
       "decentralized": {
         "title": "لا مركزية بالكامل",
-        "description": "نظير إلى نظير بحكم التصميم. لا شيء يقف بينك وبين من تتابعهم. يمكن أن تكون هويتك ومنشوراتك على السلسلة، فتتدفق القيمة مباشرة إلى المبدعين.",
-        "alt": "لا مركزية"
+        "description": "نظير إلى نظير بحكم التصميم. لا شيء يقف بينك وبين من تتابعهم. يمكن أن تكون هويتك ومنشوراتك على السلسلة، فتتدفق القيمة مباشرة إلى المبدعين."
       },
       "posting": {
         "title": "النشر اللامركزي"
       }
     },
     "valueProposition": {
-      "badge": "لماذا الهوية والمنشورات على السلسلة؟",
-      "title": "تسجيل الدخول بالمحفظة يجعل هويتك <b>قابلة للنقل</b>. المنشورات على السلسلة <b>قابلة للإثبات</b> و<b>قابلة لإعادة المزج</b>.",
-      "points": {
-        "walletIdentity": "سجّل الدخول بمحفظتك — هوية واحدة عبر التطبيقات",
-        "socialGraph": "امتلك رسمك الاجتماعي وسمعتك القابلة للنقل",
-        "verifiablePosts": "منشورات قابلة للتحقق ومؤرّخة (خيار على السلسلة)",
-        "openSource": "مفتوح المصدر ويقوده المجتمع"
-      }
+      "title": "تسجيل الدخول بالمحفظة يجعل هويتك <b>قابلة للنقل</b>. المنشورات على السلسلة <b>قابلة للإثبات</b> و<b>قابلة لإعادة المزج</b>."
     },
     "tipping": {
-      "badge": "الإكراميات",
-      "title": "<b>إرسال العملات الرقمية</b> لم يكن <b>أسهل</b> من أي وقت مضى",
-      "description1": "تتكامل محفظة Superhero الأصلية بسلاسة مع حياتك اليومية وتتيح لك إكرام المحتوى والمبدعين فوراً – وبتكلفة تكاد تكون معدومة.",
-      "description2": "أنشئ روابط الدعوة، وتتبّع سجلّك، والمزيد – كل ذلك في مكان واحد.",
-      "walletMockup": "نموذج المحفظة",
-      "appStoreAlt": "التنزيل من App Store",
-      "googlePlayAlt": "احصل عليه من Google Play"
+      "title": "<b>إرسال العملات الرقمية</b> لم يكن <b>أسهل</b> من أي وقت مضى"
     },
     "powerFeatures": {
       "title": "مليء <b>بالميزات القوية</b>",
@@ -3248,21 +3131,13 @@
         },
         "button": {
           "title": "Superhero Button",
-          "description": "أضف زر إكرامية بسيطاً وقابلاً للتخصيص إلى موقعك أو مدونتك ودع الناس يكافئون عملك.",
-          "learnMore": "اعرف المزيد"
+          "description": "أضف زر إكرامية بسيطاً وقابلاً للتخصيص إلى موقعك أو مدونتك ودع الناس يكافئون عملك."
         }
       }
     },
     "openSource": {
-      "badge": "مفتوح المصدر",
       "title": "Superhero",
-      "title2": "مفتوح المصدر",
-      "description": "اغُص في التفاصيل، واستخدم الكود، أو انسخه، أو شغّله محلياً. انضم إلى مجتمع عالمي يدفع المنظومة إلى الأمام.",
-      "githubAlt": "GitHub",
-      "cta": "ساهم على GitHub"
-    },
-    "cta": {
-      "becomeToday": "كن Superhero اليوم"
+      "description": "اغُص في التفاصيل، واستخدم الكود، أو انسخه، أو شغّله محلياً. انضم إلى مجتمع عالمي يدفع المنظومة إلى الأمام."
     }
   },
   "forms": {
@@ -3387,10 +3262,6 @@
     "bannerA": {
       "title": "انشر على السلسلة.",
       "description": "شارك منشورات تُسوّى على السلسلة. القرّاء يكرّمون مباشرة؛ والمبدعون يحصلون على إيصالات تلقائياً.",
-      "chips": [
-        "إكراميات مباشرة",
-        "إيصالات على السلسلة"
-      ],
       "primaryButton": "ابدأ النشر",
       "secondaryButton": "كيف يعمل",
       "eyebrow": "تواصل على السلسلة",
@@ -3401,25 +3272,16 @@
     "bannerC": {
       "title": "من الإشارة → الخزينة:",
       "description": "رسوم الشراء على #الترندات تُغذّي DAOs تلقائياً ليحصل أفضل الأفكار على ميزانيات ومراحل.",
-      "chips": [
-        "الرسوم → الخزينة",
-        "مدفوعات المبدعين"
-      ],
-      "primaryButton": "ابدأ DAO ذات غرض",
-      "secondaryButton": "عرض DAOs",
+      "primaryButton": "استكشف DAOs",
+      "secondaryButton": "أطلق ‎#ترندًا",
       "eyebrow": "مجتمعات DAO",
       "titleAccent": "DAOs ذات الغرض.",
       "metaMain": "حاملو الرموز",
       "metaAccent": "حوكمة المجتمع"
     },
-    "keyFeatures": "المزايا الرئيسية",
     "bannerB": {
       "title": "رمّز ‎#الترندات.",
       "description": "‎#الترندات أسواق. راهن على الثقافة ودع الأسعار تكشف ما يهمّ.",
-      "chips": [
-        "مؤشرات الشعبية",
-        "منحنى الترابط"
-      ],
       "primaryButton": "أطلق ‎#ترندًا",
       "secondaryButton": "استكشف ‎#الترندات",
       "eyebrow": "أسواق الترندات",
@@ -3535,7 +3397,6 @@
     "volume": "الحجم",
     "tvl": "إجمالي القيمة المقفلة",
     "fees": "الرسوم",
-    "createdTrends": "الترندات المنشأة",
     "feed": "الموجز",
     "ownedTrends": "الترندات المملوكة",
     "transactions": "المعاملات",
@@ -3588,23 +3449,15 @@
     "amountOut": "المبلغ الخارج",
     "transaction": "المعاملة",
     "explorePools": "استكشاف التجمّعات",
-    "explorePoolsDescription": "استكشف أزواج التداول ومقاييس أدائها عبر DEX.",
     "createdAt": "أُنشئ في",
-    "show": "عرض:",
-    "searchPoolsPlaceholder": "البحث في التجمّعات...",
-    "poolsCount_one": "{{count}} تجمّع",
-    "poolsCount_other": "{{count}} تجمّع",
-    "tvlShort": "TVL",
     "chart": "الرسم البياني",
     "showingPoolsRange": "عرض {{from}}-{{to}} من {{total}} تجمّع",
     "first": "الأول",
     "firstPage": "الصفحة الأولى",
     "prev": "السابق",
     "previousPage": "الصفحة السابقة",
-    "ofPages": "من {{total}}",
     "next": "التالي",
     "nextPage": "الصفحة التالية",
-    "last": "الأخير",
     "lastPage": "الصفحة الأخيرة",
     "tokenListTable": {
       "loadingTokens": "جارٍ تحميل الرموز...",
@@ -3676,13 +3529,13 @@
   "faq": {
     "welcome": "أهلاً بك",
     "heroTitle": "Superhero — التطبيق الشامل للتواصل الاجتماعي والعملات الرقمية",
-    "heroDescription": "اكتشف الترندات، وأنشئ رموز المجتمع، وتداول على منحنيات الربط، وتحادث في الوقت الفعلي، وأدِر الخزائن — بالشراكة مع Quali.chat.",
+    "heroDescription": "اكتشف الترندات، وأنشئ رموز المجتمع، وتداول على منحنيات الربط، وتحادث في الوقت الفعلي، وأدِر الخزائن.",
     "badgeCreate": "إنشاء",
     "badgeTrade": "تداول",
     "badgeVote": "تصويت",
     "badgeEarn": "كسب",
     "onThisPage": "في هذه الصفحة",
-    "tip": "نصيحة: ابدأ بقسم البدء، ثم استكشف Trendminer وقسم DAO والحوكمة.",
+    "tip": "نصيحة: ابدأ بقسم البدء، ثم استكشف قسم التداول وقسم DAO والحوكمة.",
     "gettingStartedCardTitle": "البدء",
     "gettingStartedIntro": "جديد هنا؟ إليك النسخة المختصرة:",
     "gettingStartedLi1": "ثبّت محفظة Superhero وموّلها بقليل من AE.",
@@ -3714,10 +3567,6 @@
     "collapse": "−",
     "qWhatIsSuperheroTitle": "ما هو Superhero؟",
     "qWhatIsSuperheroAnswer": "Superhero تطبيق للتواصل الاجتماعي والعملات الرقمية على بلوكشين aeternity. يمكنك اكتشاف المحتوى، وإنشاء المنشورات، وإرسال الإكراميات، وتداول رموز المجتمع، والمشاركة في الحوكمة على السلسلة — كل ذلك في مكان واحد.",
-    "qChatPoweredByQualiTitle": "من يدعم المحادثة هنا؟",
-    "qChatPoweredByQualiAnswer": "نتشارك مع Quali.chat — تطبيق محادثة عالي الجودة لمحبي العملات الرقمية. توقّع محادثات فورية، وأدوات إشراف، وتجربة استخدام ملائمة للعملات الرقمية. لكل رمز غرفة عامة؛ يمكن للحائزين التنسيق بسرعة أكبر.",
-    "qWhatIsTrendingTitle": "ما هو Trendminer؟",
-    "qWhatIsTrendingAnswer": "يتيح لك Trendminer تحويل الأفكار الرائجة إلى رموز. يطلق المبدعون رموز المجتمع على منحنى ربط. يتغيّر السعر مع عمليات الشراء والبيع؛ لا دفاتر أوامر، مجرد رياضيات. تتدفق رسوم صغيرة إلى خزينة رمز (DAO) لتمويل مبادرات المجتمع.",
     "qQuickStartTitle": "بداية سريعة: كيف أبدأ؟",
     "qQuickStartLi1": "ثبّت محفظة Superhero وموّلها بقليل من AE.",
     "qQuickStartLi2": "افتح الرائج ورتّب حسب القيمة السوقية لمشاهدة المجتمعات الراسخة.",
@@ -3734,7 +3583,7 @@
     "qGovernanceTitle": "ما هو قسم التصويت؟",
     "qGovernanceAnswer": "توفّر صفحة التصويت واجهة موحّدة لتصفح الاستطلاعات، والتصويت، وإدارة التفويضات، وعرض نشاط حوكمتك على السلسلة. جميع وظائف الحوكمة متاحة عبر علامات تبويب ضمن صفحة واحدة.",
     "qSocialTitle": "هل يوجد موجز اجتماعي؟",
-    "qSocialAnswer": "نعم. يمكنك تصفح المنشورات، والتعليق، واستكشاف المجتمعات. التعليقات ومحادثات الرموز مدعومة بـ Quali.chat — غرف فورية مبنية للمجتمعات الأصيلة للعملات الرقمية.",
+    "qSocialAnswer": "نعم. يمكنك تصفح المنشورات، والتعليق، واستكشاف المجتمعات. المحادثة مدمجة في تطبيق Superhero على الويب والهاتف وتعمل عبر Nostr.",
     "qAccountsTitle": "ماذا يمكنني أن أرى في صفحات الحسابات؟",
     "qAccountsAnswer": "تعرض ملفات الحسابات الرموز المملوكة، والرموز المنشأة، والنشاط. وتسلّط لوحات الصدارة الضوء على أكثر المبدعين والمتداولين نشاطاً.",
     "qInvitesTitle": "ما هي الدعوات؟",
@@ -3776,19 +3625,12 @@
     "heroTitle": "اشترِ أو اكسب AE من أجل Superhero",
     "heroDescription": "AE هي العملة الأصلية لبلوكشين aeternity. تستخدمها لدفع رسوم الشبكة، والإكراميات، وتداول رموز الترند، والمشاركة في النشاط على السلسلة على Superhero.",
     "badgeBuy": "شراء",
-    "badgeBridge": "جسر",
     "badgeEarn": "كسب",
     "onThisPage": "في هذه الصفحة",
     "tip": "قد يتغيّر التوفر والأزواج. تأكد دائماً من التفاصيل مع مزوّد الخدمة قبل إرسال الأموال.",
-    "whatIsAeTitle": "ما هو AE؟",
-    "whatIsAeDescription": "يشغّل AE بلوكشين aeternity. يُستخدم لرسوم المعاملات، والتفاعل مع العقود الذكية، والإكراميات، وشراء أو بيع رموز المجتمع على Superhero.",
-    "waysTitle": "طرق الحصول على AE",
     "gateTitle": "بادل أو اشترِ على Gate.io",
     "gateDescription": "يوفّر Gate.io سوق AE/USDT وهو أحد الخيارات الرئيسية للمنصات المركزية لسيولة AE.",
     "gateAction": "فتح Gate.io AE/USDT",
-    "bridgeTitle": "اجسر أو بادل من أصول أخرى",
-    "bridgeDescription": "إذا كنت تملك عملات رقمية بالفعل، استخدم أدوات DeFi المتاحة في Superhero أو الجسور والمبادلات المدعومة لنقل القيمة نحو AE عند توفر المسارات.",
-    "bridgeAction": "فتح Superhero DeFi",
     "referTitle": "استخدم برنامج الدعوة والكسب",
     "referDescription": "يمكن لدعوات Superhero أن تساعد في تنمية الشبكة وفتح المكافآت عندما يصبح المدعوون نشطين. استخدم صفحة الدعوة لإنشاء الروابط وتتبّع المكافآت.",
     "referAction": "فتح الدعوة والكسب",
@@ -3799,47 +3641,6 @@
     "safetyLi1": "تأكد من الرمز، والشبكة، وعنوان الإيداع، ورسوم السحب، والحد الأدنى لمبلغ السحب.",
     "safetyLi2": "ابدأ بمعاملة اختبارية صغيرة قبل نقل مبالغ أكبر.",
     "safetyLi3": "احتفظ بالحيازة في محفظتك الخاصة قدر الإمكان ولا تشارك المفاتيح الخاصة أو عبارات الاسترداد أبداً.",
-    "buyAeWidget": {
-      "crossChain": "عبر السلاسل",
-      "description": "اجسر ETH الأصلي من Ethereum إلى æternity كـ æETH، ثم بدّله تلقائيًا إلى رموز AE.",
-      "toEstimated": "إلى (مقدّر)",
-      "balanceLabel": "الرصيد",
-      "maxLabel": "الحد الأقصى",
-      "ethereum": "Ethereum",
-      "insufficientBalanceAvailable": "رصيد غير كافٍ. المتاح:",
-      "bridgeStatus": "حالة الجسر",
-      "insufficientLiquidity": "سيولة غير كافية",
-      "exceedsLiquidityPrefix": "المبلغ المطلوب يتجاوز السيولة المتاحة. الحد الأقصى المتاح:",
-      "exceedsLiquiditySuffix": "يرجى تقليل المبلغ أو إضافة سيولة إلى التجمّع.",
-      "bridgingShort": "جارٍ الجسر…",
-      "waitingForAeeth": "بانتظار æETH…",
-      "swappingShort": "جارٍ التبديل…",
-      "processingShort": "جارٍ المعالجة…",
-      "failedToFetchEthBalance": "فشل جلب رصيد ETH",
-      "failedToLoadTokenData": "فشل تحميل بيانات الرمز",
-      "bridgeCompleted": "اكتمل جسر ETH→AE بنجاح!",
-      "viewEthTransaction": "عرض معاملة ETH",
-      "viewAeSwapTransaction": "عرض معاملة تبديل AE",
-      "bridgeOperationFailed": "فشلت عملية الجسر",
-      "status": {
-        "connecting": "جارٍ الاتصال بالمحافظ",
-        "bridging": "جسر ETH → æETH",
-        "waiting": "بانتظار إيداع æETH",
-        "swapping": "تبديل æETH → AE",
-        "completed": "اكتمل بنجاح",
-        "failed": "فشل",
-        "processing": "جارٍ المعالجة"
-      }
-    },
-    "connectEthWallet": {
-      "failedToConnect": "فشل ربط المحفظة",
-      "failedToDisconnect": "فشل فصل المحفظة",
-      "ethereumWallet": "محفظة Ethereum",
-      "connected": "متصل",
-      "switch": "تبديل",
-      "disconnect": "فصل",
-      "connectEthereumWallet": "ربط محفظة Ethereum"
-    },
     "earnSectionTitle": "اكسب AE",
     "earnSectionDescription": "ابدأ بالطرق الأصلية في Superhero لكسب AE عبر تنمية المجتمع والانضمام إلى برامج المكافآت.",
     "buySectionTitle": "الشراء من جهات خارجية",
@@ -3864,18 +3665,22 @@
       "stepDotLabel": "الخطوة {{number}}",
       "ios": {
         "step1": {
-          "title": "اضغط على قائمة ⋯",
-          "description": "اضغط على قائمة النقاط الثلاث (⋯) في أعلى زاوية شريط Safari."
+          "title": "افتح قائمة «مشاركة»",
+          "description": "في iOS 26، اضغط على ••• بجانب شريط العنوان، ثم اضغط على «مشاركة». في الإصدارات الأقدم، اضغط على زر «مشاركة» في شريط الأدوات."
         },
         "step2": {
-          "title": "إضافة إلى الشاشة الرئيسية",
-          "description": "مرّر لأسفل واضغط على «إضافة إلى الشاشة الرئيسية» في القائمة."
+          "title": "اضغط على «إضافة إلى الشاشة الرئيسية»",
+          "description": "إذا ظهر لك «عرض المزيد» فاضغط عليه أولاً، ثم مرّر لأسفل في القائمة واضغط على «إضافة إلى الشاشة الرئيسية»."
         },
         "step3": {
-          "title": "اضغط على «إضافة»",
-          "description": "أكّد بالضغط على «إضافة» في الأعلى — ستظهر أيقونة التطبيق على شاشتك الرئيسية."
+          "title": "أبقِ «فتح كتطبيق ويب» مفعّلاً",
+          "description": "أبقِ هذا المفتاح مفعّلاً ليفتح Superhero بملء الشاشة كأنه تطبيق. في إصدارات iOS الأقدم، انتقل مباشرةً إلى الخطوة التالية."
         },
         "step4": {
+          "title": "اضغط على «إضافة»",
+          "description": "اضغط على «إضافة» في الأعلى — ستظهر أيقونة Superhero على شاشتك الرئيسية."
+        },
+        "step5": {
           "title": "افتحه من الشاشة الرئيسية",
           "description": "شغّله من أيقونة الشاشة الرئيسية — تعمل الآن مشاركة الموقع ووضع العمل دون اتصال."
         }
@@ -3908,7 +3713,6 @@
     "axisPrice": "السعر (mAE)",
     "play": "تشغيل",
     "pause": "إيقاف مؤقت",
-    "replay": "إعادة",
     "step0Label": "الإطلاق — معروض صفر",
     "step0Desc": "عند الإطلاق يبدأ السعر قريباً من الصفر. المنحنى شبه مسطّح هنا عن قصد — وهذه أرخص نقطة دخول ممكنة. يحصل المؤمنون الأوائل على أفضل سعر.",
     "step1Label": "المتبنّون الأوائل — 10 ملايين رمز",

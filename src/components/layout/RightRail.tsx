@@ -11,7 +11,6 @@ import RewardsOnboarding from '@/components/onboarding/RewardsOnboarding';
 import { useCurrencies } from '@/hooks/useCurrencies';
 import { useAccountBalances } from '../../hooks/useAccountBalances';
 import { useAeSdk } from '../../hooks/useAeSdk';
-// import { BuyAeWidget } from '../../features/ae-eth-buy';
 import { useWallet } from '../../hooks';
 import { useAddressByChainName } from '../../hooks/useChainName';
 
@@ -105,15 +104,14 @@ const RightRail = ({
       {/* Onboarding nudge — placed below the search bar so users can continue account setup. */}
       <RewardsOnboarding variant="rail" />
 
-      {/* Network & Wallet Overview - Hidden on own profile */}
+      {/* AE price, plus the wallet under it once signed in - hidden on own profile */}
       {!isOwnProfile && (
-        <div className={activeAccount ? walletRailCardClassName : undefined}>
-          <WalletOverviewCard
-            key={activeAccount}
-            selectedCurrency={selectedCurrency}
-            prices={prices}
-          />
-        </div>
+        <WalletOverviewCard
+          key={activeAccount}
+          selectedCurrency={selectedCurrency}
+          prices={prices}
+          className={activeAccount ? walletRailCardClassName : undefined}
+        />
       )}
 
       {/* Enhanced Price Section (via hidePriceSection;
@@ -183,14 +181,6 @@ const RightRail = ({
           </div>
         </div>
       )}
-
-      {/* Enhanced Trending Section removed for now. */}
-
-      {/* Buy AE with ETH (disabled): uncomment BuyAeWidget import above, then the block below.
-      <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none">
-        <BuyAeWidget embedded />
-      </div>
-      */}
 
       <GetAeButton />
       <TopTradersCard />

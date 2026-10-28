@@ -12,12 +12,16 @@ import PostLanguageEmptyState from '../components/PostLanguageEmptyState';
 import PostLanguageErrorState from '../components/PostLanguageErrorState';
 import WebSocketClient from '../../../libs/WebSocketClient';
 import AeButton from '../../../components/AeButton';
+import Spinner from '../../../components/Spinner';
 import HeroBannerCarousel from '../../../components/hero-banner/HeroBannerCarousel';
 import Shell from '../../../components/layout/Shell';
 import RightRail from '../../../components/layout/RightRail';
+import MobileNetworkStats from '../../../components/layout/MobileNetworkStats';
 import CreatePost, { CreatePostRef } from '../components/CreatePost';
 import SortControls, { type PopularWeights } from '../components/SortControls';
 import EmptyState from '../components/EmptyState';
+import NewPostsPill from '../components/NewPostsPill';
+import { useNewPostsWatcher } from '../hooks/useNewPostsWatcher';
 import PostSkeleton from '../components/PostSkeleton';
 import ReplyToFeedItem from '../components/ReplyToFeedItem';
 import TokenCreatedActivityItem from '../components/TokenCreatedActivityItem';
@@ -795,6 +799,31 @@ const FeedList = ({
     [navigate, queryClient, popularFeedEnabled, sortBy],
   );
 
+  // New posts by others: poll the newest page and offer a pill instead of
+  // inserting them, so the feed never jumps under the reader.
+  const feedPostsShown = useMemo(
+    () => (sortBy === 'hot' ? [...popularList, ...latestListForHot] : list),
+    [sortBy, popularList, latestListForHot, list],
+  );
+  const { count: newPostsCount, acknowledge: acknowledgeNewPosts } = useNewPostsWatcher({
+    enabled: sortBy === 'hot' ? !!popularData?.pages.length : !!latestData?.pages.length,
+    language: languageParam,
+    knownPosts: feedPostsShown as any[],
+  });
+  const handleShowNewPosts = useCallback(() => {
+    acknowledgeNewPosts();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (sortBy === 'hot') {
+      // New posts have no ranking yet: show them in the chronological feed.
+      handleSortChange('latest');
+      return;
+    }
+    refetchLatest();
+    if (!languageParam) refetchActivities();
+  }, [
+    acknowledgeNewPosts, sortBy, handleSortChange, refetchLatest, refetchActivities, languageParam,
+  ]);
+
   const handlePopularWeightsChange = useCallback((weights: PopularWeights) => {
     setPopularWeights(weights);
     queryClient.removeQueries({ queryKey: ['popular-posts'], exact: false });
@@ -850,6 +879,9 @@ const FeedList = ({
   const hasMoreFeedItems = sortBy === 'hot'
     ? hasMorePopular || hasMoreLatestForHot
     : hasMoreLatest || (!languageParam && hasMoreActivities);
+  const fetchingMoreFeedItems = sortBy === 'hot'
+    ? fetchingMorePopular || fetchingMoreLatestForHot
+    : fetchingMoreLatest || fetchingMoreActivities;
 
   // An empty response is distinct from a pending or failed request, including
   // Hot's latest-post backfill. Keep the language control available in every state.
@@ -1232,6 +1264,8 @@ const FeedList = ({
           />
         </div>
       )}
+      {/* The right rail (AE price, block height) is hidden below lg */}
+      {isHomepage && <MobileNetworkStats className="mb-3" />}
       {/* Single CreatePost instance for consistent focus/scroll across viewports */}
       <div>
         <CreatePost
@@ -1295,6 +1329,7 @@ const FeedList = ({
 
       </div>
 
+      <NewPostsPill count={newPostsCount} onClick={handleShowNewPosts} />
       <div className="w-full flex flex-col gap-0 md:mx-0">
         {renderEmptyState()}
         {/* Non-hot: existing renderer - show feed if we have data, even while refetching */}
@@ -1310,15 +1345,21 @@ const FeedList = ({
       {/* Load more button (desktop) */}
       {!initialLoading && !feedError && hasMoreFeedItems && (
         <>
+          {/* The desktop load more button shows its own spinner */}
+          {fetchingMoreFeedItems && (
+            <div
+              className={`flex justify-center py-4${showLoadMore ? ' md:hidden' : ''}`}
+              role="status"
+              aria-label={t('emptyState.loadingPosts')}
+            >
+              <Spinner className="w-6 h-6" />
+            </div>
+          )}
           {/* Desktop: explicit load more button */}
           {showLoadMore && (
             <div className="hidden md:block p-4 md:p-6 text-center">
               <AeButton
-                loading={
-                  sortBy === 'hot'
-                    ? (fetchingMorePopular || fetchingMoreLatestForHot)
-                    : (fetchingMoreLatest || fetchingMoreActivities)
-                }
+                loading={fetchingMoreFeedItems}
                 onClick={async () => {
                   if (sortBy === 'hot') {
                     const lastPage = popularData?.pages?.[popularData.pages.length - 1];

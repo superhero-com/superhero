@@ -1,14 +1,23 @@
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import {
+  useAtom, useAtomValue, useSetAtom, useStore,
+} from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import {
   useCallback, useEffect, useMemo, useState,
 } from 'react';
 import { AccountsService } from '../api/generated/services/AccountsService';
+import { activeAccountAtom } from '../atoms/accountAtoms';
 import {
   chainNameLookupCheckedAtAtom,
   chainNamesAtom,
+  preferredChainNamesAtom,
 } from '../atoms/walletAtoms';
 import { CURRENT_NETWORK } from '../utils/constants';
+import {
+  currentPreferredChainName,
+  isPreferredChainNamePending,
+  mergeServerChainName,
+} from '../utils/preferredChainName';
 
 const CHAIN_NAME_REFRESH_INTERVAL = 1000 * 60 * 60; // 1 hour
 const CHAIN_NAME_RETRY_INTERVAL = 1000 * 60 * 5; // 5 minutes
@@ -157,6 +166,8 @@ export function useEnsureChainName(accountAddress?: string | null) {
 
   const setChainNames = useSetAtom(chainNamesAtom);
   const setCheckedAt = useSetAtom(chainNameLookupCheckedAtAtom);
+  const setPreferredNames = useSetAtom(preferredChainNamesAtom);
+  const activeAccount = useAtomValue(activeAccountAtom);
 
   const handleResult = useCallback((addr: string, results: Map<string, string>) => {
     if (!addr || !results.has(addr)) return;
@@ -173,7 +184,17 @@ export function useEnsureChainName(accountAddress?: string | null) {
       delete next[addr];
       return next;
     });
-  }, [setCheckedAt, setChainNames]);
+    // An account that owns no name has no preferred one either. The active
+    // account's entry is left to its sync, which reads the account directly.
+    if (!name && addr !== activeAccount) {
+      setPreferredNames((prev) => {
+        if (!prev[addr] || isPreferredChainNamePending(prev[addr])) return prev;
+        const next = { ...prev };
+        delete next[addr];
+        return next;
+      });
+    }
+  }, [activeAccount, setCheckedAt, setChainNames, setPreferredNames]);
 
   const handleError = useCallback((addr: string) => {
     const retryAt = Date.now() - CHAIN_NAME_REFRESH_INTERVAL + CHAIN_NAME_RETRY_INTERVAL;
@@ -198,9 +219,16 @@ export function useEnsureChainName(accountAddress?: string | null) {
 export function useChainName(accountAddress: string, options?: { lookup?: boolean }) {
   const normalizedAddress = normalizeAccountAddress(accountAddress);
   const chainNames = useAtomValue(chainNamesAtom);
+  const preferredNames = useAtomValue(preferredChainNamesAtom);
+  const activeAccount = useAtomValue(activeAccountAtom);
+  // The batch lookup returns the newest name the account owns; the name the
+  // user picked as preferred (or just claimed) wins over it when known.
   const chainName = useMemo(
-    () => chainNames[normalizedAddress],
-    [chainNames, normalizedAddress],
+    () => currentPreferredChainName(
+      preferredNames[normalizedAddress],
+      !!normalizedAddress && normalizedAddress === activeAccount,
+    ) || chainNames[normalizedAddress],
+    [activeAccount, chainNames, preferredNames, normalizedAddress],
   );
   useEnsureChainName(options?.lookup === false ? undefined : normalizedAddress);
 
@@ -216,8 +244,7 @@ type PostWithSender = {
 };
 
 export function useStorePostSenderChainNames(posts: Array<PostWithSender | null | undefined>) {
-  const setChainNames = useSetAtom(chainNamesAtom);
-  const setCheckedAt = useSetAtom(chainNameLookupCheckedAtAtom);
+  const store = useStore();
 
   useEffect(() => {
     const names = posts.reduce<Record<string, string>>((acc, post) => {
@@ -229,30 +256,37 @@ export function useStorePostSenderChainNames(posts: Array<PostWithSender | null 
     const entries = Object.entries(names);
     if (!entries.length) return;
 
+    // This runs after every render of every feed item, and atomWithStorage rewrites
+    // the whole map to storage on every set, even an unchanged one. So each map is
+    // read first and set only when it changed.
     const now = Date.now();
-    setChainNames((prev) => {
-      let changed = false;
-      const next = { ...prev };
-      entries.forEach(([address, name]) => {
-        if (next[address] !== name) {
-          next[address] = name;
-          changed = true;
-        }
-      });
-      return changed ? next : prev;
-    });
-    setCheckedAt((prev) => {
-      let changed = false;
-      const next = { ...prev };
-      entries.forEach(([address]) => {
-        if (!prev[address] || now - prev[address] > CHAIN_NAME_REFRESH_INTERVAL) {
-          next[address] = now;
-          changed = true;
-        }
-      });
-      return changed ? next : prev;
-    });
-  }, [posts, setCheckedAt, setChainNames]);
+    const chainNames = store.get(chainNamesAtom);
+    if (entries.some(([address, name]) => chainNames[address] !== name)) {
+      store.set(chainNamesAtom, { ...chainNames, ...names });
+    }
+    const checkedAt = store.get(chainNameLookupCheckedAtAtom);
+    const due = entries.filter(([address]) => (
+      !checkedAt[address] || now - checkedAt[address] > CHAIN_NAME_REFRESH_INTERVAL
+    ));
+    if (due.length) {
+      const next = { ...checkedAt };
+      due.forEach(([address]) => { next[address] = now; });
+      store.set(chainNameLookupCheckedAtAtom, next);
+    }
+    // `public_name` is the name the API displays for the sender, which is the
+    // preferred name when one is linked.
+    const preferred = store.get(preferredChainNamesAtom);
+    const nextPreferred = entries.reduce((acc, [address, name]) => {
+      if (isPreferredChainNamePending(acc[address], now)) return acc;
+      const server = { name: name.toLowerCase(), linked: null };
+      const merged = mergeServerChainName(acc, address, server, now);
+      const seenAt = merged[address]?.seenAt ?? 0;
+      // An unchanged name is re-stamped only hourly.
+      if (merged === acc && now - seenAt < CHAIN_NAME_REFRESH_INTERVAL) return acc;
+      return { ...merged, [address]: { ...merged[address], seenAt: now } };
+    }, preferred);
+    if (nextPreferred !== preferred) store.set(preferredChainNamesAtom, nextPreferred);
+  }, [posts, store]);
 }
 
 export function useAddressByChainName(chainNameInput?: string) {

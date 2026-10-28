@@ -6,6 +6,8 @@ import {
   beforeEach, describe, expect, it, vi,
 } from 'vitest';
 import { Buffer } from 'buffer';
+import { ApiError } from '@/api/generated/core/ApiError';
+import { OpenAPI } from '@/api/generated/core/OpenAPI';
 import { verifyEvent } from 'nostr-tools/pure';
 import { verifyMessageSignature, type Encoded } from '@aeternity/aepp-sdk';
 import { mnemonicToSeedSync } from '@scure/bip39';
@@ -31,6 +33,8 @@ vi.mock('@/api/generated', () => ({
 // Imported AFTER the mock so link-flow binds to the stubbed service.
 // eslint-disable-next-line import/first
 import { linkNostrIdentity, fetchNostrLink } from '../link-flow';
+// eslint-disable-next-line import/first
+import { rememberNostrSubmission } from '../storage';
 
 const MNEMONIC = 'abandon abandon abandon abandon abandon abandon abandon abandon '
   + 'abandon abandon abandon about';
@@ -40,6 +44,13 @@ beforeEach(() => {
   claim.mockReset();
   submit.mockReset();
   getAccount.mockReset();
+  const values = new Map<string, string>();
+  vi.stubGlobal('localStorage', {
+    getItem: (key: string) => values.get(key) ?? null,
+    setItem: (key: string, value: string) => values.set(key, value),
+    removeItem: (key: string) => values.delete(key),
+  });
+  OpenAPI.BASE = 'https://api.example.test';
 });
 
 describe('linkNostrIdentity — claim → AE-sign → nostr-proof → submit', () => {
@@ -102,6 +113,61 @@ describe('linkNostrIdentity — claim → AE-sign → nostr-proof → submit', (
 });
 
 describe('fetchNostrLink', () => {
+  it.each([
+    new Error('offline'),
+    new ApiError({ method: 'GET', url: '/api/accounts/ak_x' }, {
+      url: '', ok: false, status: 503, statusText: 'Unavailable', body: {},
+    }, 'Unavailable'),
+  ])('does not classify lookup failures as unlinked: %s', async (error) => {
+    getAccount.mockRejectedValue(error);
+    await expect(fetchNostrLink('ak_x')).rejects.toBe(error);
+  });
+
+  it('keeps a successful submission across reloads until the account index catches up', async () => {
+    const { address } = deriveAccount(MNEMONIC, 0);
+    const signer = deriveSigner(MNEMONIC, 0);
+    const keys = deriveKeysFromSeed(SEED, 0);
+    claim.mockResolvedValue({ message: `link:${address}:nostr:${keys.npub}:0`, nonce: 0, value: keys.npub });
+    submit.mockResolvedValue({ txHash: 'th_test' });
+    await linkNostrIdentity({
+      address,
+      npub: keys.npub,
+      identity: createDerivedNostrIdentity(keys),
+      signMessage: async (message) => Buffer.from(await signer.signMessage(message)).toString('hex'),
+    });
+    // A fresh module has no in-memory link state, like a full browser reload.
+    vi.resetModules();
+    const reloaded = await import('../link-flow');
+    const { OpenAPI: reloadedConfig } = await import('@/api/generated/core/OpenAPI');
+    reloadedConfig.BASE = OpenAPI.BASE;
+    getAccount.mockResolvedValue({ links: {} });
+    expect(await reloaded.fetchNostrLink(address)).toBe(keys.npub);
+    expect(getAccount).toHaveBeenCalledWith({ address });
+    expect(await reloaded.fetchNostrLink('ak_other')).toBeNull();
+    reloadedConfig.BASE = 'https://testnet.example.test';
+    expect(await reloaded.fetchNostrLink(address)).toBeNull();
+    reloadedConfig.BASE = OpenAPI.BASE;
+    // Slow indexing must not offer registration again: the receipt still counts.
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 60 * 60_000);
+    expect(await reloaded.fetchNostrLink(address)).toBe(keys.npub);
+    clock.mockRestore();
+    getAccount.mockResolvedValue({ links: { nostr: 'npub1server' } });
+    expect(await reloaded.fetchNostrLink(address)).toBe('npub1server');
+    // After server confirmation an unlink must not resurrect the old receipt.
+    getAccount.mockResolvedValue({ links: {} });
+    expect(await reloaded.fetchNostrLink(address)).toBeNull();
+  });
+
+  it('trusts the API again once a receipt is a day old', async () => {
+    rememberNostrSubmission(OpenAPI.BASE, 'ak_x', 'npub1receipt', 'th_receipt');
+    getAccount.mockResolvedValue({ links: {} });
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 24 * 60 * 60_000);
+    expect(await fetchNostrLink('ak_x')).toBeNull();
+    clock.mockRestore();
+    // Dropped, not just skipped.
+    expect(await fetchNostrLink('ak_x')).toBeNull();
+  });
+
   it('returns the linked npub when present', async () => {
     getAccount.mockResolvedValue({ links: { nostr: 'npub1linked' } });
     expect(await fetchNostrLink('ak_x')).toBe('npub1linked');
@@ -112,8 +178,10 @@ describe('fetchNostrLink', () => {
     expect(await fetchNostrLink('ak_x')).toBeNull();
   });
 
-  it('treats a missing account (throw) as not linked', async () => {
-    getAccount.mockRejectedValue(new Error('404'));
+  it('treats an HTTP 404 as not linked', async () => {
+    getAccount.mockRejectedValue(new ApiError({ method: 'GET', url: '/api/accounts/ak_x' }, {
+      url: '', ok: false, status: 404, statusText: 'Not Found', body: {},
+    }, 'Not Found'));
     expect(await fetchNostrLink('ak_x')).toBeNull();
   });
 });

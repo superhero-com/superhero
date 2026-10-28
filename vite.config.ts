@@ -111,12 +111,7 @@ export default defineConfig(({ mode }) => {
               return 'markdown';
             }
 
-            if (
-              id.includes('@reown')
-              || id.includes('@walletconnect')
-              || id.includes('@ethersproject')
-              || id.includes('/ethers/')
-            ) {
+            if (id.includes('@ethersproject')) {
               return 'web3';
             }
 

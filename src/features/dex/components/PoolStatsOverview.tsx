@@ -7,11 +7,19 @@ import {
 import type { PairDto, PairSummaryDto } from '@/api/generated';
 import { CONFIG } from '@/config';
 import aeMark from '@/svg/aeternity-mark.svg';
-import { formatPoolAmount, poolBalances, poolNumber } from '../utils/poolStatsValues';
+import {
+  formatPoolAmount, poolBalances, poolNumber, poolValueAe,
+} from '../utils/poolStatsValues';
 import './PoolStatsOverview.scss';
 
 interface PoolStatsOverviewProps {
   pairData: PairDto;
+  /**
+   * `pairData` holds the pair contract's reserves. Indexed reserves can sit on the
+   * wrong token, and doubling the wrong side is off by orders of magnitude, so the
+   * pool value waits for this.
+   */
+  aligned?: boolean;
   pairSummary?: PairSummaryDto;
   loading?: boolean;
   failed?: boolean;
@@ -23,7 +31,7 @@ type Period = typeof periods[number];
 const periodLabels = { '24h': 'last24Hours', '7d': 'last7Days', '30d': 'last30Days' };
 
 export const PoolStatsOverview = ({
-  pairData, pairSummary, loading = false, failed = false, onRetry,
+  pairData, aligned = false, pairSummary, loading = false, failed = false, onRetry,
 }: PoolStatsOverviewProps) => {
   const { t } = useTranslation('dex');
   const [period, setPeriod] = useState<Period>('24h');
@@ -35,6 +43,7 @@ export const PoolStatsOverview = ({
   const balances = poolBalances(pairData);
   const tokens = [pairData.token0, pairData.token1];
   const reserves = [balances.reserve0, balances.reserve1];
+  const value = aligned ? poolValueAe(pairData) : null;
   const volume = poolNumber(current?.volume?.ae);
   const total = poolNumber(summary?.total_volume?.ae);
   const change = poolNumber(current?.price_change?.percentage);
@@ -148,6 +157,12 @@ export const PoolStatsOverview = ({
             {t('poolReserves.lpTokenSupply')}
             <b title={balances.supply?.toFixed()}><bdi>{formatPoolAmount(balances.supply)}</bdi></b>
           </span>
+          {value && (
+            <span>
+              {t('poolStats.poolValue')}
+              <b title={value.toFixed()}><bdi>{`${formatPoolAmount(value)} AE`}</bdi></b>
+            </span>
+          )}
           <button type="button" onClick={() => setDetails(!details)} aria-expanded={details} aria-controls={rateId}>
             {t('poolStats.exchangeRate')}
             {details ? <ChevronUp aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}

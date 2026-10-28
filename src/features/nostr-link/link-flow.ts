@@ -13,8 +13,11 @@
  *    (`createNostrProofEvent`), never a raw nostr secret key.
  */
 import { AccountsService, NostrLinkService } from '@/api/generated';
+import { ApiError } from '@/api/generated/core/ApiError';
+import { OpenAPI } from '@/api/generated/core/OpenAPI';
 import { signAndVerifyLinkMessage } from '@/utils/signLinkMessage';
 import type { NostrIdentityProvider } from '@/features/chat/identity/nostr-identity';
+import { clearNostrSubmission, readNostrSubmission, rememberNostrSubmission } from './storage';
 import { createNostrProofEvent } from './nostr-proof';
 
 /** The wallet signed-message channel (`useAeSdk().signMessage`). */
@@ -41,19 +44,45 @@ export interface LinkNostrParams {
   signMessage: SignMessageFn;
 }
 
+// The backend returns a txHash only once the link tx is mined and succeeded, so
+// a receipt stands in for the link through a prolonged indexer lag rather than
+// starting another registration. Past a day the API is trusted again: a link it
+// still lacks was lost or undone, and registering again is the way out.
+const SUBMISSION_BRIDGE_MS = 24 * 60 * 60_000;
+
+function submittedLink(api: string, address: string): string | null {
+  const submitted = readNostrSubmission(api, address);
+  if (!submitted) return null;
+  if (Date.now() - submitted.submittedAt >= SUBMISSION_BRIDGE_MS) {
+    clearNostrSubmission(api, address);
+    return null;
+  }
+  return submitted.npub;
+}
+
 /**
- * Read the nostr link currently registered for `address`, or null if none.
- * A missing account (404) is treated as "not linked", matching the app.
+ * Check the backend first. A recently accepted submission bridges stale/missing
+ * account records while the indexer catches up, including after a page reload.
+ * Transport/server failures are unknown, never evidence of a missing link.
  */
 export async function fetchNostrLink(address: string): Promise<string | null> {
+  const api = OpenAPI.BASE;
   try {
     const account = (await AccountsService.getAccount({ address })) as {
       links?: Record<string, string> | null;
     } | null;
-    return account?.links?.nostr ?? null;
-  } catch {
-    return null;
+    if (!account || typeof account !== 'object') throw new Error('Invalid account response');
+    const linked = account.links?.nostr;
+    if (linked) {
+      clearNostrSubmission(api, address);
+      return linked;
+    }
+  } catch (error) {
+    const submitted = submittedLink(api, address);
+    if (submitted) return submitted;
+    if (!(error instanceof ApiError && error.status === 404)) throw error;
   }
+  return submittedLink(api, address);
 }
 
 /**
@@ -67,6 +96,7 @@ export async function linkNostrIdentity({
   identity,
   signMessage,
 }: LinkNostrParams): Promise<{ txHash?: string }> {
+  const api = OpenAPI.BASE;
   // 1. Claim — get the challenge message + on-chain nonce.
   const claim = (await NostrLinkService.nostrLinkControllerClaim({
     requestBody: { address, value: npub },
@@ -82,7 +112,7 @@ export async function linkNostrIdentity({
   const nostrEvent = await createNostrProofEvent(identity, claim.message);
 
   // 4. Submit.
-  return (await NostrLinkService.nostrLinkControllerSubmit({
+  const result = (await NostrLinkService.nostrLinkControllerSubmit({
     requestBody: {
       address,
       value: npub,
@@ -91,4 +121,6 @@ export async function linkNostrIdentity({
       nostr_event: nostrEvent,
     },
   })) as { txHash?: string };
+  if (result.txHash) rememberNostrSubmission(api, address, npub, result.txHash);
+  return result;
 }

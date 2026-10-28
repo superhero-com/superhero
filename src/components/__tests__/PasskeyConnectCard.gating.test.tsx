@@ -21,6 +21,9 @@ import {
  */
 const mocks = vi.hoisted(() => ({
   standalone: true,
+  available: true,
+  availabilityChecked: true,
+  needsOnboarding: false,
   trigger: vi.fn(),
   openDeviceWallet: vi.fn(),
   deviceWallet: 'none' as string,
@@ -42,10 +45,11 @@ vi.mock('@/hooks', () => ({
 vi.mock('@/hooks/usePasskeyConnect', () => ({
   hasDeviceVault: (d: string) => d === 'passkey' || d === 'other-factors',
   usePasskeyConnect: () => ({
-    available: true,
+    available: mocks.available,
+    availabilityChecked: mocks.availabilityChecked,
     state: mocks.state,
     errorMsg: mocks.errorMsg,
-    needsOnboarding: false,
+    needsOnboarding: mocks.needsOnboarding,
     deviceWallet: mocks.deviceWallet,
     connectedAddress: mocks.connectedAddress,
     trigger: mocks.trigger,
@@ -64,6 +68,9 @@ const mount = async () => {
 describe('PasskeyConnectCard — offered everywhere the wallet can actually sign', () => {
   beforeEach(() => {
     mocks.standalone = true;
+    mocks.available = true;
+    mocks.availabilityChecked = true;
+    mocks.needsOnboarding = false;
     mocks.trigger.mockClear();
     mocks.openDeviceWallet.mockClear();
     mocks.deviceWallet = 'none';
@@ -121,6 +128,66 @@ describe('PasskeyConnectCard — offered everywhere the wallet can actually sign
     expect(screen.queryByText(/tap to unlock another way/i)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /passkey/i }));
     expect(mocks.openDeviceWallet).not.toHaveBeenCalled();
+  });
+});
+
+describe('PasskeyConnectCard — a device that cannot create a passkey (#730)', () => {
+  beforeEach(() => {
+    mocks.standalone = false;
+    mocks.available = false;
+    mocks.availabilityChecked = true;
+    mocks.needsOnboarding = false;
+    mocks.trigger.mockClear();
+    mocks.openDeviceWallet.mockClear();
+    mocks.deviceWallet = 'none';
+    mocks.state = 'idle';
+    mocks.errorMsg = null;
+  });
+
+  it('offers to create a wallet with a recovery phrase instead of a disabled card', async () => {
+    // The dead end this pins: the card read "Not available on this device/browser"
+    // and was disabled, and nothing else in the modal could create a wallet.
+    await mount();
+
+    const card = screen.getByRole('button', { name: /create a wallet/i });
+    expect(card).toBeEnabled();
+    expect(card).toHaveTextContent(/recovery phrase/i);
+    expect(card).not.toHaveTextContent(/recommended/i);
+  });
+
+  it('opens the setup flow on a new phrase, never the passkey ceremony', async () => {
+    const view = render(<PasskeyConnectCard onConnected={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /create a wallet/i }));
+
+    expect(mocks.openDeviceWallet).toHaveBeenCalled();
+    expect(mocks.trigger).not.toHaveBeenCalled();
+
+    // The real flow, lazily loaded: it must land on the phrase, not a ceremony.
+    mocks.needsOnboarding = true;
+    view.rerender(<PasskeyConnectCard onConnected={vi.fn()} />);
+    expect(await screen.findByRole(
+      'heading',
+      { name: /write down your recovery phrase/i },
+      { timeout: 15000 },
+    )).toBeInTheDocument();
+  });
+
+  it('keeps opening a wallet already on this device', async () => {
+    mocks.deviceWallet = 'other-factors';
+    await mount();
+
+    fireEvent.click(screen.getByRole('button', { name: /this device.s wallet/i }));
+    expect(mocks.trigger).toHaveBeenCalled();
+  });
+
+  it('waits for the passkey check before offering either path', async () => {
+    // Until the probe answers, "no passkey" is unknown, so a tap must not be
+    // routed to the phrase on a device that can in fact create a passkey.
+    mocks.availabilityChecked = false;
+    await mount();
+
+    expect(screen.queryByRole('button', { name: /create a wallet/i })).toBeNull();
+    expect(screen.getByRole('button', { name: /passkey/i })).toBeDisabled();
   });
 });
 

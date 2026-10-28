@@ -138,32 +138,6 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
     }
   }, [sdk, voteAddress, voteId, dao.state, dao.tokenSupply]);
 
-  const runTestCheck = useCallback(async () => {
-    if (!voteState || !vote) {
-      return;
-    }
-
-    if (dao.tokenSupply) {
-      // TODO: check if this is used
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const vsl = await vote.voteStateLabel(
-        voteState,
-        dao.state!,
-        dao.tokenSupply,
-      );
-    }
-
-    if (voteStateLabel && voteState) {
-      // TODO: check if this is used
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const canV = vote.canVote(
-        voteStateLabel,
-        voteState,
-        activeAccount as any,
-      );
-    }
-  }, [voteState, vote, dao.tokenSupply, dao.state, voteStateLabel, activeAccount]);
-
   const applyAction = useCallback(async (action: () => unknown | Promise<unknown>) => {
     setActionLoading(true);
     try {
@@ -213,7 +187,6 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
     voteYesPercentage,
     voteStakeYesPercentage,
     hasTokenBalance: dao.userTokenBalance,
-    runTestCheck,
 
     // methods
     voteOption,

@@ -66,8 +66,7 @@ const ActivityCard = ({ item }: { item: ActivityTransaction }) => {
       <span className="latest-activity-card__body">
         <span className="latest-activity-card__headline">
           <span className="latest-activity-card__name">
-            <span className="latest-activity-card__hash" aria-hidden="true">#</span>
-            <bdi>{name || t('unknownToken')}</bdi>
+            <bdi>{name ? `#${name}` : t('unknownToken')}</bdi>
           </span>
           <span className="latest-activity-card__action">
             <Icon aria-hidden="true" />

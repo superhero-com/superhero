@@ -44,12 +44,13 @@ const PromptRequester = () => {
 };
 
 const Harness = ({ requestPrompt = false }: { requestPrompt?: boolean }) => {
-  const { linkNostr } = useNostrLinkCheck(deriveIdentity);
+  const { linkNostr, retry } = useNostrLinkCheck(deriveIdentity);
   const status = useAtomValue(nostrLinkStatusAtom);
   return (
     <div>
       <div data-testid="status">{status}</div>
       <button type="button" data-testid="link" onClick={() => { linkNostr(); }}>link</button>
+      <button type="button" data-testid="retry" onClick={retry}>retry</button>
       {requestPrompt && <PromptRequester />}
     </div>
   );
@@ -62,6 +63,31 @@ beforeEach(() => {
 });
 
 describe('useNostrLinkCheck — a completed link', () => {
+  it('checks again after a full remount and handles StrictMode effect replay', async () => {
+    mocks.fetchNostrLink.mockResolvedValue('npub1linked');
+    const first = render(
+      <React.StrictMode><Provider store={createStore()}><Harness /></Provider></React.StrictMode>,
+    );
+    await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('linked'));
+    first.unmount();
+    render(
+      <React.StrictMode><Provider store={createStore()}><Harness /></Provider></React.StrictMode>,
+    );
+    await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('linked'));
+  });
+
+  it('retries the lookup instead of reopening registration after a network failure', async () => {
+    mocks.fetchNostrLink.mockRejectedValueOnce(new Error('offline'));
+    const store = createStore();
+    const { rerender } = render(<Provider store={store}><Harness /></Provider>);
+    await waitFor(() => expect(store.get(nostrLinkStatusAtom)).toBe('check-error'));
+    rerender(<Provider store={store}><Harness requestPrompt /></Provider>);
+    expect(store.get(nostrLinkStatusAtom)).toBe('check-error');
+    mocks.fetchNostrLink.mockResolvedValue('npub1linked');
+    fireEvent.click(screen.getByTestId('retry'));
+    await waitFor(() => expect(store.get(nostrLinkStatusAtom)).toBe('linked'));
+  });
+
   it('resolves to `linked`, not the dismissible `done`', async () => {
     render(<Provider store={createStore()}><Harness /></Provider>);
     await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('prompt'));

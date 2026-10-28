@@ -1,7 +1,7 @@
 import React, {
   Suspense, useEffect, useRef,
 } from 'react';
-import { useNavigate, useRoutes } from 'react-router-dom';
+import { useLocation, useNavigate, useRoutes } from 'react-router-dom';
 import { useAtom } from 'jotai';
 import GlobalNewAccountEducation from './components/GlobalNewAccountEducation';
 import { CollectInvitationLinkCard } from './features/trending/components/Invitation';
@@ -26,6 +26,8 @@ import { PwaInstallPrompt } from './components/PwaInstallPrompt';
 import { PwaInstallFab, PwaInstallGuide } from './components/PwaInstallGuide';
 import { MobileAppInstallDialog } from './components/MobileAppInstall';
 import { usePwaInstall } from './hooks/usePwaInstall';
+import { usePreferredChainNameSync } from './hooks/usePreferredChainName';
+import { useKeyboardInset } from './hooks/useKeyboardInset';
 import { isMobileDevice } from './utils/displayMode';
 
 const CookiesDialog = React.lazy(
@@ -60,8 +62,30 @@ const FollowConnectionsModal = React.lazy(
   () => import('./features/social/components/FollowConnectionsModal'),
 );
 
+/**
+ * Chat fits the app to the visible viewport while the on-screen keyboard is open.
+ * The inset is read here rather than in `App`, so the viewport events it tracks
+ * re-render this container only, not every child it is handed.
+ */
+const AppContainer = ({ isChatRoute, children }: {
+  isChatRoute: boolean; children: React.ReactNode;
+}) => {
+  const keyboard = useKeyboardInset();
+  const keyboardOpen = isChatRoute && !!keyboard.inset;
+  return (
+    <div
+      className={`app-container${isChatRoute ? ' app-container--chat' : ''}${keyboardOpen ? ' chat-keyboard-open' : ''}`}
+      style={keyboardOpen ? { height: keyboard.visibleHeight } : undefined}
+    >
+      {children}
+    </div>
+  );
+};
+
 const App = () => {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const isChatRoute = pathname === '/chat' || pathname.startsWith('/chat/');
   const isMobile = useIsMobile();
   const { initSdk, activeAccount, sdkInitialized } = useAeSdk();
   const {
@@ -81,6 +105,8 @@ const App = () => {
     setInstallGuideOpen(true);
   }, [canPrompt, promptInstall]);
   const { loadAccountData } = useAccount();
+  // Keep the connected account's display name on the one it picked as preferred.
+  usePreferredChainNameSync(activeAccount);
   const {
     attemptReconnection,
     walletInfo,
@@ -188,7 +214,7 @@ const App = () => {
     <NotificationsProvider>
       {/* Mounted above the router so the relay pool survives route changes. */}
       <ChatProvider>
-        <div className="app-container">
+        <AppContainer isChatRoute={isChatRoute}>
           <GlobalNewAccountEducation />
           <AppHeader />
           <div className="app-content">
@@ -231,14 +257,14 @@ const App = () => {
           <Suspense fallback={<div className="loading-fallback" />}>
             <div className="app-routes-container">{useRoutes(routes as any)}</div>
           </Suspense>
-          {/* TODO: Disable feedback button on mobile for now */}
-          {!isMobile && <FeedbackButton />}
+          {/* Keep floating prompts clear of the chat composer. */}
+          {!isMobile && !isChatRoute && <FeedbackButton />}
           {/* PWA install prompt — hidden on mobile iOS where the FAB takes over */}
-          {!(isMobileDevice() && isIOS) && <PwaInstallPrompt />}
+          {!isChatRoute && !(isMobileDevice() && isIOS) && <PwaInstallPrompt />}
           {/* Mobile FAB — shown on iOS (no native prompt) or when native prompt unavailable.
               Uses isMobileDevice() (UA-based) instead of useIsMobile() (viewport-based)
               so landscape phones don't lose the install affordance. */}
-          {isMobileDevice() && (isIOS || !canPrompt) && (
+          {!isChatRoute && isMobileDevice() && (isIOS || !canPrompt) && (
             <PwaInstallFab
               onOpen={() => setMobileAppDialogOpen(true)}
               isInstalled={isInstalled}
@@ -255,7 +281,7 @@ const App = () => {
             open={installGuideOpen}
             onOpenChange={setInstallGuideOpen}
           />
-        </div>
+        </AppContainer>
       </ChatProvider>
     </NotificationsProvider>
   );

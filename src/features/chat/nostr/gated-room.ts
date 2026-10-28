@@ -7,7 +7,7 @@
  * rooms and user groups are out of scope (`14-user-groups.md`).
  *
  * Deliberately separate from the general `NostrClient`/`SimplePool`: that pool
- * strips `#h`/`#d` filters and can't do NIP-42 AUTH. This holds one dedicated
+ * strips `#h`/`#d` filters. This holds one dedicated
  * nostr-tools `Relay` over the relay URL from the API (`GET /api/rooms/config` →
  * `relay_url`, never a hard-coded host), guarded to `wss://` by
  * {@link ensureSecureRelayUrl}.
@@ -23,8 +23,9 @@
  *
  * The NIP-29 group id is the token **sale address** (`ct_…`) verbatim.
  */
-import { Relay } from 'nostr-tools/relay';
+import { Relay, type SubscriptionParams } from 'nostr-tools/relay';
 import type { EventTemplate, VerifiedEvent } from 'nostr-tools/pure';
+import type { Filter } from 'nostr-tools/filter';
 import { NostrKind } from '../core/constants';
 import type { NostrEvent } from '../core/types';
 import type { NostrIdentityProvider } from '../identity/nostr-identity';
@@ -93,6 +94,12 @@ async function waitFor(
 export class GatedRoomClient {
   private relay: Relay | null = null;
 
+  private connecting: Promise<Relay> | null = null;
+
+  private closed = false;
+
+  private connectionAbort = new AbortController();
+
   private readonly identity: NostrIdentityProvider | null;
 
   private readonly url: string;
@@ -119,9 +126,24 @@ export class GatedRoomClient {
   }
 
   async connect(): Promise<Relay> {
+    if (this.closed) throw new Error('Room connection is closed.');
     if (this.relay?.connected) return this.relay;
-    this.relay = await Relay.connect(this.url);
-    return this.relay;
+    if (!this.connecting) {
+      // Share one connection between concurrent metadata/history/send calls.
+      const relay = new Relay(this.url);
+      this.relay = relay;
+      this.connecting = relay.connect({ timeout: 5000, abort: this.connectionAbort.signal }).then(() => {
+        if (this.closed) {
+          relay.close();
+          throw new Error('Room connection is closed.');
+        }
+        return relay;
+      }).catch((error: unknown) => {
+        if (this.closed) throw new Error('Room connection is closed.');
+        throw error instanceof Error ? error : new Error(String(error));
+      }).finally(() => { this.connecting = null; });
+    }
+    return this.connecting;
   }
 
   private requireIdentity(): NostrIdentityProvider {
@@ -133,78 +155,96 @@ export class GatedRoomClient {
 
   /**
    * NIP-42 AUTH — needed to READ private groups and to POST as a member when the
-   * relay challenges. Best-effort; never throws. No-op without an identity.
+   * relay challenges. Authentication failures must reach the caller.
    */
   async authenticate(): Promise<void> {
-    if (!this.identity) return;
-    try {
-      const relay = await this.connect();
-      const challenged = (): boolean => !!(relay as unknown as { challenge?: string }).challenge;
-      await waitFor(challenged, 3000);
-      if (!challenged()) return;
-      const { identity } = this;
-      await relay.auth(
-        async (evt: EventTemplate): Promise<VerifiedEvent> => {
-          const signed = await identity.signEvent(evt);
-          return signed as unknown as VerifiedEvent;
-        },
-      );
-    } catch {
-      // AUTH is best-effort; a failure is surfaced later as a read/post rejection.
+    if (!this.identity) {
+      throw new GatedRoomPublishError('auth-required: Unlock chat to access this room.');
     }
+    const relay = await this.connect();
+    const challenged = (): boolean => !!(relay as unknown as { challenge?: string }).challenge;
+    await waitFor(challenged, 3000);
+    if (!challenged()) throw new GatedRoomPublishError('auth-required: No relay challenge received.');
+    const { identity } = this;
+    await relay.auth(
+      async (evt: EventTemplate): Promise<VerifiedEvent> => (
+        await identity.signEvent(evt) as unknown as VerifiedEvent
+      ),
+    );
+  }
+
+  /** A relay may challenge only AFTER REQ; retry that REQ after AUTH succeeds. */
+  private async subscribe(
+    filter: Filter,
+    callbacks: Pick<SubscriptionParams, 'onevent' | 'oneose'>,
+    onError: (error: Error) => void,
+  ): Promise<{ close: () => void }> {
+    const relay = await this.connect();
+    let stopped = false;
+    let retried = false;
+    let sub: { close: () => void } | undefined;
+    const open = () => {
+      if (stopped || this.closed) return;
+      sub = relay.subscribe([filter], {
+        ...callbacks,
+        onclose: (reason) => {
+          if (stopped || this.closed) return;
+          const error = new GatedRoomPublishError(reason);
+          if (error.isAuthRequired && this.identity && !retried) {
+            retried = true;
+            this.authenticate().then(open).catch(onError);
+          } else onError(error);
+        },
+      });
+    };
+    open();
+    return { close: () => { stopped = true; sub?.close(); } };
   }
 
   /**
-   * Subscribe to a room's kind-9/11 messages (`#h` = saleAddress). Private rooms
-   * run NIP-42 AUTH first (the relay rejects the REQ otherwise); public rooms
-   * skip it (best-effort if a challenge later arrives).
+   * Subscribe to a room's kind-9/11 messages (`#h` = saleAddress). An auth-required
+   * rejection triggers NIP-42 AUTH and one retry, including late challenges.
+   * Permanent rejections and disconnects are reported through onError.
    */
   async subscribeRoom(
     saleAddress: string,
     onEvent: (event: NostrEvent) => void,
-    options: { isPrivate?: boolean; includeSystem?: boolean } = {},
+    options: {
+      includeSystem?: boolean;
+      onError?: (error: Error) => void;
+    } = {},
   ): Promise<{ close: () => void }> {
-    await this.connect();
-    if (options.isPrivate) await this.authenticate();
-    const relay = await this.connect();
-    const sub = relay.subscribe(
-      [
-        {
-          kinds: options.includeSystem
-            ? ROOM_MESSAGE_KINDS_WITH_SYSTEM
-            : ROOM_MESSAGE_KINDS,
-          '#h': [saleAddress],
-        },
-      ],
+    return this.subscribe(
+      {
+        kinds: options.includeSystem ? ROOM_MESSAGE_KINDS_WITH_SYSTEM : ROOM_MESSAGE_KINDS,
+        '#h': [saleAddress],
+      },
       { onevent: (e) => onEvent(e as unknown as NostrEvent) },
+      (error) => options.onError?.(error),
     );
-    return { close: () => sub.close() };
   }
 
   /**
    * One-shot history backfill: REQ kind 9/11 (`#h` = saleAddress) bounded by
    * `until`/`limit`, collected until EOSE (or a 4s timeout) then closed.
    * Newest-first paging: pass the oldest currently-held `created_at` as `until`.
-   * Best-effort: resolves to whatever arrived, never throws on rejection.
+   * Rejects on timeout or denied access so the UI can distinguish an unavailable
+   * room from a successfully loaded empty history.
    */
   async fetchRoomHistory(
     saleAddress: string,
     options: {
       until?: number;
       limit?: number;
-      isPrivate?: boolean;
       includeSystem?: boolean;
     } = {},
   ): Promise<NostrEvent[]> {
     const {
       until,
       limit = 50,
-      isPrivate = false,
       includeSystem = false,
     } = options;
-    await this.connect();
-    if (isPrivate) await this.authenticate();
-    const filter: Record<string, unknown> = {
+    const filter: Filter = {
       kinds: includeSystem ? ROOM_MESSAGE_KINDS_WITH_SYSTEM : ROOM_MESSAGE_KINDS,
       '#h': [saleAddress],
       limit,
@@ -298,36 +338,40 @@ export class GatedRoomClient {
 
   /** One-shot REQ: collect events until EOSE (or timeout), then close. */
   private async query(
-    filter: Record<string, unknown>,
+    filter: Filter,
     timeoutMs: number,
   ): Promise<NostrEvent[]> {
-    const relay = await this.connect();
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const out: NostrEvent[] = [];
       let settled = false;
       let sub: { close: () => void } | null = null;
-      const finish = () => {
+      let timer: ReturnType<typeof setTimeout>;
+      const finish = (error?: Error) => {
         if (settled) return;
         settled = true;
+        clearTimeout(timer);
         try {
           sub?.close();
         } catch {
           /* ignore */
         }
-        resolve(out);
+        if (error) reject(error);
+        else resolve(out);
       };
-      sub = relay.subscribe([filter as never], {
+      this.subscribe(filter, {
         onevent: (e) => out.push(e as unknown as NostrEvent),
-        oneose: finish,
-        // The relay CLOSEs a rejected REQ (e.g. a private group we can't read) —
-        // resolve right away with whatever arrived instead of burning the timeout.
-        onclose: finish,
-      });
-      setTimeout(finish, timeoutMs);
+        oneose: () => finish(),
+      }, finish).then((subscription) => {
+        sub = subscription;
+        if (settled) sub.close();
+      }).catch(finish);
+      timer = setTimeout(() => finish(new Error('Room history request timed out.')), timeoutMs);
     });
   }
 
   close(): void {
+    this.closed = true;
+    this.connectionAbort.abort();
     this.relay?.close();
     this.relay = null;
   }

@@ -190,14 +190,19 @@ export function useGatedRoom(
       if (cancelled) return;
       relayPubkeyRef.current = client.relayPubkey;
       if (!cancelled && meta) setMetadata(meta);
+      // Denied access still surfaces. A slow or failed backfill must not block the
+      // live room, whose subscription delivers the stored messages as well.
       const history = await client
         .fetchRoomHistory(saleAddress, {
           limit: HISTORY_PAGE_SIZE,
-          isPrivate,
           includeSystem,
+        })
+        .catch((cause: unknown) => {
+          if (cause instanceof GatedRoomPublishError) throw cause;
+          return null;
         });
       if (cancelled) return;
-      if (!cancelled) {
+      if (history) {
         history.forEach(upsertEvent);
         if (history.length < HISTORY_PAGE_SIZE) setHasEarlier(false);
       }
@@ -206,7 +211,7 @@ export function useGatedRoom(
         (event) => {
           if (!cancelled) upsertEvent(event);
         },
-        { isPrivate, includeSystem, onError },
+        { includeSystem, onError },
       );
       if (cancelled) {
         sub.close();
@@ -240,7 +245,6 @@ export function useGatedRoom(
       const older = await client.fetchRoomHistory(saleAddress, {
         until,
         limit: HISTORY_PAGE_SIZE,
-        isPrivate,
         includeSystem,
       });
       if (clientRef.current !== client) return;
@@ -258,7 +262,6 @@ export function useGatedRoom(
     }
   }, [
     saleAddress,
-    isPrivate,
     includeSystem,
     isLoadingEarlier,
     hasEarlier,

@@ -47,6 +47,7 @@ const PoolDetail = () => {
         <PoolStatsOverview
           key={address}
           pairData={chainPair?.pair ?? pairData}
+          aligned={!!chainPair}
           pairSummary={pairSummary}
           loading={summaryLoading}
           failed={summaryFailed}

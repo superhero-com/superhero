@@ -33,8 +33,12 @@ describe('errorToUserMessage', () => {
     expect(errorToUserMessage(wrap('AedexV2Pair: INSUFFICIENT_LIQUIDITY_MINTED'), { action: 'add-liquidity' }))
       .toContain('too small to mint any pool tokens');
     const bAmount = errorToUserMessage(wrap('AedexV2Router: INSUFFICIENT_B_AMOUNT'), { slippagePct: 1 });
-    expect(bAmount).toContain('less of the second token');
+    expect(bAmount).toContain('second token would fall below your minimum');
     expect(bAmount).toContain('1%');
+    // A smaller deposit or removal scales the minimums with it, so it cannot help.
+    const removal = errorToUserMessage(wrap('AedexV2Router: INSUFFICIENT_A_AMOUNT'), { action: 'remove-liquidity', slippagePct: 1 });
+    expect(removal).toContain('Increase slippage (currently 1%) and try again.');
+    expect(removal).not.toContain('trade size');
     expect(errorToUserMessage(wrap('AedexV2Router: EXCESSIVE_INPUT_AMOUNT'), { slippagePct: 2 })).toContain('2%');
     expect(errorToUserMessage(wrap('AedexV2Router: EXPIRED'), { deadlineMins: 20 })).toContain('20');
     expect(errorToUserMessage(wrap('AedexV2Router: INVALID_PATH_FIRST'))).toContain('must start with wrapped AE');

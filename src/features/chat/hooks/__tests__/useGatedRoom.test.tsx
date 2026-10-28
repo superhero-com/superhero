@@ -70,6 +70,13 @@ describe('room delivery state', () => {
     await waitFor(() => expect(result.current.isReady).toBe(true));
     expect(result.current.error).toBeNull();
   });
+  it('opens the live room when the history backfill times out', async () => {
+    mocks.history.mockRejectedValueOnce(new Error('Room history request timed out.'));
+    const { result } = renderHook(() => useGatedRoom('room', { readable: true }));
+    await waitFor(() => expect(result.current.isReady).toBe(true));
+    expect(result.current.error).toBeNull();
+    expect(result.current.hasEarlier).toBe(true);
+  });
   it('surfaces asynchronous subscription rejection instead of reporting an empty ready room', async () => {
     const { result } = renderHook(() => useGatedRoom('room', { readable: true }));
     await waitFor(() => expect(result.current.isReady).toBe(true));

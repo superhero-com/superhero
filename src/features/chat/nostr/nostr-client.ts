@@ -242,7 +242,9 @@ export class NostrClient {
   destroy(): void {
     this.subscriptions.forEach((sub) => sub.close());
     this.subscriptions.clear();
-    this.pool.close(Object.keys(this.relays));
+    // Every relay the pool opened, including ones removed from settings since;
+    // with reconnect on they would otherwise keep reconnecting.
+    this.pool.destroy();
     this.eventHandlers.clear();
   }
 }

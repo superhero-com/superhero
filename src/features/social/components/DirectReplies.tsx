@@ -54,20 +54,14 @@ const DirectReplies = ({
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // Auto-drain a few pages so short threads show fully without scrolling
+  // Auto-load a few pages so short threads show fully without scrolling. Every page
+  // re-runs this effect, so the count lives in a ref; the poll refetches each loaded page.
+  const autoLoadedPages = useRef(0);
+  useEffect(() => { autoLoadedPages.current = 0; }, [id]);
   useEffect(() => {
-    if (!data) return () => {};
-    let cancelled = false;
-    const maxAutoPages = 5;
-    const drain = async (steps = 0) => {
-      if (cancelled || !hasNextPage || isFetchingNextPage || steps >= maxAutoPages) return;
-      await fetchNextPage();
-      await drain(steps + 1);
-    };
-    if (hasNextPage && !isFetchingNextPage) {
-      drain();
-    }
-    return () => { cancelled = true; };
+    if (!data || !hasNextPage || isFetchingNextPage || autoLoadedPages.current >= 5) return;
+    autoLoadedPages.current += 1;
+    fetchNextPage();
   }, [data, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   if (isLoading) return <div className="post-detail__state" role="status">{t('social:loadingReplies')}</div>;

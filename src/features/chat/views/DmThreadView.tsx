@@ -26,8 +26,6 @@ import { useMessages } from '../hooks/useMessages';
 import { useRoomSession } from '../hooks/useRoomSession';
 import { DmThreadHeader } from '../components/DmThreadHeader';
 import { DmMessageBubble } from '../components/DmMessageBubble';
-import { isChatRelayConfigured } from '../core/relay-config';
-import ChatUnavailableNotice from '../components/ChatUnavailableNotice';
 
 const DmThreadView = () => {
   const { address = '' } = useParams();
@@ -118,8 +116,6 @@ const DmThreadView = () => {
       />
     );
   };
-
-  if (!isChatRelayConfigured()) return <ChatUnavailableNotice />;
 
   return (
     <div className="chat-conversation">

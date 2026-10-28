@@ -6,6 +6,7 @@ import { request, SHORTS_API } from './api';
 import {
   WalletJournal,
   assertUnsignedWalletRequest,
+  walletCallArguments,
   validateObservation,
   type WalletAction,
   type WalletMethod,
@@ -13,6 +14,7 @@ import {
   type WalletScope,
 } from './shorts-wallet-journal';
 import { verifyShortsWalletTarget } from './shorts-release';
+import { ShortsDeadline } from './shorts-deadline';
 import type { Config } from './types';
 
 export class WalletActionPending extends Error {}
@@ -20,7 +22,7 @@ const journal = new WalletJournal();
 export const observeWalletAction = async (action: WalletAction, signal?: AbortSignal) => {
   const params = new URLSearchParams({ address: action.address, contract: action.contract });
   const value = await request<unknown>(
-    `/wallet-transactions/${encodeURIComponent(action.tx!)}?${params}`,
+    `/${action.sponsorship ? 'like-sponsorships' : 'wallet-transactions'}/${encodeURIComponent(action.tx!)}?${params}`,
     undefined,
     undefined,
     { signal, timeout: 20000 },
@@ -34,8 +36,10 @@ type Options = {
   network?: string;
   contract?: string;
   previousContract?: string;
+  rewardContracts?: string[];
   onConfirmed: (action: WalletAction) => void;
   onUnconfirmed?: (action: WalletAction) => void;
+  sponsorToken?: () => Promise<string>;
 };
 
 /** Resume observations only. Neither mounting, polling nor recovery can sign. */
@@ -43,7 +47,7 @@ export function useShortsWalletTransactions(options: Options) {
   const {
     actor, network, contract, previousContract,
   } = options;
-  const scopeKey = JSON.stringify([SHORTS_API, actor, network, contract, previousContract]);
+  const scopeKey = JSON.stringify([SHORTS_API, actor, network, contract, previousContract, options.rewardContracts]);
   const currentScope = useRef(scopeKey);
   currentScope.current = scopeKey;
   const confirmed = useRef(new Set<string>());
@@ -60,7 +64,7 @@ export function useShortsWalletTransactions(options: Options) {
   const [revision, setRevision] = useState(0);
   const check = useCallback(() => setRevision((value) => value + 1), []);
   const scopes: WalletScope[] = actor && network && contract
-    ? [...new Set([contract, previousContract].filter((s): s is string => !!s))].map(
+    ? [...new Set([contract, previousContract, ...(options.rewardContracts || [])].filter((s): s is string => !!s))].map(
       (address) => ({
         api: SHORTS_API,
         address: actor,
@@ -112,7 +116,7 @@ export function useShortsWalletTransactions(options: Options) {
             ...(old.scope === scopeKey ? old : {}),
             scope: scopeKey,
             observation: undefined,
-            error: 'Could not check wallet activity. Keep any pending payment and check again.',
+            error: 'Could not check wallet activity. Keep the pending transaction and check again.',
           }));
         }
       } finally {
@@ -147,11 +151,18 @@ export function useShortsWalletTransactions(options: Options) {
     config: Config,
     target: string,
     onSigned: () => void,
+    comment?: { text?: string; sequence?: string },
+    sponsorToken?: string,
   ) => {
+    // Retain historical journals, but never prepare or sign a new content-removal action.
+    if (method === 'withdraw') throw new Error('Published Shorts cannot be withdrawn.');
+    if (method === 'delete_comment') throw new Error('Comments cannot be deleted.');
     const expectedScope = scopeKey;
     const context = sdk.getContext();
+    let preparation: ShortsDeadline | undefined;
     const scope = latestScopes.current.find((s) => s.contract === target);
     const assertCurrent = () => {
+      preparation?.assertActive();
       if (!scope || currentScope.current !== expectedScope || sdk.address !== actor
         || sdk.getContext().onNode !== context.onNode) throw new Error('Wallet changed. This request will not be sent.');
     };
@@ -169,7 +180,7 @@ export function useShortsWalletTransactions(options: Options) {
         }
         const observation = await observeWalletAction(pending);
         assertCurrent();
-        if (!['confirmed', 'failed'].includes(observation.status)) {
+        if (!['confirmed', 'failed'].includes(observation.status) && observation.neverSubmitted !== true && observation.sponsorshipExpired !== true) {
           throw new WalletActionPending(
             'Your earlier transaction is still pending. Check its status instead of sending it again.',
           );
@@ -179,14 +190,38 @@ export function useShortsWalletTransactions(options: Options) {
     }, Promise.resolve());
     const verified = await verifyShortsWalletTarget(context, config, target, method, amount, assertCurrent);
     assertCurrent();
+    let sponsorship;
+    if (method === 'like') {
+      const policy = config.likeSponsorship;
+      if (!sponsorToken || policy?.enabled !== true || !Number.isSafeInteger(policy.ttlBlocks)
+        || policy.ttlBlocks < 1 || policy.ttlBlocks > 60 || !context.onNode) {
+        throw new Error('Network fee sponsorship is unavailable. No transaction was sent.');
+      }
+      const deadline = new ShortsDeadline('Could not prepare your Like in time. No transaction was sent.');
+      const top = await deadline.wait(context.onNode.getTopHeader()).finally(() => deadline.close());
+      assertCurrent();
+      sponsorship = {
+        gasLimit: policy.gasLimit, gasPrice: policy.gasPrice, maxFee: policy.maxFee, ttl: top.height + policy.ttlBlocks,
+      };
+    }
     const action = await journal.begin({
       ...scope!,
       method,
       videoId,
       amount,
+      ...(sponsorship ? { sponsorship } : {}),
+      ...(verified.release.schemaVersion === 2 && target === verified.release.contract ? {
+        args: {
+          claim: [],
+          like: [videoId!, verified.policy.version],
+          paid_like: [videoId!, verified.policy.version],
+          add_comment: [videoId!, comment?.text || '', verified.policy.version, comment?.sequence || ''],
+        }[method],
+      } : {}),
     });
     check();
     let signed = false;
+    preparation = new ShortsDeadline('Wallet transaction preparation timed out. No transaction was sent.');
     try {
       const signer = context.onAccount;
       if (!signer || typeof signer === 'string' || typeof signer.signTransaction !== 'function') throw new Error('Your wallet signer is unavailable.');
@@ -197,6 +232,7 @@ export function useShortsWalletTransactions(options: Options) {
           if (key === 'postTransaction') {
             return async (...args: Parameters<typeof node.postTransaction>) => {
               assertCurrent();
+              if (action.sponsorship) throw new Error('A sponsored Like cannot be submitted as a user-paid transaction.');
               await journal.attemptSubmission(action, args[0].tx as `tx_${string}`);
               assertCurrent();
               // Never clear the record after entering this boundary, even when
@@ -213,10 +249,14 @@ export function useShortsWalletTransactions(options: Options) {
           if (key === 'signTransaction') {
             return async (...args: Parameters<typeof signer.signTransaction>) => {
               assertCurrent();
+              if (!!args[1]?.innerTx !== !!action.sponsorship) throw new Error('The wallet signing mode does not match this action.');
               const current = await journal.read(scope!);
               if (current?.id !== action.id || current.tx) throw new Error('This wallet request is no longer active.');
               assertCurrent();
               assertUnsignedWalletRequest(action, args[0], args[1]?.networkId || '');
+              // User confirmation has no deadline. A late SDK read may not reach
+              // this boundary after preparation already expired and was cancelled.
+              preparation!.stop();
               const raw = await signer.signTransaction(...args);
               assertCurrent();
               await journal.signed(action, args[0], raw, args[1]?.networkId || '');
@@ -231,15 +271,32 @@ export function useShortsWalletTransactions(options: Options) {
           return typeof value === 'function' ? value.bind(account) : value;
         },
       });
-      const call = await Contract.initialize({
+      const call = await preparation.wait(Contract.initialize({
         ...context,
         onNode: submissionNode,
         onAccount: wrapped,
         aci: verified.aci as any,
         address: target as `ct_${string}`,
-      });
+      }));
       assertCurrent();
-      await call.$call(method, method === 'claim' ? [] : [videoId], { amount, waitMined: false });
+      const result = await preparation.wait(call.$call(method, walletCallArguments(action), {
+        amount,
+        waitMined: false,
+        ...(sponsorship ? {
+          innerTx: true, absoluteTtl: true, gasLimit: sponsorship.gasLimit, gasPrice: sponsorship.gasPrice, ttl: sponsorship.ttl,
+        } : {}),
+      }));
+      if (sponsorship) {
+        assertCurrent();
+        if (!signed || !result.rawTx) throw new Error('The wallet did not return a signed Like.');
+        // Persist the inner hash before entering the API boundary. A lost response
+        // is recovered by that same hash, never by signing a replacement request.
+        await journal.attemptSubmission(action, result.rawTx);
+        assertCurrent();
+        await request('/like-sponsorships', {
+          id: action.id, videoId, signedInnerTx: result.rawTx,
+        }, sponsorToken, { timeout: 20000 });
+      }
       if (!signed) {
         throw new Error(
           'The wallet returned without a saved transaction. Check your wallet history.',
@@ -254,9 +311,10 @@ export function useShortsWalletTransactions(options: Options) {
         throw error;
       }
       throw new WalletActionPending(
-        'Your signed transaction is saved. Its outcome is not confirmed yet; check its status before another payment.',
+        'Your signed transaction is saved. Its outcome is not confirmed yet; check its status before another transaction.',
       );
     } finally {
+      preparation.close();
       check();
     }
     throw new WalletActionPending(
@@ -282,12 +340,40 @@ export function useShortsWalletTransactions(options: Options) {
       check();
     }
   };
+  const retrySponsorship = async () => {
+    if (!action?.sponsorship || !action.rawInner || action.submission !== 'attempted') return;
+    const expectedScope = scopeKey;
+    const assertCurrent = () => {
+      if (currentScope.current !== expectedScope) throw new Error('Wallet changed. Check the pending Like from its original wallet.');
+    };
+    try {
+      const observed = await observeWalletAction(action);
+      assertCurrent();
+      if (['confirmed', 'failed'].includes(observed.status) || observed.neverSubmitted === true || observed.sponsorshipExpired === true) { check(); return; }
+      const token = await options.sponsorToken?.();
+      assertCurrent();
+      if (!token) throw new Error('Connect your wallet to retry sponsorship.');
+      const saved = await journal.read(action);
+      if (saved?.id !== action.id || saved.tx !== action.tx || saved.rawInner !== action.rawInner) throw new Error('Wallet activity changed. Check status again.');
+      assertCurrent();
+      await request('/like-sponsorships', {
+        id: action.id, videoId: action.videoId, signedInnerTx: action.rawInner,
+      }, token, { timeout: 20000 });
+    } catch (error) {
+      if (currentScope.current === expectedScope) {
+        setState((old) => ({
+          ...old, error: error instanceof Error ? error.message : 'Sponsorship could not be reached. Your pending Like is preserved.',
+        }));
+      }
+    } finally { check(); }
+  };
   return {
     action,
     observation: state.scope === scopeKey ? state.observation : undefined,
     error: state.scope === scopeKey ? state.error : undefined,
     check,
     release,
+    retrySponsorship,
     run,
   };
 }

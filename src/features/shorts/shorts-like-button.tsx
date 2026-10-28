@@ -9,7 +9,8 @@ export const ShortsLikeButton = ({
   pricing?: ShortsPricing;
 }) => {
   const payment = shortsPricing(pricing);
-  const availableLabel = payment ? `Like for ${payment.price}` : 'Likes temporarily unavailable';
+  const availableLabel = payment ? 'Like' : 'Likes temporarily unavailable';
+  const label = liked ? 'Liked' : 'Like';
   const previous = useRef({ count, liked });
   const [motion, setMotion] = useState({ from: count, to: count, celebrate: false });
   useEffect(() => {
@@ -48,7 +49,7 @@ export const ShortsLikeButton = ({
           <span className="sv-like-new">{count}</span>
         </span>
       </strong>
-      <span>{liked ? 'Liked' : payment?.price || 'Unavailable'}</span>
+      <span>{payment || liked ? label : 'Unavailable'}</span>
     </div>
   );
 };

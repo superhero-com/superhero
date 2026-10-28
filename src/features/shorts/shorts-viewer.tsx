@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import {
   Bookmark, Captions, ArrowDown, ArrowLeft, ArrowUp, ChevronDown, Clapperboard,
   Flag, Info, Maximize2, Pause, Play, Plus, Share2, SlidersHorizontal,
-  Volume2, VolumeX, X, EyeOff, Eye, RefreshCw,
+  Volume2, VolumeX, X, EyeOff, Eye, RefreshCw, MessageCircle,
 } from 'lucide-react';
 import { shortsMediaUrl } from './shorts-media';
 import { useShortHls } from './use-short-hls';
@@ -28,6 +28,7 @@ type Props = {
   topic: string;
   onTopic: (topic: string) => void;
   onLike: (short: Short) => void;
+  onComments?: (short: Short) => void;
   onReport: (id: string, reportId: string, reason: string, detail: string) => Promise<boolean | undefined> | void;
   personal?: ReturnType<typeof useShortsPreferences>;
   social?: ReturnType<typeof useShortsSocial>;
@@ -50,9 +51,10 @@ type Props = {
 const time = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
 
 const ShortPlayer = ({
-  short, active, warm, muted, onMute, onLike, onDetails, onShare, busy, onPlayback, onSave, saved, measurementSession, pricing,
+  short, active, warm, muted, onMute, onLike, onComments, onDetails, onShare, busy, onPlayback, onSave, saved, measurementSession, pricing,
 }: {
   short: Short; active: boolean; warm: boolean; muted: boolean; busy: boolean;
+  onComments?: () => void;
   onMute: () => void; onLike: () => void; onDetails: () => void; onShare: () => void;
   onPlayback?: Props['onPlayback']; onSave?: () => void; saved?: boolean;
   measurementSession?: string;
@@ -277,6 +279,12 @@ const ShortPlayer = ({
         )}
       </div>
       <div className="sv-actions" aria-label="Video actions">
+        {!covered && onComments && (
+        <div className="sv-action">
+          <button type="button" className="sv-action-button" aria-label="Video comments" onClick={onComments}><MessageCircle size={23} /></button>
+          <span>Comments</span>
+        </div>
+        )}
         {!covered && <ShortsLikeButton pricing={pricing} count={short.likes} liked={short.liked} disabled={busy || short.mine} onLike={onLike} />}
         <div className="sv-action">
           <button type="button" className="sv-action-button" aria-label="Copy Short link" onClick={onShare}><Share2 size={23} /></button>
@@ -299,7 +307,7 @@ const ShortPlayer = ({
 };
 
 export const ShortsViewer = ({
-  feed, topics, topic, onTopic, onLike, onReport, onStudio, onUpload,
+  feed, topics, topic, onTopic, onLike, onComments, onReport, onStudio, onUpload,
   message, onDismissMessage, busy, suspended, ready, personal, social, onConnect, onPlayback, measurementSession, shared = false, pagination, pricing,
 }: Props) => {
   const payment = shortsPricing(pricing);
@@ -452,6 +460,7 @@ export const ShortsViewer = ({
                   onMute={() => setMuted((value) => !value)}
                   busy={busy}
                   onLike={() => onLike(short)}
+                  onComments={onComments ? () => onComments(short) : undefined}
                   onPlayback={onPlayback}
                   measurementSession={measurementSession}
                   onSave={personal ? () => personal.toggle('saved', short.id) : undefined}
@@ -572,12 +581,12 @@ export const ShortsViewer = ({
             <dl>
               <dt>Topic</dt>
               <dd>{details.topic}</dd>
-              <dt>Paid Likes</dt>
+              <dt>Likes</dt>
               <dd>{details.likes}</dd>
               <dt>Views (preview)</dt>
               <dd>{details.views}</dd>
             </dl>
-            <p>{payment ? `Each Like costs ${payment.price}: ${payment.creatorReward} to the creator and ${payment.treasuryReward} to the treasury. Network fees are additional.` : 'Like payment details are temporarily unavailable.'}</p>
+            <p>{payment ? 'Likes are free. Superhero covers the network fee.' : 'Likes are temporarily unavailable.'}</p>
             <details>
               <summary>IPFS content identifier</summary>
               <code>{details.cid}</code>

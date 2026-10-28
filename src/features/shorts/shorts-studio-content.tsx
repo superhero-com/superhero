@@ -98,8 +98,8 @@ export const StudioContent = ({ s, compact = false }: { s: ReturnType<typeof use
               <select id="studio-sort" value={sort} onChange={(e) => update('sort', e.target.value)}>
                 <option value="newest">Newest first</option>
                 <option value="oldest">Oldest first</option>
-                <option value="likes">Most paid Likes</option>
-                <option value="likes-asc">Fewest paid Likes</option>
+                <option value="likes">Most Likes</option>
+                <option value="likes-asc">Fewest Likes</option>
                 <option value="views" disabled={!completeViews}>Most views</option>
                 <option value="views-asc" disabled={!completeViews}>Fewest views</option>
               </select>
@@ -128,7 +128,7 @@ export const StudioContent = ({ s, compact = false }: { s: ReturnType<typeof use
           {params.has('cursor') && <button type="button" onClick={() => update('cursor', '')}>Return to first page</button>}
         </p>
       )}
-      {!compact && data?.index.stale && <p className="ss-measurement-note" role="status">Publication status and paid Likes are catching up with the network.</p>}
+      {!compact && data?.index.stale && <p className="ss-measurement-note" role="status">Publication status and Likes are catching up with the network.</p>}
       {remote && !data && !remote.error && <StudioSkeleton page="content" label="Loading your content…" />}
       {(!remote || data) && (shown.length > 0 ? (
         <div className="ss-table-wrap ss-responsive-table">
@@ -157,9 +157,9 @@ export const StudioContent = ({ s, compact = false }: { s: ReturnType<typeof use
                   <small className="ss-cell-note">{`Last ${s.days} days`}</small>
                 </th>
                 <th scope="col" className="ss-number-cell" aria-sort={sortDirection('likes', 'likes-asc')}>
-                  {compact ? 'Paid Likes' : (
+                  {compact ? 'Likes' : (
                     <button type="button" className="ss-sort-heading" onClick={() => update('sort', sort === 'likes' ? 'likes-asc' : 'likes')}>
-                      Paid Likes
+                      Likes
                       {sort === 'likes' && <ArrowDown size={13} />}
                       {sort === 'likes-asc' && <ArrowUp size={13} />}
                     </button>
@@ -204,7 +204,7 @@ export const StudioContent = ({ s, compact = false }: { s: ReturnType<typeof use
                     </td>
                     )}
                     <td className="ss-content-views ss-number-cell" data-label={`Views · ${s.days} days`}>{viewsAvailable && views !== undefined ? views.toLocaleString() : '—'}</td>
-                    <td className="ss-content-likes ss-number-cell" data-label="Paid Likes · all time">{v.likes.toLocaleString()}</td>
+                    <td className="ss-content-likes ss-number-cell" data-label="Likes · all time">{v.likes.toLocaleString()}</td>
                     {!compact && (
                     <td className="ss-content-actions">
                       <div>
@@ -257,7 +257,7 @@ export const StudioContent = ({ s, compact = false }: { s: ReturnType<typeof use
         )}
       </div>
       )}
-      {!compact && <p className="ss-table-note">Views cover the selected period. Paid Likes include all time.</p>}
+      {!compact && <p className="ss-table-note">Views cover the selected period. Likes include all time.</p>}
     </section>
   );
 };

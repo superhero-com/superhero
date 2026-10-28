@@ -1,4 +1,5 @@
 import type { ShortsRelease } from './shorts-release';
+import type { ShortsContractPolicy } from './shorts-contract-policy';
 
 export interface Short {
   contentWarning?: 'feed-excluded' | 'unreviewed';
@@ -38,8 +39,15 @@ export interface Account {
   earned: string;
   claimed: string;
   previousAvailable?: string;
+  rewardAccounts?: { contract: string; available: string }[];
 }
 export interface Config {
+  likeMode?: 'free' | 'paid';
+  likeSponsorship?: {
+    enabled: boolean; gasLimit: number; gasPrice: string; maxFee: string; ttlBlocks: number;
+  };
+  policy?: ShortsContractPolicy;
+  rewardContracts?: { contract: string; aci: unknown[] }[];
   release?: ShortsRelease;
   catalogPaging?: boolean;
   followingPaging?: boolean;

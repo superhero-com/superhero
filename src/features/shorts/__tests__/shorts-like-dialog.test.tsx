@@ -1,6 +1,4 @@
-import {
-  fireEvent, render, screen, within,
-} from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import {
   beforeEach, describe, expect, it, vi,
 } from 'vitest';
@@ -12,7 +10,7 @@ beforeEach(() => {
 });
 const makeProps = () => ({
   title: 'An original Short',
-  pricing: { network: 'ae_uat' as const, likeFeeAetto: '100000000000000000', treasuryBps: 2000 },
+  pricing: { network: 'ae_uat' as const, likeFeeAetto: '0', treasuryBps: 2000 },
   connected: true,
   busy: false,
   walletPending: false,
@@ -21,62 +19,32 @@ const makeProps = () => ({
   onClose: vi.fn(),
 });
 
-describe('Creator support dialog', () => {
-  it('shows the actual split and rounding on a different release without testnet copy', () => {
+describe('Free Like dialog', () => {
+  it.each(['ae_uat', 'ae_mainnet'] as const)('shows a free Like and platform network fee coverage on %s', (network) => {
     const props = makeProps();
     const { container } = render(<ShortsLikeDialog
       {...props}
-      pricing={{
-        network: 'ae_mainnet', likeFeeAetto: '3', treasuryBps: 3333,
-      }}
+      pricing={{ ...props.pricing, network }}
     />);
-    expect(screen.getByRole('button', { name: 'Send a Like · 0.000000000000000003 AE' })).toBeEnabled();
-    fireEvent.click(screen.getByRole('button', { name: 'How the Like fee is split' }));
-    expect(screen.getByText('66.67%')).toBeVisible();
-    expect(screen.getByText('33.33%')).toBeVisible();
-    expect(within(screen.getByRole('dialog', { name: 'How your Like is shared' }))
-      .getByText('0.000000000000000003 AE')).toBeVisible();
-    expect(screen.getByText('0 AE')).toBeVisible();
-    expect(screen.getByText('Any rounding remainder goes to the creator.')).toBeVisible();
-    expect(screen.queryByText(/testnet/i)).not.toBeInTheDocument();
-    const bars = container.querySelectorAll<HTMLElement>('.sh-support-split span');
-    expect(bars[0].style.flexGrow).toBe('66.67');
-    expect(bars[1].style.flexGrow).toBe('33.33');
-    expect(props.onLike).not.toHaveBeenCalled();
-  });
-
-  it('opens fee details without a payment and restores focus when returning', () => {
-    const props = makeProps();
-    const { container } = render(<ShortsLikeDialog {...props} />);
-    expect(screen.getByRole('button', { name: 'Send a Like · 0.1 test AE' })).toBeEnabled();
-    expect(screen.queryByText('0.08 test AE')).not.toBeInTheDocument();
-    const info = screen.getByRole('button', { name: 'How the Like fee is split' });
-    fireEvent.click(info);
-    expect(screen.getByRole('dialog', { name: 'How your Like is shared' })).toBeVisible();
+    expect(screen.getByRole('dialog', { name: 'Like this Short' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Like' })).toBeEnabled();
+    expect(screen.getByText('Show the creator you enjoyed it. Likes are free.')).toBeVisible();
+    expect(screen.getByText('Superhero covers the network fee. Confirm the Like in your wallet.')).toBeVisible();
+    expect(screen.queryByRole('button', { name: /fee.*split/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/0\.1|0\.08|0\.02|80%|20%/)).not.toBeInTheDocument();
     expect(container.querySelectorAll('dialog[open]')).toHaveLength(1);
-    expect(screen.getByText('0.08 test AE')).toBeVisible();
-    expect(screen.getByText('0.02 test AE')).toBeVisible();
-    expect(screen.getByText('Network fee is separate')).toBeVisible();
-    fireEvent.click(screen.getByRole('button', { name: 'Back to supporting' }));
-    expect(info).toHaveFocus();
-    expect(screen.getByRole('dialog', { name: 'Support this creator' })).toBeVisible();
     expect(props.onLike).not.toHaveBeenCalled();
     expect(props.onConnect).not.toHaveBeenCalled();
-    expect(props.onClose).not.toHaveBeenCalled();
-    fireEvent.click(info);
-    fireEvent(screen.getByRole('dialog', { name: 'How your Like is shared' }), new Event('cancel', { cancelable: true }));
-    expect(info).toHaveFocus();
-    expect(props.onClose).not.toHaveBeenCalled();
   });
 
-  it('connects a missing wallet without paying, then offers the single paid Like', () => {
+  it('connects a missing wallet without sending a Like, then requires the Like action', () => {
     const props = makeProps();
     const { rerender } = render(<ShortsLikeDialog {...props} connected={false} />);
     fireEvent.click(screen.getByRole('button', { name: 'Connect wallet to Like' }));
     expect(props.onConnect).toHaveBeenCalledOnce();
     expect(props.onLike).not.toHaveBeenCalled();
     rerender(<ShortsLikeDialog {...props} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Send a Like · 0.1 test AE' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Like' }));
     expect(props.onLike).toHaveBeenCalledOnce();
   });
 
@@ -86,24 +54,41 @@ describe('Creator support dialog', () => {
     rerender(<ShortsLikeDialog {...props} busy walletPending />);
     expect(container.querySelectorAll('dialog[open]')).toHaveLength(0);
     rerender(<ShortsLikeDialog {...props} busy />);
-    expect(screen.getByRole('button', { name: 'How the Like fee is split' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Close Like dialog' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Waiting for wallet & network…' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Waiting for wallet & network…' }));
     fireEvent(screen.getByRole('dialog'), new Event('cancel', { cancelable: true }));
+    expect(props.onLike).not.toHaveBeenCalled();
     expect(props.onClose).not.toHaveBeenCalled();
-    rerender(<ShortsLikeDialog {...props} error="Payment cancelled. No Like was sent." />);
-    expect(screen.getByRole('alert')).toHaveTextContent('Payment cancelled');
-    expect(screen.getByRole('button', { name: 'Send a Like · 0.1 test AE' })).toBeEnabled();
+    rerender(<ShortsLikeDialog {...props} error="Like cancelled. No Like was sent." />);
+    expect(screen.getByRole('alert')).toHaveTextContent('Like cancelled');
+    expect(screen.getByRole('button', { name: 'Like' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Like' }));
+    expect(props.onLike).toHaveBeenCalledOnce();
     fireEvent(screen.getByRole('dialog'), new Event('cancel', { cancelable: true }));
+    expect(props.onClose).toHaveBeenCalledOnce();
+  });
+
+  it('closes without sending a transaction', () => {
+    const props = makeProps();
+    render(<ShortsLikeDialog {...props} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Close Like dialog' }));
     expect(props.onClose).toHaveBeenCalledOnce();
     expect(props.onLike).not.toHaveBeenCalled();
   });
-});
 
-it('disables an unverified payment without displaying an unverified price', () => {
-  const props = makeProps();
-  render(<ShortsLikeDialog {...props} pricing={undefined} />);
-  expect(screen.getByRole('button', { name: 'Likes temporarily unavailable' })).toBeDisabled();
-  expect(screen.queryByText('0.1 test AE')).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Likes temporarily unavailable' }));
-  expect(props.onLike).not.toHaveBeenCalled();
+  it.each([undefined, '1', '100000000000000000'])('disables an unavailable or paid release (%s)', (likeFeeAetto) => {
+    const props = makeProps();
+    render(<ShortsLikeDialog
+      {...props}
+      pricing={likeFeeAetto === undefined ? undefined : { ...props.pricing, likeFeeAetto }}
+    />);
+    const action = screen.getByRole('button', { name: 'Likes temporarily unavailable' });
+    expect(action).toBeDisabled();
+    expect(screen.getByText('Network fee sponsorship is temporarily unavailable.')).toBeVisible();
+    expect(screen.queryByText(/Superhero covers the network fee/)).not.toBeInTheDocument();
+    expect(screen.queryByText('0.1 test AE')).not.toBeInTheDocument();
+    fireEvent.click(action);
+    expect(props.onLike).not.toHaveBeenCalled();
+  });
 });

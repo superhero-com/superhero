@@ -1,5 +1,6 @@
 import { ShortsStudio } from './shorts-studio';
 import { useShorts } from './use-shorts';
+import { ShortsComments } from './shorts-comments';
 import { ShortsDialog } from './shorts-dialog';
 import { ShortsLikeDialog } from './shorts-like-dialog';
 import { ShortsViewer } from './shorts-viewer';
@@ -21,6 +22,7 @@ export const ShortsPage = () => {
           topic={s.topic}
           onTopic={s.setTopic}
           onLike={s.setLike}
+          onComments={s.config?.release?.schemaVersion === 2 ? s.setCommentShort : undefined}
           onReport={s.report}
           personal={s.personal}
           social={s.social}
@@ -32,7 +34,7 @@ export const ShortsPage = () => {
           message={s.message}
           onDismissMessage={s.clearMessage}
           busy={s.busy}
-          suspended={!!s.like || !!s.withdrawal || s.busy}
+          suspended={!!s.like || !!s.commentShort || s.busy}
           ready={s.feedReady}
           shared={s.shared}
           pagination={s.config?.catalogPaging && !s.shared ? {
@@ -40,7 +42,24 @@ export const ShortsPage = () => {
           } : undefined}
         />
       ) : <ShortsStudio s={s} />}
-      {s.claimReview && s.dashboard && (
+      {s.commentShort && s.config?.policy && (
+      <ShortsComments
+        key={s.commentShort.id}
+        id={s.commentShort.id}
+        title={s.commentShort.title}
+        actor={s.actor}
+        policy={s.config.policy}
+        busy={s.busy}
+        walletPending={s.walletPending}
+        revision={s.commentRevision}
+        publishedRevision={s.commentPublishedRevision}
+        message={s.message}
+        onClose={() => s.setCommentShort(undefined)}
+        onConnect={s.connectForComments}
+        onAdd={s.addComment}
+      />
+      )}
+      {s.claimReview && s.dashboard && s.config?.likeMode !== 'free' && (
         <ShortsDialog label="Review reward claim" busy={s.busy} suspended={s.walletPending} onClose={() => s.setClaimReview(false)}>
           <section className="sh-modal">
             <h2>Claim your rewards</h2>
@@ -55,18 +74,6 @@ export const ShortsPage = () => {
             {s.message && <p role="status">{s.message}</p>}
             <button type="button" disabled={s.busy} onClick={() => s.setClaimReview(false)}>Cancel</button>
             <button type="button" className="primary" disabled={s.busy || Number(s.dashboard.account.available) <= 0} onClick={s.claim}>Confirm claim in wallet</button>
-          </section>
-        </ShortsDialog>
-      )}
-      {s.withdrawal && (
-        <ShortsDialog label="Withdraw Short" busy={s.busy} suspended={s.walletPending} onClose={() => s.setWithdrawal(undefined)}>
-          <section className="sh-modal">
-            <h2>Permanently withdraw this Short?</h2>
-            <p>{s.withdrawal.title}</p>
-            <p>Official playback stops and this video cannot be reactivated.</p>
-            {s.message && <p role="status">{s.message}</p>}
-            <button type="button" disabled={s.busy} onClick={() => s.setWithdrawal(undefined)}>Keep my Short</button>
-            <button type="button" className="primary" disabled={s.busy} onClick={() => s.withdraw(s.withdrawal!.id)}>Confirm withdrawal in wallet</button>
           </section>
         </ShortsDialog>
       )}

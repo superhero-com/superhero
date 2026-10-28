@@ -12,7 +12,7 @@ export const shortsUnit = (network?: string) => (network === 'ae_uat' ? 'test AE
 /** Presentation only: callers pass the independently verified payment release. */
 export function shortsPricing(value?: ShortsPricing) {
   if (!value || !['ae_uat', 'ae_mainnet'].includes(value.network)
-    || typeof value.likeFeeAetto !== 'string' || !/^[1-9]\d{0,77}$/.test(value.likeFeeAetto)
+    || value.likeFeeAetto !== '0'
     || BigInt(value.likeFeeAetto) >= 2n ** 256n || !Number.isInteger(value.treasuryBps)
     || value.treasuryBps < 0 || value.treasuryBps > 10000) return undefined;
   const fee = BigInt(value.likeFeeAetto);
@@ -21,7 +21,7 @@ export function shortsPricing(value?: ShortsPricing) {
   return {
     unit,
     networkLabel: value.network === 'ae_uat' ? 'Testnet' : 'Mainnet',
-    price: `${shortsAe(fee)} ${unit}`,
+    price: 'Free',
     creatorReward: `${shortsAe(fee - treasury)} ${unit}`,
     treasuryReward: `${shortsAe(treasury)} ${unit}`,
     creatorPercent: (10000 - value.treasuryBps) / 100,

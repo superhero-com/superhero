@@ -58,6 +58,9 @@ export function useShorts() {
   const [performanceRevision, setPerformanceRevision] = useState(0);
   const performanceScope = useRef('');
   const [claimReview, setClaimReview] = useState(false);
+  const [commentShort, setCommentShort] = useState<Short>();
+  const [commentRevision, setCommentRevision] = useState(0);
+  const [commentPublishedRevision, setCommentPublishedRevision] = useState(0);
   const videoId = section === 'video' ? location.pathname.split('/')[4] : undefined;
   const [topic, setTopic] = useState('All');
   const [config, setConfig] = useState<Config>();
@@ -146,7 +149,6 @@ export function useShorts() {
   };
   const [like, setLike] = useState<Short>();
   const likeAfterConnect = useRef<Short | undefined>(undefined);
-  const [withdrawal, setWithdrawal] = useState<Short>();
   const generation = useRef(0);
   const actionLock = useRef(false);
   const previousActor = useRef(actor);
@@ -167,7 +169,6 @@ export function useShorts() {
     // A first connection returns to review; connecting never submits a payment.
     setLike(actor ? likeAfterConnect.current : undefined);
     if (actor) likeAfterConnect.current = undefined;
-    setWithdrawal(undefined);
     setUploadProgress(undefined);
     if (changedAccount) {
       setUploadDraft(undefined);
@@ -240,7 +241,7 @@ export function useShorts() {
       }
       if (gen !== generation.current) return;
       setConfig(c);
-      setPaymentRelease(payment?.release);
+      setPaymentRelease(payment?.freeLikes && c.likeSponsorship?.enabled === true ? { ...payment.release, likeFeeAetto: payment.policy.likeFeeAetto, treasuryBps: payment.policy.treasuryBps } : undefined);
       if (f) setFeed(f.map(withConfirmedLike));
       setSharedResult(sharedId ? { id: sharedId, video: shared ? withConfirmedLike(shared) : undefined } : undefined);
       setDashboard(d); setDashboardScope(JSON.stringify([actor, c.network, c.contract, c.bytecodeHash, token]));
@@ -295,18 +296,24 @@ export function useShorts() {
     load();
     return () => { cancelled = true; };
   }, [days, token, tab, videoId, performanceRevision]);
+  const sponsorSession = useRef<() => Promise<string>>(async () => { throw new Error('Wallet connection is not ready.'); });
   const walletRecovery = useShortsWalletTransactions({
+    sponsorToken: () => sponsorSession.current(),
     actor,
     network: config?.network,
     contract: config?.contract,
     previousContract: config?.previousContract,
+    rewardContracts: config?.release?.rewardContracts?.map((item) => item.contract),
     onUnconfirmed: (action) => {
       if (action.videoId) confirmedLikes.current.delete(action.videoId);
       refresh().catch(() => undefined);
     },
     onConfirmed: (action) => {
       if (action.address !== currentAddress.current) return;
-      if (action.method === 'paid_like' && action.videoId) {
+      // Older deployments can still confirm previously signed deletion transactions.
+      if (action.method === 'add_comment' || action.method === 'delete_comment') setCommentRevision((value) => value + 1);
+      if (action.method === 'add_comment') setCommentPublishedRevision((value) => value + 1);
+      if (action.method === 'like' && action.videoId && action.contract === config?.contract) {
         const id = action.videoId;
         const latest = currentFeed.current.find((item) => item.id === id) || sharedVideo;
         if (latest?.id === id) {
@@ -319,7 +326,9 @@ export function useShorts() {
       }
       setPerformanceRevision((value) => value + 1);
       setMessageTone('success');
-      setMessage({ paid_like: 'Like confirmed. Thanks for supporting this creator!', claim: 'Rewards claimed to your wallet.', withdraw: 'Short withdrawn from official playback.' }[action.method]);
+      setMessage({
+        like: 'Like confirmed.', paid_like: 'Like confirmed.', claim: 'Rewards claimed to your wallet.', withdraw: 'Short withdrawn from official playback.', add_comment: 'Comment published.', delete_comment: 'Comment deleted.',
+      }[action.method]);
       refresh().catch(() => undefined);
     },
   });
@@ -411,11 +420,22 @@ export function useShorts() {
     }
     if (!actor || currentAddress.current !== actor) throw new Error('Wallet changed. Reconnect and try again.');
   };
-  const transact = async (method: WalletMethod, args: string[], amount = '0', previous = false) => {
+  const transact = async (
+    method: WalletMethod,
+    args: string[],
+    amount = '0',
+    previous: boolean | string = false,
+    comment?: { text?: string; sequence?: string },
+  ) => {
     setWalletPending(true);
     try {
       await checkNetwork();
       if (sdk.address !== actor || currentAddress.current !== actor) throw new Error('Wallet signer does not match the connected account.');
+      const sponsorshipToken = method === 'like' ? await sponsorSession.current() : undefined;
+      // Session authentication releases its own wallet handoff when it finishes.
+      // Keep the native dialog suspended for the separate transaction approval,
+      // or showModal() makes the wallet's confirmation portal inert.
+      setWalletPending(true);
       setMessage('Review the transaction in your wallet…');
       return await walletRecovery.run(
         sdk,
@@ -423,8 +443,10 @@ export function useShorts() {
         args[0],
         amount,
         config!,
-(previous ? config!.previousContract : config!.contract)!,
-() => { setLike(undefined); setClaimReview(false); setWithdrawal(undefined); setWalletPending(false); },
+(typeof previous === 'string' ? previous : [config!.contract, config!.previousContract][Number(previous)])!,
+() => { setLike(undefined); setClaimReview(false); setWalletPending(false); },
+comment,
+sponsorshipToken,
       );
     } finally { setWalletPending(false); }
   };
@@ -469,6 +491,7 @@ export function useShorts() {
       return session.token;
     } finally { setWalletPending(false); }
   };
+  sponsorSession.current = ensureCreatorSession;
   const signIn = () => perform(async () => {
     if (!actor) { openModal({ name: 'connect-wallet' }); return; }
     await ensureCreatorSession();
@@ -610,18 +633,31 @@ export function useShorts() {
   const publish = (id: string) => perform(() => completePublication(id), 'Your Short is published.');
   const confirmLike = () => perform(async () => {
     if (!like) throw new Error('Choose a Short to Like.');
-    if (like.creator === actor) throw new Error('You cannot send a paid Like to your own Short.');
+    if (like.creator === actor) throw new Error('You cannot Like your own Short.');
     if (like.liked || currentFeed.current.find((item) => item.id === like.id)?.liked) {
       throw new Error('You already liked this Short.');
     }
     const selected = like;
     if (!paymentRelease) throw new Error('Likes are temporarily unavailable for this Shorts release.');
-    await transact('paid_like', [selected.id], paymentRelease.likeFeeAetto);
-  }, 'Like sent. Thanks for supporting this creator!', true);
+    await transact('like', [selected.id], '0');
+  }, 'Like sent.', true);
   const visibleFeed = sharedId ? [sharedVideo].filter((item): item is Short => !!item)
     : rankShorts(feed, personal.preferences, topic, social.followed);
   return {
     actor,
+    commentShort,
+    setCommentShort,
+    commentRevision,
+    commentPublishedRevision,
+    connectForComments: () => perform(async () => {
+      setWalletPending(true);
+      try { await connectWallet(); } finally { setWalletPending(false); }
+    }, 'Wallet connected.', true),
+    addComment: (text: string) => perform(async () => {
+      if (!commentShort || !actor) throw new Error('Connect your wallet to comment.');
+      const author = await request<{ nextSequence: string }>(`/comments/authors/${encodeURIComponent(actor)}`);
+      await transact('add_comment', [commentShort.id], '0', false, { text, sequence: author.nextSequence });
+    }, 'Comment published.', true),
     paymentRelease,
     measurementSession,
     authenticated,
@@ -691,11 +727,10 @@ export function useShorts() {
     clearMessage: () => setMessage(''),
     like,
     setLike: (value?: Short) => { setLike(value); if (value) setMessage(''); },
-    withdrawal,
-    setWithdrawal: (value?: Short) => { setWithdrawal(value); if (value) setMessage(''); },
     confirmLike,
     claim: () => perform(async () => { await transact('claim', []); setClaimReview(false); }, 'Rewards claimed to your wallet.'),
     claimPrevious: () => perform(() => transact('claim', [], '0', true), 'Earlier rewards claimed to your wallet.'),
+    claimReward: (contract: string) => perform(() => transact('claim', [], '0', contract), 'Earlier rewards claimed to your wallet.'),
     rescan: (id: string) => perform(() => request(`/${id}/scan`, {}, requireLogin()), 'Community-guidelines status updated.'),
     moderate: (id: string, approved: boolean, reason: string, reviewedTopic: string, visualConfirmed = false) => perform(
       () => request(`/review/${id}`, {
@@ -708,10 +743,6 @@ export function useShorts() {
       if (!response.ok) throw new Error('Preview unavailable. Sign in as the creator or operator.');
       setPreview({ id, url: URL.createObjectURL(await response.blob()) });
     }, 'Private review preview loaded.'),
-    withdraw: (id: string) => perform(async () => {
-      await transact('withdraw', [id]);
-      setWithdrawal(undefined);
-    }, 'Short permanently withdrawn from official playback.'),
     appeal: (id: string, explanation: string) => perform(() => request(`/${id}/appeal`, { message: explanation }, requireLogin()), 'Your request for another feed review has been submitted.'),
     report: (id: string, reportId: string, reason: string, detail: string) => perform(async () => {
       await request(`/${id}/report`, { id: reportId, reason, detail });

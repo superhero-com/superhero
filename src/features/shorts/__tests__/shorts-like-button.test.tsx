@@ -4,21 +4,37 @@ import {
 } from 'vitest';
 import { ShortsLikeButton } from '../shorts-like-button';
 
-const pricing = { network: 'ae_uat' as const, likeFeeAetto: '100000000000000000', treasuryBps: 2000 };
+const pricing = { network: 'ae_uat' as const, likeFeeAetto: '0', treasuryBps: 2000 };
 
 describe('Animated Like feedback', () => {
-  it('shows the release price in both visible and accessible labels, without a fallback price', () => {
+  it('offers a regular Like without displaying a price', () => {
     const onLike = vi.fn();
-    const props = {
-      count: 2, liked: false, disabled: false, onLike,
-    };
-    const { rerender } = render(<ShortsLikeButton {...props} pricing={{ ...pricing, likeFeeAetto: '2000000000000000000' }} />);
-    expect(screen.getByRole('button', { name: 'Like for 2 test AE' })).toBeEnabled();
-    expect(screen.getByText('2 test AE')).toBeVisible();
-    rerender(<ShortsLikeButton {...props} />);
+    render(<ShortsLikeButton
+      count={2}
+      liked={false}
+      disabled={false}
+      onLike={onLike}
+      pricing={pricing}
+    />);
+    expect(screen.getByRole('button', { name: 'Like' })).toBeEnabled();
+    expect(screen.getByText('Like', { selector: '.sv-like-action > span' })).toBeVisible();
+    expect(screen.queryByText(/test AE/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Like' }));
+    expect(onLike).toHaveBeenCalledOnce();
+  });
+
+  it.each([undefined, '1', '2000000000000000000'])('does not offer an unavailable or paid release (%s)', (likeFeeAetto) => {
+    const onLike = vi.fn();
+    render(<ShortsLikeButton
+      count={2}
+      liked={false}
+      disabled={false}
+      onLike={onLike}
+      pricing={likeFeeAetto === undefined ? undefined : { ...pricing, likeFeeAetto }}
+    />);
     const unavailable = screen.getByRole('button', { name: 'Likes temporarily unavailable' });
     expect(unavailable).toBeDisabled();
-    expect(screen.queryByText('2 test AE')).not.toBeInTheDocument();
+    expect(screen.queryByText(/test AE/)).not.toBeInTheDocument();
     fireEvent.click(unavailable);
     expect(onLike).not.toHaveBeenCalled();
   });

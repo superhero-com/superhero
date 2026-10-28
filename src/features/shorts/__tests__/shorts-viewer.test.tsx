@@ -41,7 +41,7 @@ const clips = ['one', 'two'].map((id) => ({
   moderation: 'approved',
 } satisfies Short));
 const makeProps = () => ({
-  pricing: { network: 'ae_uat' as const, likeFeeAetto: '100000000000000000', treasuryBps: 2000 },
+  pricing: { network: 'ae_uat' as const, likeFeeAetto: '0', treasuryBps: 2000 },
   feed: clips,
   topics: ['All', 'Art'],
   topic: 'All',
@@ -95,22 +95,28 @@ const mount = (props = makeProps()) => {
   return { ...view, region, videos: [...view.container.querySelectorAll('video')] };
 };
 describe('Shorts playback lifecycle', () => {
-  it('uses the same release price in the Like action and details, then removes it when unavailable', () => {
+  it('shows a regular free Like and sponsored network fee, then disables an unavailable offer', () => {
     const props = {
       ...makeProps(),
       feed: [clips[0]],
       pricing: {
-        network: 'ae_mainnet' as const, likeFeeAetto: '2000000000000000000', treasuryBps: 2500,
+        network: 'ae_mainnet' as const, likeFeeAetto: '0', treasuryBps: 2500,
       },
     };
     const view = render(<MemoryRouter><ShortsViewer {...props} /></MemoryRouter>);
-    expect(screen.getByRole('button', { name: 'Like for 2 AE' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Like' })).toBeEnabled();
     expect(screen.getByText('Mainnet')).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Video details and report' }));
-    expect(screen.getByText(/Each Like costs 2 AE: 1.5 AE to the creator and 0.5 AE/)).toBeVisible();
+    expect(screen.getByText('Likes are free. Superhero covers the network fee.')).toBeVisible();
+    expect(screen.queryByText(/Each Like costs|to the creator and/)).not.toBeInTheDocument();
     view.rerender(<MemoryRouter><ShortsViewer {...props} pricing={undefined} /></MemoryRouter>);
     expect(screen.queryByText('Mainnet')).not.toBeInTheDocument();
-    expect(screen.getByText('Like payment details are temporarily unavailable.')).toBeVisible();
+    expect(screen.getByText('Likes are temporarily unavailable.')).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Close details' }));
+    const unavailable = screen.getByRole('button', { name: 'Likes temporarily unavailable' });
+    expect(unavailable).toBeDisabled();
+    fireEvent.click(unavailable);
+    expect(props.onLike).not.toHaveBeenCalled();
   });
 
   it('has no playback opt-in controls and never starts measurement for an unplayed video', () => {
@@ -123,7 +129,7 @@ describe('Shorts playback lifecycle', () => {
     expect(screen.queryByRole('button', { name: /Delete my playback/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Reset feed preferences' })).toBeVisible();
   });
-  it('hands playback to the visible clip and pauses every clip while a payment is open', () => {
+  it('hands playback to the visible clip and pauses every clip while a wallet interaction is open', () => {
     const props = makeProps();
     const { region, videos, rerender } = mount(props);
     expect(videos.map((video) => video.paused)).toEqual([false, true]);

@@ -1,0 +1,9 @@
+.sh-comments { width: min(580px, calc(100vw - 32px)); max-height: 85dvh; overflow-y: auto; }
+.sh-comments-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.sh-comments-list { max-height: 35dvh; overflow-y: auto; }
+.sh-comments-list article { padding: 1rem 0; border-bottom: 1px solid #ffffff24; }
+.sh-comments .sh-address { display: block; white-space: normal; overflow-wrap: anywhere; font-size: .75rem; }
+.sh-comment-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.sh-comments form { display: grid; gap: .5rem; margin-top: 1rem; }
+.sh-comments textarea { width: 100%; resize: vertical; padding: .75rem; border: 1px solid #ffffff40; border-radius: .5rem; background: #171b26; color: #fff; }
+.sh-comments form p, .sh-comments small { font-size: .75rem; color: #b9c2d2; }

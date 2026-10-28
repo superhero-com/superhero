@@ -57,6 +57,7 @@ vi.mock('../../tx-summary', () => ({
           rows: [
             { label: 'To', value: fx.RECIPIENT, emphasis: true },
             { label: 'Amount', value: '3 AE', emphasis: true },
+            { label: 'Network fee', value: '0.00002 AE' },
           ],
         };
       case fx.TOKEN_TRANSFER_TX:
@@ -90,7 +91,9 @@ vi.mock('../../tx-summary', () => ({
   },
 }));
 
-const { requestUnlock, resetUnlockBroker, NO_PROMPT_MOUNTED } = await import('../../unlock-broker');
+const {
+  requestUnlock, resetUnlockBroker, NO_PROMPT_MOUNTED, UNLOCK_CANCELLED,
+} = await import('../../unlock-broker');
 const { default: WalletSignPrompt } = await import('../WalletSignPrompt');
 
 const KEK = { fake: 'kek' } as unknown as CryptoKey;
@@ -139,6 +142,18 @@ describe('WalletSignPrompt — per-signature unlock + WYSIWYS confirm', () => {
     const { container } = render(<WalletSignPrompt />);
     expect(container).toBeEmptyDOMElement();
     expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+  });
+
+  it('labels sponsor-paid fees without hiding the value sent by the wallet', async () => {
+    render(<WalletSignPrompt />);
+    const pending = request(recordWith('passphrase'), { ...SPEND_CONTEXT, innerTx: true });
+    const rejected = pending.catch((error: Error) => error);
+    expect(screen.getByText('Network fee (sponsor pays)')).toBeVisible();
+    expect(screen.getByText(/Your wallet still pays any AE sent with the call/)).toBeVisible();
+    expect(screen.getByText('3 AE')).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(await rejected).toMatchObject({ message: UNLOCK_CANCELLED });
+    expect(passphraseProvider).not.toHaveBeenCalled();
   });
 
   it('is the mounted prompt host: signing fails closed until it is mounted', async () => {

@@ -4,13 +4,13 @@ Run `npm run start:shorts:testnet` and open `http://127.0.0.1:5180/shorts`. The 
 
 Start the separate Shorts API on loopback port 3334 using its `src/shorts/README.md`. Its testnet deployment supplies the ACI and contract identity. The API verifies the deployed bytecode before serving.
 
-Watch freely and connect your testnet wallet to Like. A Like requires only its paid contract transaction; no message signature or API sign-in is requested. Public Like counts and creator revenue come from verified chain state/events. Connecting a wallet returns to the Like review and never automatically pays. Network and signer identity are checked before payments.
+Watch freely and connect your testnet wallet to Like. Likes transfer zero tokens and create no creator or treasury reward. The user signs the Like contract call; Superhero pays the network fee through a separate PayingForTx envelope. Sponsorship requires an authenticated wallet session and is unavailable when the sponsor is disabled or its budget is exhausted. Connecting a wallet never automatically submits a Like.
 
-Creator Studio shares the main wallet connection. In the explicit local connected-wallet demo mode, it opens an API session without an extra signature. Outside that mode, private creator access requires a signed challenge. Paid Likes, reward claims and withdrawals always use the wallet. Publishing is paid for by Superhero and does not request a creator transaction.
+Creator Studio shares the main wallet connection. In the explicit local connected-wallet demo mode, it opens an API session without an extra signature. Outside that mode, private creator access requires a signed challenge. Likes, comments and claims from earlier reward contracts use the wallet. Published Shorts and comments cannot be withdrawn or deleted. Publishing is paid for by Superhero and does not request a creator transaction.
 
 Studio provides free publication, content management, on-chain earnings and claims, measured browser reach/watch time and verified transaction receipts. There are no creator hosting plans, top-ups, payment-source selectors or expiry dates. Content screening and feed eligibility remain separate from storage; the local demo can bypass scanning using the API's explicit demo flag.
 
-The public feed uses reviewed topics, explicit interests, Superhero contract follows, language, recent watch quality, freshness and creator diversity. Watch quality blends watched fraction and completion over seven days, with a neutral score for new or small samples; Recent remains chronological. Follow/unfollow uses the same wallet-signed social contract and relationship cache as profiles; Following and For You use those relationships for the current feed's creators. Wallet switches select a separate relationship cache. Old browser-only follows are ignored, and resetting feed preferences never changes contract follows. An unavailable social API shows retry guidance; no local follow is substituted. Saved videos, interests, hidden creators and not-interested controls remain browser preferences. Payments never affect ranking. Creator-supplied captions are supported; playback uses prepared HLS segments. Official publication, discovery and playback all require the API content-policy checks. Unreviewed, failed or blocked scans do not grant public access. Published videos are shareable through `/shorts?short=<id>`, resolved separately from the ranked feed. The server denies ineligible shared links and media; a browser cover cannot override that decision. Withdrawn videos cannot be played or resolved by link. JEV is implemented as an optional server-side text suggestion adapter and stays disabled until configured. The paid flow is a local web/testnet prototype and does not establish mobile-store payment approval. Native mobile remains a separate integration.
+The public feed uses reviewed topics, explicit interests, Superhero contract follows, language, recent watch quality, freshness and creator diversity. Watch quality blends watched fraction and completion over seven days, with a neutral score for new or small samples; Recent remains chronological. Follow/unfollow uses the same wallet-signed social contract and relationship cache as profiles; Following and For You use those relationships for the current feed's creators. Wallet switches select a separate relationship cache. Old browser-only follows are ignored, and resetting feed preferences never changes contract follows. An unavailable social API shows retry guidance; no local follow is substituted. Saved videos, interests, hidden creators and not-interested controls remain browser preferences. Payments never affect ranking. Creator-supplied captions are supported; playback uses prepared HLS segments. Official publication, discovery and playback all require the API content-policy checks. Unreviewed, failed or blocked scans do not grant public access. Published videos are shareable through `/shorts?short=<id>`, resolved separately from the ranked feed. The server denies ineligible shared links and media; a browser cover cannot override that decision. Withdrawn videos cannot be played or resolved by link. JEV is implemented as an optional server-side text suggestion adapter and stays disabled until configured. The sponsored Like flow currently supports testnet. Native mobile remains a separate integration.
 
 ## Wallet release verification
 
@@ -22,27 +22,23 @@ accept this trust value from the public API response. Rebuild the website when
 changing the release. An absent or mismatched hash disables Shorts wallet actions;
 public browsing remains available.
 
-The browser validates the release and ACI before displaying the Like price. Before
-a Like, claim or withdrawal it reads the configured node independently, with no
-wallet account: network, deployed bytecode, operator/treasury, fee/split and previous
-contract must match. Reads have per-request and total time limits and a 1 MiB
-response limit. The connected SDK node must match the configured origin. The
-unsigned request's account, network, target, amount and calldata are checked again
-before the external signer opens. Account or node changes cancel the action.
+The browser validates the release and ACI before enabling Likes. The reviewed
+artifact must expose a nonpayable, stateful `like(string, int)` entrypoint with a
+zero Like fee. Before signing, the client independently checks the node network,
+deployed bytecode and current contract policy. Reads have per-request and total
+time limits and a 1 MiB response limit. The connected SDK node must match the
+configured origin. Account or node changes cancel the action.
 
-The action rail, video details, payment dialog and Studio use this same verified
-release for pricing, reward percentages, network units and receipt destinations.
-Payouts use integer aetto arithmetic: the treasury share rounds down and the
-creator receives the remainder. Unavailable verification shows no default price
-or split and disables paid Likes. Presentation support for other prices or networks
-does not change the release and signing restrictions below.
+A Like has amount zero and uses the network's inner-transaction signature domain.
+The client bounds gas, gas price, fee and expiry before opening the wallet. The
+API authenticates the caller, verifies the signed call and queues the exact bytes;
+an isolated fee payer validates them again and submits the sponsored envelope.
+The app never falls back to charging the user when sponsorship is unavailable.
+The Like dialog and video details explain that Superhero covers the network fee.
 
-Previous-contract rewards require the old compiler/source/bytecode/ACI identity in
-`previousArtifact` within the pinned manifest. Only zero-value claims can target
-the predecessor. The old ABI and on-chain bytecode are checked too. These checks
-do not prove source-to-bytecode reproducibility, replace an independent contract
-audit, or enable mainnet. The runtime still supports only testnet and the existing
-0.1 AE Like / 20% treasury split.
+The build-pinned release is still required for claims and other wallet actions.
+These checks do not establish source reproducibility, an independent contract
+audit or mainnet support.
 
 ## Feature flag and staging configuration
 
@@ -78,14 +74,14 @@ updated API. See the API's `src/shorts/DIRECT-UPLOADS.md` for the rollout guide.
 
 The consumer view shows one portrait video per viewport with vertical scroll snapping. Desktop has previous/next controls; touch screens use native vertical scrolling. Arrow keys navigate, Space/K toggles playback, and M toggles sound when a text field or control is not focused. Playback starts muted, pauses offscreen, pauses in hidden browser tabs and pauses while dialogs are open. Explicit user pauses survive closing an overlay.
 
-The action rail opens the existing paid Like confirmation, copies a local deep link, or opens video details/reporting. A seek bar supports keyboard and pointer interaction. Seeking does not count toward the two-second preview view threshold. Discovery preferences are available through the For you menu; upload and creator Studio have separate routes from watching. Studio has its own sidebar and hides the global app sidebar/header; the main shell returns when leaving Studio.
+The action rail opens the Like confirmation, copies a local deep link, or opens video details/reporting. A seek bar supports keyboard and pointer interaction. Seeking does not count toward the two-second preview view threshold. Discovery preferences are available through the For you menu; upload and creator Studio have separate routes from watching. Studio has its own sidebar and hides the global app sidebar/header; the main shell returns when leaving Studio.
 
 Run the playback regression tests with `npm test -- --run src/features/shorts/__tests__/shorts-viewer.test.tsx`.
 
 
 ## Creator Studio
 
-Creator API access is shared through an app-level Jotai session and cached in sessionStorage for the server-issued lifetime (currently 30 minutes). It is bound to the address, API origin, network and contract, survives route changes/reloads, and is cleared on expiry, server rejection, main-wallet disconnect or account changes even outside Shorts. Public viewing and paid Likes do not require this private API session. The API config selects either signed private sessions or the explicitly enabled local connected-wallet shortcut.
+Creator API access is shared through an app-level Jotai session and cached in sessionStorage for the server-issued lifetime (currently 30 minutes). It is bound to the address, API origin, network and contract, survives route changes/reloads, and is cleared on expiry, server rejection, main-wallet disconnect or account changes even outside Shorts. Public viewing requires no private API session. Sponsored Likes use the same authenticated session and renew it when needed; sponsorship rejects the local connected-wallet authentication shortcut.
 
 The composer has three numbered steps: **Video → Details → Review**. Previous/Next controls stay in the fixed bottom bar. Guests can choose a local video and enter details before connecting through Superhero's shared wallet dialog. Studio reuses the main sidebar's wallet component. The first connection preserves the guest draft; switching an existing account clears private composer state.
 
@@ -101,16 +97,16 @@ transport. Expired permissions can be refreshed without starting a second upload
 Draft files/details remain in memory while staying in Shorts. After a reload, reselect identical file/details within 24 hours to resume an interrupted transfer. Uploaded private drafts remain in Studio. Changing prepared metadata creates a new draft; unchanged retries reuse the prepared video. Mobile has a collapsible preview and fixed Previous/Next controls.
 
 - `/shorts/studio`: compact performance snapshot, latest uploads, live available rewards and contextual draft/review actions. Detailed reports remain in Analytics.
-- `/shorts/studio/content`: searchable content library with publication filters (published/draft/withdrawn), sortable date/view/paid-Like table headings and ten-item pagination. Each row links directly to its scoped analytics. Feed eligibility is shown separately from publication. Cards replace table rows on narrow screens; views show their selected period while paid Likes are all-time.
-- `/shorts/studio/analytics`: Overview, Reach and Engagement sections with a shared 7/28/90-day UTC period. Metric selectors control one daily trend chart; a data table provides the underlying values. Reports include views/reach/watch time/average view duration/completion/earnings/paid Likes, prior-period comparisons when coverage permits, top Shorts, and privacy-suppressed discovery sources. Missing days remain gaps; creator accruals exclude wallet claims. Watch time displays seconds, minutes or hours as appropriate. The API exposes unrounded `watchHours = watchSeconds / 3600` for current, previous, daily and per-video summaries; Studio explains that watch time uses unique played segments from qualified daily views.
+- `/shorts/studio/content`: searchable content library with publication filters (published/draft/withdrawn), sortable date/view/Like table headings and ten-item pagination. Each row links directly to its scoped analytics. Feed eligibility is shown separately from publication. Cards replace table rows on narrow screens; views show their selected period while Likes are all-time.
+- `/shorts/studio/analytics`: Overview, Reach and Engagement sections with a shared 7/28/90-day UTC period. Metric selectors control one daily trend chart; a data table provides the underlying values. Reports include views/reach/watch time/average view duration/completion/earnings/Likes, prior-period comparisons when coverage permits, top Shorts, and privacy-suppressed discovery sources. Missing days remain gaps; creator accruals exclude wallet claims. Watch time displays seconds, minutes or hours as appropriate. The API exposes unrounded `watchHours = watchSeconds / 3600` for current, previous, daily and per-video summaries; Studio explains that watch time uses unique played segments from qualified daily views.
 - `/shorts/studio/revenue`: live available rewards, lifetime earned/claimed balances, separate earlier rewards, claim review and dated verified activity. Activity can be filtered to earnings or claims; pending and stale history are explicit and do not alter the live balance.
 - `/shorts/studio/upload`: local preview, resumable encrypted-part upload, language, description, WebVTT and disclosures. Keep the page open during preparation. After interruption, reselect identical file/details within 24 hours.
-- `/shorts/studio/video/:id`: Details, Analytics and Revenue sections preserve the selected Short’s context. Details contains private preview, content receipt, withdrawal and restriction appeal; Analytics has scoped Overview/Reach/Engagement reports. Content links can open `?panel=analytics` directly.
+- `/shorts/studio/video/:id`: Details, Analytics and Revenue sections preserve the selected Short’s context. Details contains private preview, content receipt and restriction appeal; Analytics has scoped Overview/Reach/Engagement reports. Content links can open `?panel=analytics` directly.
 - `/shorts/studio/review`: operator-only media/reports/appeals, sampled-frame safety evidence, explicit full-video review for uncertain scans, reviewed topic corrections and decision history.
 
 Views, watch time and completion are counted automatically during actual playback, including for guests. There is no analytics opt-in in the feed menu; legacy saved measurement flags are ignored. Reach means distinct browsers, not people. A view qualifies after two seconds, at most once per browser/Short/UTC day. The viewer displays server-confirmed lifetime views. Repeated segments cannot inflate completion: measurement merges unique played intervals and excludes seeks, pauses, buffering and hidden playback. The server also bounds progress by duration and elapsed time. Heartbeats retry idempotently, and a final keepalive request flushes pending progress on page exit. The API's deletion endpoint removes retained browser measurement records and their view counts. Raw records expire after 90 days, while anonymous lifetime view totals persist. A 24-hour salted revocation digest rejects in-flight requests after deletion. Earlier legacy preview views are not backfilled into watch-time reports. At least five browsers are required for each discovery-source breakdown.
 
-Save/block preferences remain browser-local; follows use the existing social contract. Published content metadata remains bound to its CID; editing a video or captions requires a new upload. Paid Likes and reward claims retain their 80/20 split. An upgrade shows earlier unclaimed rewards separately, with a wallet claim against the previous immutable contract. Run `npx vitest run src/features/shorts` for viewer, modal and ranking regressions.
+Save/block preferences remain browser-local; follows use the existing social contract. Published content metadata remains bound to its CID; editing a video or captions requires a new upload. Free Likes do not accrue rewards or apply a revenue split. Run `npx vitest run src/features/shorts` for viewer, modal and ranking regressions.
 
 Measured HLS sessions bind a hash of the browser session to a short-lived playback
 token. Each analytics send first obtains a no-store signed receipt from streaming;
@@ -127,6 +123,14 @@ Audience metrics are estimates, not proof of human attention, and never authoriz
 rewards. Deploy the matching API and streaming protocol with this player.
 
 Studio preserves the last successful report during background updates, exposes retry actions for unavailable data, and disables claims if the account balance refresh fails. Refresh requests both account and performance updates. No new wallet signing or authorization path is introduced.
+
+## Comments
+
+Comments are permanent public records on the current contract. The viewer can
+publish a comment but cannot edit or delete it. New wallet deletion requests are
+rejected before transaction preparation or signing. Previously signed transactions
+from older deployments remain readable in wallet recovery; removing an app action
+does not change an existing contract's bytecode.
 
 ## Playback service
 
@@ -218,49 +222,40 @@ keeps one page in memory, debounces reads, aborts obsolete requests and hides da
 from a previous wallet, deployment or period. An unavailable page has placeholders
 and retry rather than a false empty-library message. Background refresh keeps the
 last same-page result with an explicit error on failure. Index lag is shown because
-publication status and paid Likes use confirmed plugin data, while wallet balances
+publication status and Likes use confirmed plugin data, while wallet balances
 are read separately. Local/older API config without the flag retains the capped
 legacy dashboard. Test these paths with the Studio, session and Studio-read tests.
 
 ### Recovering wallet actions
 
-Paid Likes, claims and withdrawals save public action context in the browser's
+Likes, comments and earlier reward claims save public action context in the browser's
 `superhero-shorts-wallet-actions` IndexedDB database. The signing adapter verifies
-the returned transaction against the exact wallet, contract, amount and calldata,
-then commits its hash and nonce before returning signed bytes to SDK submission.
-Wallets may refresh the nonce, as Superhero Wallet's deep-link path does; the
-journal verifies and stores that actual signed nonce. All other requested fields,
-including caller, fee, gas and TTL, must be unchanged. Both SDK signature formats
-(network-prefixed transaction hash or transaction bytes) are accepted, always
-for the configured network. Account replacement and altered payments are rejected.
-An atomic submission checkpoint is committed immediately before the SDK calls
-the node. SDK validation failures before that checkpoint can release the request.
-No secret, signature, raw transaction or Studio token is persisted in this journal.
-Unavailable browser storage prevents a new request; there is no memory fallback.
+the exact wallet, contract, amount and calldata before saving the signed hash and
+nonce. Wallets may refresh the nonce; every other requested field must remain
+unchanged. Sponsored signatures use the inner-transaction domain. Account
+replacement, altered fields and ordinary user-paid Like signatures are rejected.
 
-After reload, account changes or a lost submission response, the client only
-queries the API's read-only wallet-transaction endpoint. Unknown, pending, mined
-and reorganized outcomes stay unresolved and cannot trigger automatic resubmission.
-The activity card can cancel an unsigned intent or a signed request that has not
-reached the submission checkpoint. Atomic IDB checks fence late wallet replies
-and SDK validation results before broadcast, including across tabs. After that
-checkpoint, only a fresh matching confirmed success or contract failure releases
-the action. Older signed records without a checkpoint remain conservatively
-pending. A crash between saving the checkpoint and sending is also unresolved;
-absence from a node does not prove a transaction can never be included.
-The next deliberate action
-also reconciles saved activity first. Public Likes require no API ownership
-signature; private Studio authentication is unchanged.
+For sponsored Likes, the journal also stores the signed zero-value inner
+transaction so a lost API response can be retried with exactly the same bytes and
+request ID. No private key, seed or session token is stored. The submission
+checkpoint is saved before entering the API boundary. Browser storage failure
+prevents submission. A deliberate sponsorship retry authenticates again but never
+asks the wallet to sign a replacement transaction.
 
-Records are scoped by API, testnet, wallet and contract. Atomic updates prevent
-duplicate admission for the same scope across tabs. The current and configured
-previous contract are checked when returning to Shorts. Browser clearing,
-private-browsing restrictions or browser eviction can remove this local record;
-it is not a backup or cross-device lock. Never infer that a missing local record
-means a wallet has never paid. Current support is ordinary single-signature
-testnet contract calls. Three observed confirmations are not absolute finality;
-retained records are rechecked, including reversal of pending Like feedback after
-a reorganization. The shared accounting plugin remains the revenue authority.
+After reload, the client observes status by the inner hash and verifies the
+reported outer sponsored hash. Mounting, polling and recovery never sign or
+submit automatically. Unknown, pending, mined and reorganized outcomes remain
+unresolved. The client releases a request only after matching confirmed execution,
+a durable pre-sign sponsorship rejection, or a canonical expiry proof after the
+signed TTL plus three key blocks. A timeout or a missing node transaction alone
+is insufficient. Expired signed envelopes and reserved sponsor costs remain in
+the server journal.
+
+Records are scoped by API, testnet, wallet and contract. Atomic browser updates
+prevent duplicate admission across tabs. Browser clearing or eviction can remove
+local records; they are not a cross-device lock. Three confirmations are not
+absolute finality. Retained observations are rechecked after reorganization.
+The server separately serializes payer nonces and enforces sponsorship budgets.
 
 The journal and recovery-hook tests cover signatures, cancellation fencing,
 interrupted submission, reload, account changes and mismatched observations.
@@ -270,3 +265,5 @@ or substitute for extension, deep-link and mobile wallet acceptance tests.
 The extension-adapter tests additionally use AeSdkAepp, BrowserRuntimeConnection
 and its actual RPC account over a simulated extension port, including sign-only
 requests and user rejection. The port is simulated; no real extension is opened.
+
+Historical withdrawal and comment-deletion journals remain readable so transactions signed against older deployments can be reconciled. The app never prepares new calls to those methods. Current free contracts have no claim endpoint; only verified earlier reward contracts can receive claims.

@@ -91,14 +91,15 @@ const state = (section: string, extra: Partial<State> = {}): State => ({
 const studio = (s: State, query = '') => render(<MemoryRouter initialEntries={[`/shorts/studio/${s.section === 'overview' ? '' : s.section}${query}`]}><ShortsStudio s={s} /></MemoryRouter>);
 
 describe('Creator Studio workflows', () => {
-  it.each(['ae_uat', 'ae_mainnet'] as const)('uses release economics and receipt links for %s', (network) => {
+  it.each(['ae_uat', 'ae_mainnet'] as const)('explains free Likes and keeps receipt links on %s', (network) => {
     const unit = network === 'ae_uat' ? 'test AE' : 'AE';
     const paymentRelease = {
-      network, likeFeeAetto: '2000000000000000000', treasuryBps: 2500,
+      network, likeFeeAetto: '0', treasuryBps: 2500,
     } as State['paymentRelease'];
     studio(state('revenue', { paymentRelease }));
-    expect(screen.getByText('75%')).toBeVisible();
-    expect(screen.getByText(/remaining 25%/)).toBeVisible();
+    expect(screen.getByText('Likes are free')).toBeVisible();
+    expect(screen.getByText(/Superhero covers the network fee/)).toBeVisible();
+    expect(screen.queryByText(/75%|remaining 25%|How you earn/)).not.toBeInTheDocument();
     expect(within(screen.getByRole('region', { name: 'Available rewards' }))
       .getByRole('heading')).toHaveTextContent(`0.04 ${unit}`);
     const explorer = network === 'ae_uat' ? 'https://testnet.aescan.io' : 'https://aescan.io';
@@ -106,9 +107,10 @@ describe('Creator Studio workflows', () => {
       .toEqual([`${explorer}/transactions/th_claim`, `${explorer}/transactions/th_reward`]);
   });
 
-  it('does not advertise a default reward split or explorer when release verification is unavailable', () => {
+  it('does not advertise a reward split or explorer when release verification is unavailable', () => {
     studio(state('revenue'));
-    expect(screen.getByText('Like payment details are temporarily unavailable.')).toBeVisible();
+    expect(screen.getByText('Likes are free')).toBeVisible();
+    expect(screen.queryByText(/remaining.*%|How you earn/)).not.toBeInTheDocument();
     expect(screen.queryByText('80%')).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'View receipt' })).not.toBeInTheDocument();
   });
@@ -189,8 +191,9 @@ describe('Creator Studio workflows', () => {
   it('explains empty current rewards while keeping earlier rewards claimable', () => {
     const s = state('revenue');
     s.dashboard!.account.available = '0'; s.dashboard!.account.previousAvailable = '0.12';
+    s.config = { ...s.config, previousContract: 'ct_earlier', likeMode: 'free' } as typeof s.config;
     studio(s);
-    expect(screen.getByRole('button', { name: 'No rewards to claim' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: /^(Review claim|No rewards to claim)$/ })).not.toBeInTheDocument();
     expect(screen.getByText(/0.12 AE in earlier rewards/)).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Claim earlier rewards' }));
     expect(s.claimPrevious).toHaveBeenCalledOnce();
@@ -272,7 +275,7 @@ describe('Creator Studio workflows', () => {
     const navigation = screen.getByRole('navigation', { name: 'Short sections' });
     fireEvent.click(within(navigation).getByRole('link', { name: 'Details' }));
     expect(screen.getByRole('button', { name: 'Load private preview' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Withdraw' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Withdraw' })).not.toBeInTheDocument();
     fireEvent.click(within(navigation).getByRole('link', { name: 'Revenue' }));
     expect(screen.getByRole('heading', { name: 'Reward activity' })).toBeVisible();
     expect(screen.queryByRole('navigation', { name: 'Analytics sections' })).not.toBeInTheDocument();
@@ -283,9 +286,9 @@ describe('Creator Studio workflows', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Date' }));
     expect(within(screen.getAllByRole('row')[1]).getByText('Short 1')).toBeVisible();
     expect(screen.getByRole('columnheader', { name: 'Date' })).toHaveAttribute('aria-sort', 'ascending');
-    fireEvent.click(screen.getByRole('button', { name: 'Paid Likes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Likes' }));
     expect(within(screen.getAllByRole('row')[1]).getByText('Short 2')).toBeVisible();
-    fireEvent.click(screen.getByRole('button', { name: 'Paid Likes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Likes' }));
     expect(within(screen.getAllByRole('row')[1]).getByText('Short 1')).toBeVisible();
   });
 });
@@ -345,7 +348,7 @@ describe('Paged creator library', () => {
   });
   it('shows network lag explicitly and leaves unknown period values blank', () => {
     studio(state('content', { config, studioContent: { ...read, data: { ...data, index: { ...index, stale: true }, items: [short(107)] } } }));
-    expect(screen.getByText(/Publication status and paid Likes are catching up/)).toBeVisible();
+    expect(screen.getByText(/Publication status and Likes are catching up/)).toBeVisible();
     expect(screen.getAllByRole('row')[1].querySelector('[data-label="Views · 28 days"]')).toHaveTextContent('—');
   });
   it('includes top performers older than the summary window', () => {

@@ -47,7 +47,7 @@ vi.mock('../shorts-wallet-journal', async (original) => {
   };
 });
 // Durability unit tests isolate release verification; the SDK suite exercises it.
-vi.mock('../shorts-release', () => ({ verifyShortsWalletTarget: async () => ({ aci: [] }) }));
+vi.mock('../shorts-release', () => ({ verifyShortsWalletTarget: async () => ({ aci: [], release: { schemaVersion: 1 } }) }));
 vi.mock('../api', () => ({ SHORTS_API: 'https://api.example', request: mocks.request }));
 vi.mock('@aeternity/aepp-sdk', async (original) => {
   const actual = await original<typeof import('@aeternity/aepp-sdk')>();
@@ -351,6 +351,7 @@ it('shows pending outcomes without offering another payment or cancellation afte
         error: undefined,
         check,
         release,
+        retrySponsorship: vi.fn(),
         run: vi.fn(),
       }}
     />,

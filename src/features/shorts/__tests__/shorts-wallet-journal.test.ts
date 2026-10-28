@@ -277,3 +277,83 @@ describe('persistent wallet action protocol', () => {
     await expect(unavailable.begin(f.intent)).rejects.toThrow('Disk unavailable');
   });
 });
+
+async function sponsoredFixture() {
+  const f = fixture();
+  const intent: WalletIntent = {
+    ...f.intent,
+    method: 'like',
+    amount: '0',
+    args: [f.intent.videoId!, '3'],
+    sponsorship: {
+      gasLimit: 100000, gasPrice: '1000000000', maxFee: '1000000000000000', ttl: 100,
+    },
+  };
+  const abi = new AciContractCallEncoder([{
+    contract: {
+      name: 'Shorts',
+      kind: 'contract_main',
+      typedefs: [],
+      functions: [{
+        name: 'like',
+        arguments: [{ name: 'id', type: 'string' }, { name: 'version', type: 'int' }],
+        returns: { tuple: [] },
+        payable: false,
+        stateful: true,
+      }],
+    },
+  }]);
+  const unsigned = buildTx({ ...unpackTx(f.unsigned, Tag.ContractCallTx), amount: '0', callData: abi.encodeCall('Shorts', 'like', intent.args) });
+  const action = await f.journal.begin(intent);
+  const raw = await f.account.signTransaction(unsigned, { networkId: 'ae_uat', innerTx: true });
+  const signed = await f.journal.signed(action, unsigned, raw, 'ae_uat');
+  await f.journal.attemptSubmission(signed, raw);
+  return { ...f, action: { ...signed, submission: 'attempted' as const }, raw };
+}
+
+it('preserves bounded signed inner bytes for retries and detects damaged recovery bytes', async () => {
+  const f = await sponsoredFixture();
+  expect((await f.journal.read(f.action))?.rawInner).toBe(f.raw);
+  f.values.set(walletScopeKey(f.action), { ...f.action, rawInner: buildTx({ tag: Tag.SignedTx, encodedTx: f.unsigned, signatures: [] }) });
+  await expect(f.journal.read(f.action)).rejects.toThrow();
+});
+
+it('releases only an immutable sponsor rejection and rejects contradictions', async () => {
+  const f = await sponsoredFixture();
+  const rejected = {
+    ...f.action,
+    sponsored: true,
+    status: 'unknown',
+    confirmations: 0,
+    confirmationsRequired: 3,
+    sponsorshipStatus: 'rejected',
+    neverSubmitted: true,
+  };
+  expect(() => validateObservation(f.action, { ...rejected, sponsoredTx: f.action.tx })).toThrow();
+  expect(() => validateObservation(f.action, { ...rejected, sponsorshipStatus: 'queued' })).toThrow();
+  await expect(f.journal.finish(f.action, { ...rejected, neverSubmitted: false })).rejects.toThrow(/unknown/);
+  await f.journal.finish(f.action, rejected);
+  expect(await f.journal.read(f.action)).toBeUndefined();
+});
+
+it('requires a matching expiry proof with three blocks beyond TTL before releasing a signed Like', async () => {
+  const f = await sponsoredFixture();
+  const expired = {
+    ...f.action,
+    sponsored: true,
+    sponsoredTx: f.action.tx,
+    status: 'unknown',
+    confirmations: 0,
+    confirmationsRequired: 3,
+    sponsorshipStatus: 'expired',
+    sponsorshipExpired: true,
+    expiryProof: {
+      ttl: 100, height: 103, blockHash: encode(new Uint8Array(32).fill(4), Encoding.KeyBlockHash), payerNonce: 4,
+    },
+  };
+  expect(() => validateObservation(f.action, { ...expired, expiryProof: { ...expired.expiryProof, height: 102 } })).toThrow();
+  expect(() => validateObservation(f.action, { ...expired, expiryProof: { ...expired.expiryProof, ttl: 99 } })).toThrow();
+  expect(() => validateObservation(f.action, { ...expired, sponsorshipStatus: 'signed' })).toThrow();
+  await f.journal.finish(f.action, expired);
+  expect(await f.journal.read(f.action)).toBeUndefined();
+});

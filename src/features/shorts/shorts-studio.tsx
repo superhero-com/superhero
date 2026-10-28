@@ -5,7 +5,7 @@ import { Link, NavLink, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft, ArrowUpRight, BarChart3, Clapperboard, Coins, LayoutDashboard, Plus, RefreshCw, ShieldCheck,
 } from 'lucide-react';
-import { shortsPricing, shortsUnit, type ShortsPricing } from './shorts-pricing';
+import { shortsUnit, type ShortsPricing } from './shorts-pricing';
 import { shortsMediaUrl } from './shorts-media';
 import { StudioContent as Content } from './shorts-studio-content';
 import { ShortsUpload } from './shorts-upload';
@@ -115,7 +115,7 @@ const Ledger = ({ s }: { s: State }) => {
           <b>{stale ? 'Updating…' : `${p.finance.earned} ${shortsUnit(s.paymentRelease?.network)}`}</b>
         </span>
         <span>
-          Confirmed paid Likes
+          Confirmed Likes
           <b>{stale ? '—' : p.finance.paidLikes}</b>
         </span>
       </div>
@@ -168,7 +168,7 @@ const Ledger = ({ s }: { s: State }) => {
         <div className="ss-empty">
           <Coins size={28} />
           <h3>{stale ? 'Activity is unavailable' : 'No activity in this period'}</h3>
-          <p>{stale ? 'Try again to load your reward history.' : 'Try a different period. Rewards appear here when viewers send paid Likes.'}</p>
+          <p>{stale ? 'Try again to load your reward history.' : 'Try a different period. Likes do not carry a payment.'}</p>
         </div>
       )}
       {p.finance.truncated && <p className="ss-measurement-note">Showing the latest 200 receipts. Totals and charts include all activity in the selected period.</p>}
@@ -182,8 +182,10 @@ const Ledger = ({ s }: { s: State }) => {
 };
 const Rewards = ({ s, compact = false }: { s: State; compact?: boolean }) => {
   const a = s.dashboard!.account;
-  const hasRewards = Number(a.available) > 0;
-  const rewardMessage = hasRewards ? 'Transfer these rewards to your connected wallet.' : 'New paid Likes build your next reward.';
+  const freeLikes = s.config?.likeMode === 'free';
+  const hasRewards = !freeLikes && Number(a.available) > 0;
+  const earlier = (a.rewardAccounts ?? (s.config?.previousContract ? [{ contract: s.config.previousContract, available: a.previousAvailable || '0' }] : [])).filter((item) => Number(item.available) > 0);
+  const rewardMessage = hasRewards ? 'Transfer these rewards to your connected wallet.' : 'Likes are free and do not generate rewards.';
   return (
     <section className={`ss-rewards ${compact ? 'ss-rewards--compact' : ''}`} aria-label="Available rewards">
       <div>
@@ -197,11 +199,11 @@ const Rewards = ({ s, compact = false }: { s: State; compact?: boolean }) => {
       </div>
       {compact ? (
         <Link className="ss-button" to="/shorts/studio/revenue">
-          {hasRewards || Number(a.previousAvailable) > 0 ? 'View & claim rewards' : 'View revenue'}
+          {hasRewards || earlier.length > 0 ? 'View & claim rewards' : 'View revenue'}
           {' '}
           <ArrowUpRight size={15} />
         </Link>
-      ) : (
+      ) : !freeLikes && (
         <div className="ss-claim-action">
           <button type="button" className="primary" disabled={s.busy || !hasRewards || !!s.dashboardError} onClick={() => s.setClaimReview(true)}>
             {hasRewards ? 'Review claim' : 'No rewards to claim'}
@@ -210,12 +212,13 @@ const Rewards = ({ s, compact = false }: { s: State; compact?: boolean }) => {
           <small>You review and approve in your wallet. A network fee applies.</small>
         </div>
       )}
-      {Number(a.previousAvailable || 0) > 0 && (
-      <div className="ss-previous-rewards">
-        <p>{`${a.previousAvailable} ${shortsUnit(s.paymentRelease?.network)} in earlier rewards is available separately.`}</p>
-        {!compact && <button type="button" disabled={s.busy || !!s.dashboardError} onClick={s.claimPrevious}>Claim earlier rewards</button>}
-      </div>
-      )}
+      {earlier.map((reward) => (
+        <div className="ss-previous-rewards" key={reward.contract}>
+          <p>{`${reward.available} ${shortsUnit(s.paymentRelease?.network)} in earlier rewards is available separately.`}</p>
+          <code className="sh-address">{reward.contract}</code>
+          {!compact && <button type="button" disabled={s.busy || !!s.dashboardError} onClick={() => (s.claimReward ? s.claimReward(reward.contract) : s.claimPrevious())}>Claim earlier rewards</button>}
+        </div>
+      ))}
     </section>
   );
 };
@@ -309,7 +312,6 @@ const VideoDetail = ({ s }: { s: State }) => {
             <ShortsGuidelines video={video} />
             <div className="ss-action-row">
               <button type="button" disabled={s.busy} onClick={() => s.reviewClip(video.id)}>Load private preview</button>
-              {publicationStatus(video) === 'published' && <button type="button" disabled={s.busy} onClick={() => s.setWithdrawal(video)}>Withdraw</button>}
             </div>
             <details>
               <summary>Storage details</summary>
@@ -455,7 +457,6 @@ const ReviewQueue = ({ s }: { s: State }) => {
   );
 };
 export const ShortsStudio = ({ s }: { s: State }) => {
-  const pricing = shortsPricing(s.paymentRelease);
   const page = s.section;
   const [params] = useSearchParams();
   const layout = useRef<HTMLDivElement>(null);
@@ -528,7 +529,7 @@ export const ShortsStudio = ({ s }: { s: State }) => {
           <div className="ss-welcome ss-panel">
             <BarChart3 size={45} />
             <h2>{{ content: 'Your content, all in one place', revenue: 'Your audience’s support adds up' }[page] || 'Welcome to your creator space'}</h2>
-            <p>{{ content: 'Find your uploads, check their status and manage each Short.', revenue: 'Track paid Likes, see available rewards and review claims.' }[page] || 'See your latest Shorts, audience activity and rewards here.'}</p>
+            <p>{{ content: 'Find your uploads, check their status and manage each Short.', revenue: 'View recorded rewards and claims.' }[page] || 'See your latest Shorts, audience activity and rewards here.'}</p>
             {s.actor ? (
               <>
                 {s.creatorConnectionError && <small role="alert">{s.creatorConnectionError}</small>}
@@ -538,7 +539,7 @@ export const ShortsStudio = ({ s }: { s: State }) => {
           </div>
         ) : null}
         {s.authenticated && s.dashboardError && page !== 'upload' && <DataError message={s.dashboardError} retry={s.refreshNow} />}
-        {s.authenticated && index?.stale && page !== 'upload' && page !== 'content' && <p className="ss-measurement-note" role="status">Publication status and paid Likes are catching up with the network. Your wallet balance is read separately.</p>}
+        {s.authenticated && index?.stale && page !== 'upload' && page !== 'content' && <p className="ss-measurement-note" role="status">Publication status and Likes are catching up with the network. Your wallet balance is read separately.</p>}
         {loading && <StudioSkeleton page={page} label={s.restoringCreatorSession ? 'Opening your Studio…' : 'Loading your Studio…'} />}
         {page === 'upload' && <ShortsUpload key={s.uploadEpoch} s={s} />}
         {s.authenticated && s.dashboard && !loading && (
@@ -561,27 +562,11 @@ export const ShortsStudio = ({ s }: { s: State }) => {
             <>
               <Rewards s={s} />
               <div className="ss-metrics ss-revenue-metrics">
-                <Metric label="Lifetime earned" value={`${s.dashboard.account.earned} ${shortsUnit(s.paymentRelease?.network)}`} detail="Your total creator share of paid Likes" />
+                <Metric label="Lifetime earned" value={`${s.dashboard.account.earned} ${shortsUnit(s.paymentRelease?.network)}`} detail="Recorded creator rewards" />
                 <Metric label="Claimed to wallet" value={`${s.dashboard.account.claimed} ${shortsUnit(s.paymentRelease?.network)}`} detail="Total rewards you’ve already collected" />
                 <div className="ss-metric ss-revenue-explainer">
-                  <span>How you earn</span>
-                  <p>
-                    {pricing ? (
-                      <>
-                        You receive
-                        {' '}
-                        <b>
-                          {pricing.creatorPercent}
-                          %
-                        </b>
-                        {' '}
-                        of each paid Like. The remaining
-                        {' '}
-                        {pricing.treasuryPercent}
-                        % goes to the Superhero treasury.
-                      </>
-                    ) : 'Like payment details are temporarily unavailable.'}
-                  </p>
+                  <span>Likes are free</span>
+                  <p>Likes show appreciation without a payment. Superhero covers the network fee.</p>
                   <small>Superhero pays for hosting your Shorts.</small>
                 </div>
               </div>

@@ -393,7 +393,11 @@ export function useAddLiquidity() {
       }
       throw new Error('Transaction failed - no hash returned');
     } catch (error: any) {
-      const errorMsg = errorToUserMessage(error);
+      const errorMsg = errorToUserMessage(error, {
+        action: 'remove-liquidity',
+        slippagePct: params.slippagePct,
+        deadlineMins: params.deadlineMins,
+      });
       setState((prev) => ({ ...prev, error: errorMsg, loading: false }));
       notifyError(errorMsg);
 

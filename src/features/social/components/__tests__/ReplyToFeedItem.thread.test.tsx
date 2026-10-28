@@ -1,4 +1,6 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import {
+  act, fireEvent, render, screen, waitFor,
+} from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import {
@@ -6,6 +8,8 @@ import {
 } from 'vitest';
 import { changeLanguage } from '@/i18n';
 import { PostsService } from '@/api/generated';
+import { clearPendingTransactions } from '@/features/pending-transactions/store';
+import { trackPublishedReply, watchPendingPosts } from '../../utils/pendingPosts';
 import ReplyToFeedItem from '../ReplyToFeedItem';
 
 vi.mock('@/hooks', () => ({ useWallet: () => ({ chainNames: {}, profileDisplayNames: {} }) }));
@@ -43,8 +47,12 @@ const posts: Record<string, any> = {
   '6_v3': post('6_v3', 'Deepest reply', '5_v3'),
 };
 
-const renderItem = (ui: React.ReactElement) => render(
-  <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+const newClient = (staleTime?: number) => new QueryClient({
+  defaultOptions: { queries: { retry: false, staleTime } },
+});
+
+const renderItem = (ui: React.ReactElement, client = newClient()) => render(
+  <QueryClientProvider client={client}>
     <MemoryRouter>{ui}</MemoryRouter>
   </QueryClientProvider>,
 );
@@ -96,5 +104,68 @@ describe('ReplyToFeedItem threads', () => {
     fireEvent.keyDown(card, { key: 'Enter' });
     expect(onOpenPost).toHaveBeenCalledTimes(1);
     expect(onOpenPost).toHaveBeenCalledWith('6_v3');
+  });
+
+  it('refreshes nested replies from the top-level reply\'s poll alone', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      renderItem(<ReplyToFeedItem item={posts['4_v3']} hideParentContext threadDepth={0} onOpenPost={() => {}} />);
+      await screen.findByText('Deepest reply');
+      await act(() => vi.advanceTimersByTimeAsync(1000));
+      vi.mocked(PostsService.getComments).mockClear();
+      posts['7_v3'] = post('7_v3', 'Newest reply', '5_v3');
+
+      await act(() => vi.advanceTimersByTimeAsync(120_000));
+
+      expect(screen.getByText('Newest reply')).toBeInTheDocument();
+      const middleCount = document.querySelector('#post-5_v3 > .feed-post__content > .feed-post__actions .feed-post__reply');
+      expect(middleCount?.textContent).toMatch(/^2/);
+      // The top-level reply's list, plus its walk over itself and the middle reply.
+      const ids = vi.mocked(PostsService.getComments).mock.calls.map(([args]) => (args as any).id);
+      expect(ids.sort()).toEqual(['4_v3', '4_v3', '5_v3']);
+    } finally {
+      delete posts['7_v3'];
+      vi.useRealTimers();
+    }
+  });
+
+  it.each([
+    ['in a feed', undefined],
+    ['at the top of a thread', 0],
+  ])('keeps the app\'s staleTime for a post %s', async (_, threadDepth) => {
+    // The app's default (main.tsx).
+    const client = newClient(5 * 60 * 1000);
+    const ui = <ReplyToFeedItem item={posts['4_v3']} hideParentContext threadDepth={threadDepth} onOpenPost={() => {}} />;
+    const { unmount } = renderItem(ui, client);
+    await waitFor(() => expect(client.isFetching()).toBe(0));
+    vi.mocked(PostsService.getComments).mockClear();
+
+    unmount();
+    renderItem(ui, client);
+    await waitFor(() => expect(client.isFetching()).toBe(0));
+
+    expect(PostsService.getComments).not.toHaveBeenCalled();
+  });
+
+  it('keeps a reply the backend doesn\'t have yet in a nested reply\'s list', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const client = newClient();
+    const stop = watchPendingPosts(client);
+    trackPublishedReply({
+      account: 'ak_author', txHash: 'th_reply', parentId: '5_v3', reply: post('8_v3', 'Pending reply', '5_v3'),
+    });
+    try {
+      renderItem(<ReplyToFeedItem item={posts['4_v3']} hideParentContext threadDepth={0} onOpenPost={() => {}} />, client);
+      await screen.findByText('Deepest reply');
+
+      // The top-level reply's walk rewrites the middle reply's list.
+      await act(() => vi.advanceTimersByTimeAsync(120_000));
+
+      expect(screen.getByText('Pending reply').closest('#replies-5_v3')).not.toBeNull();
+    } finally {
+      stop();
+      clearPendingTransactions();
+      vi.useRealTimers();
+    }
   });
 });

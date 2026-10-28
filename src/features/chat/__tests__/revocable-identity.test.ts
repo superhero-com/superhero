@@ -72,7 +72,7 @@ describe('revocable nostr identity', () => {
     await expect(identity.getPublicKey()).resolves.toMatch(/^[0-9a-f]{64}$/);
   });
 
-  it('fires onActivity on locally-initiated ops (sign / encrypt) but not on getPublicKey or inbound decrypt', async () => {
+  it('fires onActivity on locally-initiated ops (sign / encrypt) but not on getPublicKey, AUTH or inbound decrypt', async () => {
     const session = new NostrKeySession();
     session.unlock(generateKeys());
     const onActivity = vi.fn();
@@ -94,6 +94,15 @@ describe('revocable nostr identity', () => {
     // must NOT count as activity, else a remote sender could keep the key resident
     // by trickling in DMs.
     await identity.nip04Decrypt(otherPubkey, ciphertext);
+    expect(onActivity).toHaveBeenCalledTimes(2);
+
+    // A relay asks for AUTH on every new connection, so answering it is not activity.
+    await identity.signEvent({
+      kind: 22242,
+      created_at: 0,
+      tags: [['relay', 'wss://relay.example'], ['challenge', 'c']],
+      content: '',
+    });
     expect(onActivity).toHaveBeenCalledTimes(2);
   });
 

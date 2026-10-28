@@ -73,6 +73,9 @@ export const Timing = {
   EVENT_QUEUE_DEBOUNCE_MS: 50,
   PERIODIC_FETCH_INTERVAL_MS: 10000, // 10 seconds
   INITIAL_FETCH_DELAY_MS: 500,
+  // A failed startup retries after this, doubling up to the max.
+  START_RETRY_DELAY_MS: 5000,
+  START_RETRY_MAX_DELAY_MS: 60000,
   RELAY_CONNECTION_TIMEOUT_MS: 5000,
   ONLINE_STATUS_TIMEOUT_MS: 5 * 60 * 1000, // 5 minutes
 } as const;

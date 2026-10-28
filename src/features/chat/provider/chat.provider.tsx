@@ -129,24 +129,44 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     setSyncReady, setSyncDone,
   ]);
 
-  const stopServices = useCallback(() => {
+  // Startup retry after relays were unreachable.
+  const [startAttempt, setStartAttempt] = useState(0);
+  const startFailuresRef = useRef(0);
+  const startRetryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelStartRetry = useCallback(() => {
+    if (startRetryRef.current) clearTimeout(startRetryRef.current);
+    startRetryRef.current = null;
+  }, []);
+
+  /** Drop the relay client and services, but keep the session's history and store. */
+  const teardownClient = useCallback(() => {
     clientRef.current?.destroy();
     clientRef.current = null;
     eventHandlerRef.current = null;
     dmServiceRef.current = null;
     contactServiceRef.current = null;
     profileServiceRef.current = null;
-    clearChatStore();
-    clearAtoms();
+    setSyncReady(false);
+    setSyncDone(false);
     setConnectedRelays([]);
     setStatus((prev) => ({ ...prev, isConnected: false, isInitializing: false }));
-  }, [clearAtoms, setConnectedRelays, setStatus]);
+  }, [setSyncReady, setSyncDone, setConnectedRelays, setStatus]);
+
+  const stopServices = useCallback(() => {
+    cancelStartRetry();
+    startFailuresRef.current = 0;
+    teardownClient();
+    clearChatStore();
+    clearAtoms();
+    setStatus((prev) => ({ ...prev, error: null }));
+  }, [cancelStartRetry, teardownClient, clearAtoms, setStatus]);
 
   const startServices = useCallback(async (
     pubkey: string,
     identity: NostrIdentityProvider,
   ) => {
-    setStatus((prev) => ({ ...prev, isInitializing: true, error: null }));
+    // A startup retry keeps the last error on screen until it succeeds.
+    setStatus((prev) => ({ ...prev, isInitializing: true }));
 
     // Seal history at rest under the session-derived, non-extractable key.
     const privateKey = roomKeySession.keys?.privateKey;
@@ -292,9 +312,11 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       if (contactPubkeys.length > 0) filters.push({ authors: contactPubkeys, kinds: [0] });
       const events = await client.fetchEvents(filters);
       events.forEach((e) => eventHandlerRef.current?.queueEvent(e));
-      setSince(Date.now());
     } catch {
       // best-effort reconciliation
+    } finally {
+      // `since` schedules the next refresh, so a failed one must still advance it.
+      if (clientRef.current === client) setSince(Date.now());
     }
   }, []);
 
@@ -316,7 +338,9 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
       const { pubkey, identity, isUnlocked } = session;
       if (!activeAccount || !isUnlocked || !pubkey || !identity) {
-        if (startedPubkeyRef.current) {
+        // Keyed on the account, not the pubkey: a failed start clears the pubkey
+        // but keeps decrypted history on screen, which a lock must still wipe.
+        if (startedAccountRef.current) {
           stopServices();
           startedPubkeyRef.current = null;
           startedAccountRef.current = null;
@@ -330,22 +354,31 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       startedPubkeyRef.current = pubkey;
       try {
         await startServices(pubkey, identity);
+        startFailuresRef.current = 0;
       } catch (error) {
         if (cancelled) return;
         startedPubkeyRef.current = null;
-        stopServices();
+        teardownClient();
         setStatus((prev) => ({
           ...prev,
-          isConnected: false,
-          isInitializing: false,
           error: error instanceof Error ? error.message : 'Failed to start chat',
         }));
+        const delay = Math.min(
+          Timing.START_RETRY_DELAY_MS * 2 ** startFailuresRef.current,
+          Timing.START_RETRY_MAX_DELAY_MS,
+        );
+        startFailuresRef.current += 1;
+        cancelStartRetry();
+        startRetryRef.current = setTimeout(() => {
+          startRetryRef.current = null;
+          setStartAttempt((attempt) => attempt + 1);
+        }, delay);
       }
     };
     sync();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeAccount, session.isUnlocked, session.pubkey]);
+  }, [activeAccount, session.isUnlocked, session.pubkey, startAttempt]);
 
   // Periodic reconciliation (a backgrounded tab throttles this timer, so the
   // visibility handler below is the real catch-up path on the web).
@@ -374,7 +407,10 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => { clientRef.current?.updateRelays(relays); }, [relays]);
 
   // Teardown on unmount.
-  useEffect(() => () => { clientRef.current?.destroy(); }, []);
+  useEffect(() => () => {
+    cancelStartRetry();
+    clientRef.current?.destroy();
+  }, [cancelStartRetry]);
 
   // Scoped to /chat, and registered only once the user is on a chat route — see
   // the hook for why a visitor who never opens chat must not carry the worker.

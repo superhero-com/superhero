@@ -73,8 +73,6 @@ const CreatePost = forwardRef<CreatePostRef, CreatePostProps>(
           onTextChange={onTextChange}
           onPostCreated={onPostCreated}
           showMediaFeatures
-          showEmojiPicker
-          showGifInput
           characterLimit={280}
           minHeight="60px"
           autoFocus={autoFocus}

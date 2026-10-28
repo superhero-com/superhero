@@ -1,20 +1,21 @@
 import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import { type ContractMethodsBase } from '@aeternity/aepp-sdk';
 import { useQueryClient } from '@tanstack/react-query';
+import { ImagePlus } from 'lucide-react';
 import React, {
   forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import TIPPING_V3_ACI from 'tipping-contract/generated/Tipping_v3.aci.json';
 import { TxPayloadType, useTransactionNotification } from '@/features/transaction-notification';
+import { MAX_POST_IMAGES, POST_IMAGE_ACCEPT } from '../utils/postImages';
+import { usePostImages } from '../hooks/usePostImages';
 import '@/components/layout/RailCards.css';
 import './PostComposer.css';
 
 import AeButton from '../../../components/AeButton';
 import { ConnectWalletButton } from '../../../components/ConnectWalletButton';
-import {
-  IconClose, IconGif, IconLink, IconSmile,
-} from '../../../icons';
+import { IconClose, IconLink } from '../../../icons';
 // @ts-ignore
 import { PostsService } from '../../../api/generated';
 import { CONFIG } from '../../../config';
@@ -22,7 +23,6 @@ import { useAccount } from '../../../hooks/useAccount';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useHashtagAllowedChars } from '../../../hooks/useCommunityFactory';
 import { initializeContractTyped } from '../../../libs/initializeContractTyped';
-import { GifSelectorDialog } from './GifSelectorDialog';
 import { DetectedLinkPreview } from './DetectedLinkPreview';
 import TokenTagOptionsBar from './TokenTagOptionsBar';
 import { MentionSuggestionList } from './MentionSuggestionList';
@@ -79,34 +79,9 @@ interface PostFormProps {
 
   // Feature toggles
   showMediaFeatures?: boolean;
-  showEmojiPicker?: boolean;
-  showGifInput?: boolean;
   characterLimit?: number;
   autoFocus?: boolean;
 }
-
-const DEFAULT_EMOJIS = [
-  '😀',
-  '😄',
-  '😍',
-  '🔥',
-  '🚀',
-  '✨',
-  '🎉',
-  '🙌',
-  '🧠',
-  '💡',
-  '🧪',
-  '🦾',
-  '🤝',
-  '💬',
-  '🔗',
-  '📈',
-  '🧭',
-  '🛠️',
-  '🧩',
-  '🦄',
-];
 
 const PROMPTS: string[] = [
   "Drop alpha: what's cooking on æ today? 🚀",
@@ -139,8 +114,6 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
     initialText,
     requiredHashtag,
     showMediaFeatures = true,
-    showEmojiPicker = true,
-    showGifInput = true,
     characterLimit = 280,
     autoFocus = false,
   } = props;
@@ -150,8 +123,6 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
   const queryClient = useQueryClient();
   const { notifySubmitted, notifyConfirmed, notifyError } = useTransactionNotification();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const emojiBtnRef = useRef<HTMLButtonElement>(null);
-  const gifBtnRef = useRef<HTMLButtonElement>(null);
 
   useImperativeHandle(ref, () => ({
     focus: (opts?: { immediate?: boolean; preventScroll?: boolean; scroll?: 'none' | 'start' | 'center' }) => {
@@ -182,9 +153,13 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
 
   const [text, setText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [mediaUrls, setMediaUrls] = useState<string[]>([]);
-  const [showEmoji, setShowEmoji] = useState(false);
-  const [showGif, setShowGif] = useState(false);
+  const postImages = usePostImages();
+  const imageInput = useRef<HTMLInputElement>(null);
+  const submitting = useRef(false);
+  const accountRef = useRef(activeAccount);
+  accountRef.current = activeAccount;
+  const hasContent = Boolean(text.trim() || postImages.images.length);
+  const mediaFull = postImages.images.length >= MAX_POST_IMAGES;
   const [promptIndex, setPromptIndex] = useState(0);
   const [dismissedLinkUrl, setDismissedLinkUrl] = useState<string | null>(null);
   const [mentionIndex, setMentionIndex] = useState(0);
@@ -267,21 +242,6 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
       el.focus();
     }
   }, [autoFocus]);
-
-  useEffect(() => {
-    function onDocClick(e: MouseEvent) {
-      const target = e.target as Node;
-      if (emojiBtnRef.current && emojiBtnRef.current.contains(target)) return;
-      if (gifBtnRef.current && gifBtnRef.current.contains(target)) return;
-      const popovers = document.querySelectorAll('.popover');
-      const isInsidePopover = Array.from(popovers).some((p) => p.contains(target));
-      if (isInsidePopover) return;
-      setShowEmoji(false);
-      // setShowGif(false);
-    }
-    document.addEventListener('click', onDocClick);
-    return () => document.removeEventListener('click', onDocClick);
-  }, []);
 
   // Desktop: single-line height; Mobile: slightly taller for ergonomics
   // Use useEffect to listen for window resize events instead of calling matchMedia on every render
@@ -445,41 +405,28 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
     return overlayComputed.paddingLeft + base + extra;
   }, [overlayComputed, textBeforeCaret]);
 
-  const insertAtCursor = (value: string) => {
-    const el = textareaRef.current;
-    if (!el) {
-      setText((prev) => prev + value);
-      return;
-    }
-    const start = el.selectionStart ?? el.value.length;
-    const end = el.selectionEnd ?? el.value.length;
-    const newValue = el.value.slice(0, start) + value + el.value.slice(end);
-    setText(newValue);
-    requestAnimationFrame(() => {
-      el.focus();
-      const pos = start + value.length;
-      el.setSelectionRange(pos, pos);
-    });
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Do not auto-append the required hashtag; the Post button is disabled until present
     const trimmed = text.trim();
-    if (!trimmed) return;
+    if ((!trimmed && !postImages.images.length) || submitting.current) return;
     if (!activeAccount) return;
     // Expand display runs to their `[account:{address}]` storage form for the wire.
     const serialized = serializeMentions(text, mentions).trim();
 
+    submitting.current = true;
+    const author = activeAccount;
     setIsSubmitting(true);
 
     const txPayload = isPost
       ? { type: TxPayloadType.CreatePost, content: serialized } as const
       : { type: TxPayloadType.CreateComment, postId: postId! } as const;
 
-    notifySubmitted(txPayload);
-
     try {
+      const imageUrls = await postImages.prepare();
+      if (accountRef.current !== author) throw new Error('Your wallet changed. Please try again.');
+      const attachedMedia = imageUrls;
+      if (attachedMedia.length > MAX_POST_IMAGES) throw new Error('Attach up to four images per post.');
       const contract = await initializeContractTyped<TippingV3ContractApi>(
         sdk,
         { aci: TIPPING_V3_ACI as any, address: CONFIG.CONTRACT_V3_ADDRESS },
@@ -489,11 +436,13 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
 
       if (isPost) {
         // For posts, include media URLs
-        postMedia = [...mediaUrls];
+        postMedia = attachedMedia;
       } else if (postId) {
-        postMedia = [`comment:${postId}`, ...mediaUrls];
+        postMedia = [`comment:${postId}`, ...attachedMedia];
       }
 
+      if (accountRef.current !== author) throw new Error('Your wallet changed. Please try again.');
+      notifySubmitted(txPayload);
       const { decodedResult, hash } = await contract.post_without_tip(
         serialized,
         postMedia,
@@ -510,8 +459,8 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
         const optimisticPost: any = {
           id: newPostId,
           content: serialized,
-          sender_address: activeAccount,
-          media: mediaUrls,
+          sender_address: author,
+          media: attachedMedia,
           total_comments: 0,
           created_at: new Date().toISOString(),
           tx_hash: hash ?? decodedResult,
@@ -529,7 +478,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
           // store refreshes the feeds then.
           if (hash) {
             trackPublishedPost({
-              account: activeAccount, txHash: hash, post: optimisticPost, topic,
+              account: author, txHash: hash, post: optimisticPost, topic,
             });
           }
         }
@@ -543,8 +492,8 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
         const optimisticReply: any = {
           id: newReplyId,
           content: serialized,
-          sender_address: activeAccount,
-          media: mediaUrls,
+          sender_address: author,
+          media: attachedMedia,
           total_comments: 0,
           created_at: new Date().toISOString(),
           tx_hash: hash ?? decodedResult,
@@ -559,7 +508,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
           // Not indexed yet: keep the one built here until the backend has it.
           if (hash) {
             trackPublishedReply({
-              account: activeAccount, txHash: hash, parentId: postId, reply: optimisticReply,
+              account: author, txHash: hash, parentId: postId, reply: optimisticReply,
             });
           }
         }
@@ -598,8 +547,8 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
 
       // Reset after success
       setText(initialText || '');
+      postImages.reset();
       setMentions([]);
-      setMediaUrls([]);
       setDismissedLinkUrl(null);
 
       // Call onPostCreated callback if this is a new post (for tab switching, etc.)
@@ -614,18 +563,15 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
           queryClient.invalidateQueries({ queryKey: ['topic-by-name'] });
         }
       } catch {
-        // Ignore GIF preload errors
+        // Ignore topic refresh errors
       }
     } catch (error: any) {
       // TODO: add sentry capture
       notifyError(error?.message || (isPost ? ts('failedToPublishPost') : ts('failedToPublishReply')));
     } finally {
+      submitting.current = false;
       setIsSubmitting(false);
     }
-  };
-
-  const removeMedia = (index: number) => {
-    setMediaUrls((prev) => prev.filter((_, i) => i !== index));
   };
 
   // Dynamic placeholder logic
@@ -642,51 +588,30 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
       : tf('connectWalletToReply');
   }
 
-  const hasMediaTools = showEmojiPicker || showGifInput;
+  const hasMediaTools = showMediaFeatures || Boolean(detectedLink);
   const replyMinHeight = appearance === 'integrated' ? '132px' : computedMinHeight;
+
+  const imageButton = (variant: 'desktop' | 'mobile' | 'tile' = 'desktop') => (
+    <button
+      type="button"
+      aria-label={ts('images.add')}
+      title={ts('images.add')}
+      disabled={isSubmitting || mediaFull || !activeAccount}
+      onClick={() => imageInput.current?.click()}
+      className={{
+        desktop: 'post-composer__tool inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/70 hover:text-primary-400 disabled:opacity-40',
+        mobile: 'inline-flex items-center justify-center gap-1 px-2 min-h-8 rounded-md border border-white/10 text-white/80 text-xs disabled:opacity-40',
+        tile: 'flex aspect-square w-full min-w-0 flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-white/30 bg-white/[0.02] text-xs text-white/70 hover:border-primary-400 hover:bg-white/5 hover:text-primary-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-400 disabled:opacity-40',
+      }[variant]}
+    >
+      <ImagePlus className="h-4 w-4" aria-hidden />
+      <span>{ts('images.photos')}</span>
+    </button>
+  );
 
   const desktopTools = (
     <div className="post-composer__tools flex items-center gap-2.5 relative">
-      {showEmojiPicker && (
-        <button
-          type="button"
-          className="post-composer__tool bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
-          title={ts('emoji')}
-          ref={emojiBtnRef}
-          onClick={() => {
-            setShowEmoji((s) => !s);
-            setShowGif(false);
-          }}
-        >
-          {usesComposerSurface ? (
-            <span className="post-composer__tool-icon post-composer__tool-icon--emoji" aria-hidden="true">
-              <IconSmile className="w-4 h-4" />
-            </span>
-          ) : <IconSmile className="w-4 h-4" />}
-          <span>{ts('emoji')}</span>
-        </button>
-      )}
-
-      {showGifInput && (
-        <button
-          type="button"
-          className="post-composer__tool bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
-          title={ts('gif')}
-          ref={gifBtnRef}
-          onClick={() => {
-            setShowGif((s) => !s);
-            setShowEmoji(false);
-          }}
-        >
-          {usesComposerSurface ? (
-            <span className="post-composer__tool-icon post-composer__tool-icon--gif" aria-hidden="true">
-              <IconGif className="w-4 h-4" />
-            </span>
-          ) : <IconGif className="w-4 h-4" />}
-          <span>{ts('gif')}</span>
-        </button>
-      )}
-
+      {showMediaFeatures && postImages.images.length === 0 && imageButton()}
       {detectedLink && (
         <button
           type="button"
@@ -713,34 +638,6 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
         </button>
       )}
 
-      {showEmojiPicker && showEmoji && (
-        <div className="post-composer__emoji-panel absolute bottom-[110%] left-0 bg-gray-900 border border-white/12 rounded-2xl p-2.5 shadow-[0_16px_30px_rgba(0,0,0,0.4)] z-10 min-w-[240px] md:fixed md:bottom-5 md:left-5 md:right-5 md:min-w-auto md:max-w-none md:rounded-2xl md:p-4 md:shadow-[0_20px_40px_rgba(0,0,0,0.5)]">
-          <div className="grid grid-cols-10 gap-1.5 md:grid-cols-8 md:gap-2">
-            {DEFAULT_EMOJIS.map((e) => (
-              <button
-                key={e}
-                type="button"
-                className="bg-none border-none text-xl p-1.5 cursor-pointer rounded-lg hover:bg-white/10 md:p-2 md:text-[22px] md:min-h-[44px] md:rounded-xl"
-                onClick={() => insertAtCursor(e)}
-              >
-                {e}
-              </button>
-            ))}
-          </div>
-          <div className="mt-1.5 text-center text-sm text-white/90">
-            {ts('moreSoon')}
-          </div>
-        </div>
-      )}
-
-      {showGifInput && (
-        <GifSelectorDialog
-          open={showGif}
-          onOpenChange={setShowGif}
-          mediaUrls={mediaUrls}
-          onMediaUrlsChange={setMediaUrls}
-        />
-      )}
     </div>
   );
 
@@ -776,7 +673,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
           <AeButton
             type="submit"
             loading={isSubmitting}
-            disabled={!text.trim() || (requiredHashtag ? requiredMissing : false)}
+            disabled={isSubmitting || !hasContent || (requiredHashtag ? requiredMissing : false)}
             className="post-composer__primary relative bg-[#1161FE] border-none text-white font-black px-5 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none w-full md:w-auto md:px-6 md:py-3 md:min-h-[44px] md:text-base"
           >
             {(() => {
@@ -831,8 +728,20 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
     >
       <div className={usesComposerSurface ? 'rail-card post-composer__surface' : 'bg-transparent border-none p-0 rounded-xl transition-all duration-300 relative shadow-none md:bg-gradient-to-br md:from-white/8 md:to-white/3 md:border md:border-white/10 md:outline md:outline-1 md:outline-white/10 md:rounded-2xl md:p-4 md:backdrop-blur-xl'}>
         <form onSubmit={handleSubmit} className="relative">
-          <div className="flex flex-col gap-3 md:grid md:grid-cols-[56px_1fr] md:gap-x-0 md:gap-y-3">
-            {activeAccount && (
+          <fieldset disabled={isSubmitting} className="contents">
+            {showMediaFeatures && (
+            <input
+              ref={imageInput}
+              type="file"
+              accept={POST_IMAGE_ACCEPT}
+              multiple
+              hidden
+              aria-label={ts('images.choose')}
+              onChange={(event) => { const input = event.target; postImages.select(Array.from(input.files || [])); input.value = ''; }}
+            />
+            )}
+            <div className="flex flex-col gap-3 md:grid md:grid-cols-[56px_1fr] md:gap-x-0 md:gap-y-3">
+              {activeAccount && (
               <div className="hidden md:block">
                 <AddressAvatarWithChainName
                   address={activeAccount}
@@ -841,13 +750,13 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                   showAddressAndChainName={false}
                 />
               </div>
-            )}
-            <div className={activeAccount ? 'md:col-start-2' : 'md:col-span-2'}>
-              <div ref={inputWrapRef} className="post-composer__input-wrap relative bg-white/7 border border-white/14 rounded-xl md:rounded-2xl transition-all duration-200 focus-within:border-[#1161FE] focus-within:bg-white/10 focus-within:shadow-[0_0_0_2px_rgba(17,97,254,0.5),0_8px_24px_rgba(0,0,0,0.25)]">
-                {/* Overlay mirror: same glyph runs as the textarea, mention runs pilled.
+              )}
+              <div className={activeAccount ? 'md:col-start-2' : 'md:col-span-2'}>
+                <div ref={inputWrapRef} className="post-composer__input-wrap relative bg-white/7 border border-white/14 rounded-xl md:rounded-2xl transition-all duration-200 focus-within:border-[#1161FE] focus-within:bg-white/10 focus-within:shadow-[0_0_0_2px_rgba(17,97,254,0.5),0_8px_24px_rgba(0,0,0,0.25)]">
+                  {/* Overlay mirror: same glyph runs as the textarea, mention runs pilled.
                     Sits behind the transparent-text textarea so caret/selection stay on top;
                     no horizontal padding on pills, so widths — and the caret — stay exact. */}
-                {showMirror && overlayComputed && (
+                  {showMirror && overlayComputed && (
                   <div
                     aria-hidden
                     className="post-composer__mirror absolute inset-0 overflow-hidden pointer-events-none select-none text-white whitespace-pre-wrap break-words box-border"
@@ -878,79 +787,86 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                       <span key={`t-${i}`}>{seg.text}</span>
                     )))}
                   </div>
-                )}
-                <textarea
-                  ref={textareaRef}
-                  placeholder={currentPlaceholder}
-                  aria-label={isPost ? ts('post') : tf('writeReply')}
-                  value={text}
-                  onChange={(e) => acceptComposerText(e.target.value)}
-                  onFocus={() => {
-                    if (requiredHashtag && !text) {
-                      const tag = `${requiredHashtag.toUpperCase()} `;
-                      setText(tag);
-                      requestAnimationFrame(() => {
-                        const el = textareaRef.current;
-                        if (el) el.setSelectionRange(tag.length, tag.length);
-                      });
-                    }
-                  }}
-                  onKeyDown={(e) => {
+                  )}
+                  <textarea
+                    ref={textareaRef}
+                    disabled={isSubmitting}
+                    onPaste={(event) => {
+                      const files = Array.from(event.clipboardData.files);
+                      if (showMediaFeatures && files.length && !isSubmitting) {
+                        event.preventDefault(); postImages.select(files);
+                      }
+                    }}
+                    placeholder={currentPlaceholder}
+                    aria-label={isPost ? ts('post') : tf('writeReply')}
+                    value={text}
+                    onChange={(e) => acceptComposerText(e.target.value)}
+                    onFocus={() => {
+                      if (requiredHashtag && !text) {
+                        const tag = `${requiredHashtag.toUpperCase()} `;
+                        setText(tag);
+                        requestAnimationFrame(() => {
+                          const el = textareaRef.current;
+                          if (el) el.setSelectionRange(tag.length, tag.length);
+                        });
+                      }
+                    }}
+                    onKeyDown={(e) => {
                     // Mention picker navigation takes priority while it is open.
-                    if (showMentionMenu) {
-                      if (e.key === 'ArrowDown') {
-                        e.preventDefault();
-                        setMentionIndex((i) => (i + 1) % mentionItems.length);
-                        return;
-                      }
-                      if (e.key === 'ArrowUp') {
-                        e.preventDefault();
-                        setMentionIndex((i) => (i - 1 + mentionItems.length) % mentionItems.length);
-                        return;
-                      }
-                      if (e.key === 'Enter' || e.key === 'Tab') {
-                        e.preventDefault();
-                        handleSelectMention(mentionItems[boundedMentionIndex]);
-                        return;
-                      }
-                      if (e.key === 'Escape') {
-                        e.preventDefault();
-                        setMentionDismissed(true);
-                        return;
-                      }
-                    }
-                    if (!requiredHashtag || !showAutoComplete) return;
-                    if (e.key === 'Tab' || e.key === 'Enter') {
-                      e.preventDefault();
-                      const el = textareaRef.current;
-                      const caret = el?.selectionStart ?? text.length;
-                      // Compute start index of current hashtag token (including '#')
-                      const tokenStart = caret - (typedHashtagBody.length + 1);
-                      const before = text.slice(0, tokenStart);
-                      const after = text.slice(caret);
-                      const fullUpper = (requiredHashtag || '').toUpperCase();
-                      const nextValue = `${before}${fullUpper} ${after}`;
-                      setText(nextValue);
-                      requestAnimationFrame(() => {
-                        const pos = (`${before + fullUpper} `).length;
-                        if (el) {
-                          el.focus();
-                          el.setSelectionRange(pos, pos);
+                      if (showMentionMenu) {
+                        if (e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          setMentionIndex((i) => (i + 1) % mentionItems.length);
+                          return;
                         }
-                      });
-                    }
-                  }}
-                  className="post-composer__textarea bg-transparent border-none outline-none pt-1.5 pr-2.5 pl-2.5 pb-9 text-white text-base resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium md:p-4 md:pr-14 md:pb-8 md:text-base focus:!shadow-none focus:!translate-y-0 focus:!bg-transparent caret-[#1161FE]"
-                  style={{
-                    minHeight: isPost ? 'var(--composer-min-height, 160px)' : replyMinHeight,
-                    // Text goes transparent so the mirror below shows the pills; caret
-                    // (caret-color) and selection stay painted by the textarea on top.
-                    ...(showMirror ? { color: 'transparent', position: 'relative', zIndex: 1 } : null),
-                  }}
-                  rows={1}
-                />
+                        if (e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          setMentionIndex((i) => (i - 1 + mentionItems.length) % mentionItems.length);
+                          return;
+                        }
+                        if (e.key === 'Enter' || e.key === 'Tab') {
+                          e.preventDefault();
+                          handleSelectMention(mentionItems[boundedMentionIndex]);
+                          return;
+                        }
+                        if (e.key === 'Escape') {
+                          e.preventDefault();
+                          setMentionDismissed(true);
+                          return;
+                        }
+                      }
+                      if (!requiredHashtag || !showAutoComplete) return;
+                      if (e.key === 'Tab' || e.key === 'Enter') {
+                        e.preventDefault();
+                        const el = textareaRef.current;
+                        const caret = el?.selectionStart ?? text.length;
+                        // Compute start index of current hashtag token (including '#')
+                        const tokenStart = caret - (typedHashtagBody.length + 1);
+                        const before = text.slice(0, tokenStart);
+                        const after = text.slice(caret);
+                        const fullUpper = (requiredHashtag || '').toUpperCase();
+                        const nextValue = `${before}${fullUpper} ${after}`;
+                        setText(nextValue);
+                        requestAnimationFrame(() => {
+                          const pos = (`${before + fullUpper} `).length;
+                          if (el) {
+                            el.focus();
+                            el.setSelectionRange(pos, pos);
+                          }
+                        });
+                      }
+                    }}
+                    className="post-composer__textarea bg-transparent border-none outline-none pt-1.5 pr-2.5 pl-2.5 pb-9 text-white text-base resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium md:p-4 md:pr-14 md:pb-8 md:text-base focus:!shadow-none focus:!translate-y-0 focus:!bg-transparent caret-[#1161FE]"
+                    style={{
+                      minHeight: isPost ? 'var(--composer-min-height, 160px)' : replyMinHeight,
+                      // Text goes transparent so the mirror below shows the pills; caret
+                      // (caret-color) and selection stay painted by the textarea on top.
+                      ...(showMirror ? { color: 'transparent', position: 'relative', zIndex: 1 } : null),
+                    }}
+                    rows={1}
+                  />
 
-                {showAutoComplete && overlayComputed && (
+                  {showAutoComplete && overlayComputed && (
                   <div
                     className="absolute pointer-events-none select-none"
                     style={{
@@ -965,9 +881,9 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                   >
                     <span style={{ color: 'rgba(255,255,255,0.5)' }}>{remainingSuggestion}</span>
                   </div>
-                )}
+                  )}
 
-                {showMentionMenu && (
+                  {showMentionMenu && (
                   <MentionSuggestionList
                     items={mentionItems}
                     activeIndex={boundedMentionIndex}
@@ -975,41 +891,14 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                     onSelect={handleSelectMention}
                     anchorEl={inputWrapRef.current}
                   />
-                )}
+                  )}
 
-                <div className={usesComposerSurface ? 'post-composer__input-footer' : undefined}>
-                  {usesComposerSurface && hasMediaTools && <div className="hidden md:block min-w-0">{desktopTools}</div>}
-                  <div className="post-composer__mobile-tools md:hidden absolute bottom-5 left-2 flex items-center gap-1.5">
-                    {/* Mobile-only GIF button inside textarea corner */}
-                    {showGifInput && (
-                      <button
-                        type="button"
-                        className="post-composer__gif md:hidden inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] md:rounded-full bg-transparent border border-white/10 outline outline-1 outline-white/10 text-white/80 text-[11px] leading-none hover:border-white/20 transition-colors min-h-0 min-w-0 z-20 touch-manipulation"
-                        title={ts('gif')}
-                        ref={gifBtnRef}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setShowGif((s) => !s);
-                          setShowEmoji(false);
-                        }}
-                        onTouchStart={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                        }}
-                        onTouchEnd={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setShowGif((s) => !s);
-                          setShowEmoji(false);
-                        }}
-                      >
-                        <IconGif className="w-4 h-4" aria-hidden="true" />
-                        <span className="uppercase tracking-wide">{ts('gif')}</span>
-                      </button>
-                    )}
-                    {/* Mobile-only Link preview toggle */}
-                    {detectedLink && (
+                  <div className={usesComposerSurface ? 'post-composer__input-footer' : undefined}>
+                    {usesComposerSurface && hasMediaTools && <div className="hidden md:block min-w-0">{desktopTools}</div>}
+                    <div className="post-composer__mobile-tools md:hidden absolute bottom-5 left-2 flex items-center gap-1.5">
+                      {showMediaFeatures && postImages.images.length === 0 && imageButton('mobile')}
+                      {/* Mobile-only Link preview toggle */}
+                      {detectedLink && (
                       <button
                         type="button"
                         className={`md:hidden inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] border outline outline-1 text-[11px] leading-none transition-colors min-h-0 min-w-0 z-20 touch-manipulation gap-1 ${
@@ -1041,39 +930,65 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                         <IconLink className="w-3 h-3" />
                         <span className="uppercase tracking-wide">LINK</span>
                       </button>
-                    )}
-                  </div>
-                  {compactMobile && mobileSubmit}
-                  {characterLimit && (
+                      )}
+                    </div>
+                    {compactMobile && mobileSubmit}
+                    {characterLimit && (
                     <div className="post-composer__counter absolute bottom-4 right-2 md:bottom-4 md:right-4 text-white/60 text-sm font-semibold pointer-events-none select-none z-10">
                       {serializedText.length}
                       /
                       {characterLimit}
                     </div>
-                  )}
-                </div>
+                    )}
+                  </div>
 
-                {showLinkPreview && detectedLink && (
+                  {showMediaFeatures && (postImages.error || postImages.progress || postImages.images.length > 0) && (
+                  <div className="min-w-0 space-y-2 px-3 pb-3 pt-1">
+                    {postImages.images.length > 0 && (
+                      <div className="grid max-w-[440px] grid-cols-4 gap-2" aria-label={ts('images.selected')}>
+                        {postImages.images.map((item, index) => (
+                          <div key={item.id} className="relative aspect-square overflow-hidden rounded-lg border border-white/10 bg-black/20">
+                            <img src={item.preview} alt={ts('images.preview', { number: index + 1 })} className="h-full w-full object-cover" />
+                            <button
+                              type="button"
+                              disabled={isSubmitting}
+                              aria-label={ts('images.remove', { number: index + 1 })}
+                              onClick={() => postImages.remove(item.id)}
+                              className="absolute right-1 top-1 grid h-8 w-8 place-items-center rounded-full bg-black/75 text-white disabled:opacity-40"
+                            >
+                              <IconClose className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ))}
+                        {!mediaFull && imageButton('tile')}
+                      </div>
+                    )}
+                    {postImages.error && <p role="alert" className="text-sm text-red-300">{postImages.error}</p>}
+                    {postImages.progress && <p role="status" className="text-sm text-white/70">{postImages.progress}</p>}
+                  </div>
+                  )}
+
+                  {showLinkPreview && detectedLink && (
                   <div className="px-2.5 pb-2.5 pt-1 md:px-4 md:pb-3 md:pt-0">
                     <DetectedLinkPreview
                       link={detectedLink}
                       onDismiss={() => setDismissedLinkUrl(detectedLink.url)}
                     />
                   </div>
-                )}
+                  )}
 
-              </div>
+                </div>
 
-              <TokenTagOptionsBar
-                value={text}
-                onChange={acceptComposerText}
-                serialize={(s) => serializeMentions(s, mentions)}
-                textareaRef={textareaRef}
-                characterLimit={characterLimit}
-                className="mt-2.5"
-              />
+                <TokenTagOptionsBar
+                  value={text}
+                  onChange={acceptComposerText}
+                  serialize={(s) => serializeMentions(s, mentions)}
+                  textareaRef={textareaRef}
+                  characterLimit={characterLimit}
+                  className="mt-2.5"
+                />
 
-              {(isPost || hasMediaTools) && (
+                {(isPost || hasMediaTools) && (
                 <div className="post-composer__toolbar hidden md:flex items-center justify-between mt-3 gap-3">
                   {!usesComposerSurface && desktopTools}
 
@@ -1107,7 +1022,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                       <AeButton
                         type="submit"
                         loading={isSubmitting}
-                        disabled={!text.trim() || (requiredHashtag ? requiredMissing : false)}
+                        disabled={isSubmitting || !hasContent || (requiredHashtag ? requiredMissing : false)}
                         className="post-composer__primary relative bg-[#1161FE] border-none text-white font-black px-6 py-3 rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none md:min-h-[44px] md:text-base"
                       >
                         {(() => {
@@ -1125,47 +1040,13 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                     )}
                   </div>
                 </div>
-              )}
+                )}
+              </div>
+
             </div>
 
-            {showMediaFeatures && mediaUrls.length > 0 && (
-              <div className="col-span-full md:col-start-2 w-full overflow-x-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent -mx-4 px-4 md:mx-0 md:px-0">
-                <div className="flex flex-row gap-3 pb-2">
-                  {mediaUrls.map((url, index) => (
-                    <div
-                      key={`media-${url}`}
-                      className="relative rounded-xl overflow-hidden shadow-[0_8px_20px_rgba(0,0,0,0.25)] flex-shrink-0 w-[200px] md:w-[180px]"
-                    >
-                      {/.mp4$|.webm$|.mov$/i.test(url) ? (
-                        <video
-                          src={url}
-                          controls
-                          className="w-full h-[200px] md:h-[180px] object-cover block"
-                        >
-                          <track kind="captions" />
-                        </video>
-                      ) : (
-                        <img
-                          src={url}
-                          alt={t('common.aria.media')}
-                          className="w-full h-[200px] md:h-[180px] object-cover block"
-                        />
-                      )}
-                      <button
-                        type="button"
-                        className="absolute top-1.5 right-1.5 bg-black/70 border-none text-white w-7 h-7 rounded-full cursor-pointer grid place-items-center transition-all duration-200 hover:bg-black/90 hover:scale-105 active:scale-95"
-                        onClick={() => removeMedia(index)}
-                      >
-                        <IconClose className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {!compactMobile && mobileSubmit}
+            {!compactMobile && mobileSubmit}
+          </fieldset>
         </form>
       </div>
     </div>

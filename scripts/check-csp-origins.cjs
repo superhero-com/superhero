@@ -38,7 +38,12 @@ const LIBRARY_NOISE = new Set([
   'https://react.i18next.com', 'https://reactrouter.com', 'https://redux-toolkit.js.org',
   'https://redux.js.org', 'https://schema.org', 'https://socket.io',
   'https://www.tradingview.com', 'https://yoursite.com', 'wss://relay.example.com',
+  // Azure SDK token scope, not an HTTP destination.
+  'https://disk.azure.com',
 ]);
+
+// Legacy image identities are rewritten to the configured delivery origin before loading.
+const REFERENCE_ONLY = new Set(['https://superhero.stream']);
 
 const URL_RE = /(https|wss):\/\/[a-zA-Z0-9][a-zA-Z0-9._-]*\.[a-zA-Z]{2,}/g;
 
@@ -86,7 +91,7 @@ const permitted = permittedOrigins();
 const relayCatalog = relayCatalogOrigins();
 const unlisted = [...bundleOrigins()]
   .filter((o) => !permitted.has(o) && !NAVIGATION_ONLY.has(o) && !LIBRARY_NOISE.has(o)
-    && !relayCatalog.has(o))
+    && !REFERENCE_ONLY.has(o) && !relayCatalog.has(o))
   .sort();
 
 if (unlisted.length > 0) {

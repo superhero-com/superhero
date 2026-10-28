@@ -1,6 +1,10 @@
 import { render } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import {
+  describe, expect, it, vi,
+} from 'vitest';
 import ProfileBand, { addressGradient } from '../ProfileBand';
+
+vi.mock('@/features/profile-images/useProfileImages', () => ({ useProfileImages: () => ({ data: undefined }) }));
 
 const A = 'ak_alice0000000000000000000000000000000000000000000000';
 const B = 'ak_bob00000000000000000000000000000000000000000000000';

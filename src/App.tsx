@@ -3,6 +3,7 @@ import React, {
 } from 'react';
 import { useLocation, useNavigate, useRoutes } from 'react-router-dom';
 import { useAtom } from 'jotai';
+import { SHORTS_ENABLED } from './shorts-enabled';
 import GlobalNewAccountEducation from './components/GlobalNewAccountEducation';
 import { CollectInvitationLinkCard } from './features/trending/components/Invitation';
 import ModalProvider from './components/ModalProvider';
@@ -61,6 +62,9 @@ const ReceiveModal = React.lazy(
 const FollowConnectionsModal = React.lazy(
   () => import('./features/social/components/FollowConnectionsModal'),
 );
+
+const ShortsWalletSync = SHORTS_ENABLED
+  ? React.lazy(() => import('./features/shorts/shorts-wallet-sync')) : null;
 
 const App = () => {
   const navigate = useNavigate();
@@ -193,6 +197,9 @@ const App = () => {
 
   return (
     <NotificationsProvider>
+      {ShortsWalletSync && (
+        <Suspense fallback={null}><ShortsWalletSync address={activeAccount} /></Suspense>
+      )}
       {/* Mounted above the router so the relay pool survives route changes. */}
       <ChatProvider>
         <div
@@ -243,17 +250,19 @@ const App = () => {
           </Suspense>
           {/* Keep floating prompts clear of the chat composer. */}
           {!isMobile && !isChatRoute && <FeedbackButton />}
-          {/* PWA install prompt — hidden on mobile iOS where the FAB takes over */}
-          {!isChatRoute && !(isMobileDevice() && isIOS) && <PwaInstallPrompt />}
-          {/* Mobile FAB — shown on iOS (no native prompt) or when native prompt unavailable.
+          <div className="app-install-affordances">
+            {/* PWA install prompt — hidden on mobile iOS where the FAB takes over */}
+            {!isChatRoute && !(isMobileDevice() && isIOS) && <PwaInstallPrompt />}
+            {/* Mobile FAB — shown on iOS (no native prompt) or when native prompt unavailable.
               Uses isMobileDevice() (UA-based) instead of useIsMobile() (viewport-based)
               so landscape phones don't lose the install affordance. */}
-          {!isChatRoute && isMobileDevice() && (isIOS || !canPrompt) && (
+            {!isChatRoute && isMobileDevice() && (isIOS || !canPrompt) && (
             <PwaInstallFab
               onOpen={() => setMobileAppDialogOpen(true)}
               isInstalled={isInstalled}
             />
-          )}
+            )}
+          </div>
           {/* What both floating install affordances open: the store builds
               first, the PWA as the secondary line. */}
           <MobileAppInstallDialog

@@ -2,6 +2,7 @@
 import {
   describe, expect, it, vi,
 } from 'vitest';
+import { buildTx, Tag } from '@aeternity/aepp-sdk';
 import { createInlineWalletSigner, type UnlockProvider } from '../inline-signer';
 import { deriveAccount, deriveSigner } from '../derivation';
 import { createVault, type FactorEnrollment, type VaultRecord } from '../vault-record';
@@ -30,6 +31,24 @@ function passphraseUnlock(pass: string): UnlockProvider {
 }
 
 describe('InlineWalletSigner (P4 core)', () => {
+  it('shows the same sponsorship domain that the actual signature uses', async () => {
+    const record = await createVault(MNEMONIC, await passphraseEnrollment('pw'), 1);
+    const unlock = vi.fn(passphraseUnlock('pw'));
+    const signer = createInlineWalletSigner({
+      address: GOLDEN0, index: 0, record, unlock,
+    });
+    const tx = buildTx({
+      tag: Tag.SpendTx, senderId: GOLDEN0, recipientId: GOLDEN0, amount: 0, nonce: 1,
+    });
+    const raw = await signer.signTransaction(tx, { networkId: 'ae_uat', innerTx: true });
+    expect(raw).toBe(await deriveSigner(MNEMONIC, 0).signTransaction(tx, { networkId: 'ae_uat', innerTx: true }));
+    expect(unlock.mock.calls[0][1]).toMatchObject({
+      kind: 'transaction', innerTx: true, networkId: 'ae_uat', payload: tx,
+    });
+    await signer.signTransaction(tx, { networkId: 'ae_uat' });
+    expect(unlock.mock.calls[1][1]).not.toHaveProperty('innerTx');
+    expect(unlock).toHaveBeenCalledTimes(2);
+  });
   it('derives the correct address (index 0 golden vector)', async () => {
     const record = await createVault(MNEMONIC, await passphraseEnrollment('pw'), 1);
     const signer = createInlineWalletSigner({

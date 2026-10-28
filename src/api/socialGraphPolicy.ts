@@ -1,5 +1,17 @@
 import { OpenAPI } from './generated/core/OpenAPI';
 import { request } from './generated/core/request';
+import type { CancelablePromise } from './generated/core/CancelablePromise';
+
+/** Keep unavailable social-indexer reads/prechecks from stranding wallet UI. */
+export function withSocialGraphTimeout<T>(pending: CancelablePromise<T>, timeoutMs = 12_000): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error('Social graph is unavailable. Please try again.'));
+      pending.cancel();
+    }, timeoutMs);
+    pending.then(resolve, reject).finally(() => clearTimeout(timer));
+  });
+}
 
 export type SocialGraphPolicy = {
   network: string;
@@ -18,12 +30,12 @@ const integer = (value: string) => {
 };
 
 export async function getSocialGraphCounts(account: string, network: string, contract: string) {
-  const counts = await request<{
+  const counts = await withSocialGraphTimeout(request<{
     network: string; contract: string; address: string;
     followers: string; following: string; completed_height: string; generation: string;
   }>(OpenAPI, {
     method: 'GET', url: '/api/social-graph/counts', query: { account },
-  });
+  }));
   if (counts.network !== network || counts.contract !== contract || counts.address !== account) {
     throw new Error('Social graph identity changed');
   }
@@ -36,9 +48,9 @@ export async function getSocialGraphCounts(account: string, network: string, con
 }
 
 export async function getCurrentSocialGraphConfig() {
-  const policy = await request<SocialGraphPolicy>(OpenAPI, {
+  const policy = await withSocialGraphTimeout(request<SocialGraphPolicy>(OpenAPI, {
     method: 'GET', url: '/api/social-graph/policy',
-  });
+  }));
   if (!policy.network || !policy.contract?.startsWith('ct_')
     || typeof policy.frozen !== 'boolean' || typeof policy.importing !== 'boolean') {
     throw new Error('Incomplete social graph identity');

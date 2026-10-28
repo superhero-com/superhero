@@ -55,7 +55,7 @@ function envInject(html) {
 
 function truncate(s, n){ const t=(s||'').trim(); return t.length<=n?t:t.slice(0,Math.max(0,n-1))+'…'; }
 
-function absolutize(url, origin){ if(!url) return undefined; if(/^https?:\/\//i.test(url)) return url; if(url.startsWith('//')) return `https:${url}`; if(url.startsWith('/')) return `${origin}${url}`; return `${origin}/${url}`; }
+function absolutize(url, origin){ if(!url) return undefined; const image = /^ipfs:superhero:images:(bafy[a-z2-7]{55})(-preview)?$/.exec(url); if(image) return `${(process.env.PROFILE_MEDIA_PUBLIC_URL || `${API_BASE}/profile-images`).replace(/\/$/, '')}/images/${image[1]}/${image[2] ? 'thumb' : 'image'}.webp`; if(/^https?:\/\//i.test(url)) return url; if(url.startsWith('//')) return `https:${url}`; if(url.startsWith('/')) return `${origin}${url}`; return `${origin}/${url}`; }
 
 const BASE_API = API_BASE.replace(/\/$/, '');
 
@@ -145,7 +145,7 @@ async function buildMeta(pathname, origin){
           datePublished: data?.created_at,
           dateModified: data?.updated_at || data?.created_at,
           author: { '@type': 'Person', name: data?.sender_address, identifier: data?.sender_address },
-          image: media,
+          image: media.map(url => absolutize(url, origin)),
           interactionStatistic: [
             {
               '@type': 'InteractionCounter',

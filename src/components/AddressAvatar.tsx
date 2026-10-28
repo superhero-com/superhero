@@ -1,5 +1,7 @@
 import * as jdenticon from 'jdenticon';
-import React, { useMemo } from 'react';
+import { imageUrl } from '@/features/profile-images/api';
+import { useProfileImages } from '@/features/profile-images/useProfileImages';
+import React, { useMemo, useState } from 'react';
 import { trustedHtml } from '../utils/trustedTypes';
 
 interface AddressAvatarProps {
@@ -29,6 +31,9 @@ const AddressAvatar = ({
   borderRadius = '50%',
   style = {},
 }: AddressAvatarProps) => {
+  const images = useProfileImages(address);
+  const url = imageUrl(typeof size === 'number' && size <= 128 ? (images.data?.avatar_preview_ref || images.data?.avatar_thumbnail_url) : (images.data?.avatar_ref || images.data?.avatarurl));
+  const [failed, setFailed] = useState<string>();
   // Generate the avatar SVG deterministically from the address with jdenticon.
   const avatarSvg = useMemo(() => {
     if (!address) {
@@ -83,26 +88,32 @@ const AddressAvatar = ({
         ...style,
       }}
     >
-      {avatarSvg ? (
-        <span
-          className="custom-address w-full h-full object-cover"
-          // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: trustedHtml(avatarSvg) }}
-        />
+      {url && failed !== url ? (
+        <img src={url} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" onError={() => setFailed(url)} />
       ) : (
-        <div
-          className="w-full h-full flex items-center justify-center"
-          style={{
-            backgroundColor: fallbackContent.backgroundColor,
-          }}
-        >
-          <span
-            className="text-white font-semibold"
-            style={{ fontSize: fallbackContent.fontSize }}
-          >
-            {fallbackContent.initials}
-          </span>
-        </div>
+        <span className="contents">
+          {avatarSvg ? (
+            <span
+              className="custom-address w-full h-full object-cover"
+          // eslint-disable-next-line react/no-danger
+              dangerouslySetInnerHTML={{ __html: trustedHtml(avatarSvg) }}
+            />
+          ) : (
+            <div
+              className="w-full h-full flex items-center justify-center"
+              style={{
+                backgroundColor: fallbackContent.backgroundColor,
+              }}
+            >
+              <span
+                className="text-white font-semibold"
+                style={{ fontSize: fallbackContent.fontSize }}
+              >
+                {fallbackContent.initials}
+              </span>
+            </div>
+          )}
+        </span>
       )}
     </div>
   );

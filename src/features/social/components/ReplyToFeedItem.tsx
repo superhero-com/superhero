@@ -6,7 +6,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { Languages, MessageCircle } from 'lucide-react';
-import { AspectMedia } from '@/components/AspectMedia';
+import { PostMediaGallery } from './PostMediaGallery';
 import { PostDto, PostsService } from '../../../api/generated';
 import { linkify } from '../../../utils/linkify';
 import { formatAddress } from '../../../utils/address';
@@ -390,25 +390,7 @@ const ReplyToFeedItem = memo(({
         {/* Link preview (YouTube embed or OG card) */}
         <PostLinkPreview content={item.content || ''} />
 
-        {/* Media */}
-        {media.length > 0 && (
-        <div
-          className={cn(
-            'feed-post__media mt-3 grid gap-2 rounded-xl overflow-hidden',
-            media.length === 1 && 'grid-cols-1',
-            media.length === 2 && 'grid-cols-2',
-            media.length >= 3 && 'grid-cols-2',
-          )}
-        >
-          {media.slice(0, 4).map((m: string) => (
-            media.length === 1 ? (
-              <AspectMedia key={`${postId}-${m}`} src={m} alt={t('common:aria.media')} maxHeight={presentation === 'detail' ? 320 : '50vh'} />
-            ) : (
-              <AspectMedia key={`${postId}-${m}`} src={m} alt={t('common:aria.media')} maxHeight={200} />
-            )
-          ))}
-        </div>
-        )}
+        <PostMediaGallery media={media} />
 
         {presentation === 'detail' && (
           <time className="feed-post__published" dateTime={item.created_at}>

@@ -115,15 +115,6 @@ export function errorToUserMessage(err: unknown, ctx: ErrorContext = {}): string
   }
 
   // Balance / funds
-  // Check for specific ETH balance errors first
-  if (lc.includes('insufficient eth balance')) {
-    const ethMatch = raw.match(/required:\s*([\d.]+)\s*eth/i);
-    if (ethMatch && ethMatch[1]) {
-      return t('insufficientEthBalance', { amount: ethMatch[1] });
-    }
-    return t('insufficientEthBalanceGeneric');
-  }
-
   if (lc.includes('insufficient balance') || lc.includes('insufficient funds') || lc.includes('balance too low')) {
     return t('insufficientBalance');
   }

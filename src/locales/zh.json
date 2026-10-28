@@ -3020,8 +3020,6 @@
     "invalidRecipient": "此交易的收款人无效。",
     "pairExists": "资金池已存在。",
     "tokenNotApproved": "代币未获批准用于支出。请批准该代币后重试。",
-    "insufficientEthBalance": "ETH 余额不足。你至少需要 {{amount}} ETH 才能完成此跨链操作。",
-    "insufficientEthBalanceGeneric": "ETH 余额不足，无法完成此跨链操作。",
     "insufficientBalance": "余额不足，无法完成此操作。",
     "networkError": "网络连接出现问题。请检查你的网络连接后重试。",
     "contractError": "合约交互失败。请重试，如果问题持续存在请联系客服。",

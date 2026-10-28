@@ -55,41 +55,24 @@ function MyComponent() {
 
 ## Advanced Usage with Filters
 
+`initialParams` is part of the query key, so changing a filter refetches. The
+table keeps its current page, so give it a `key` from the filters to start
+again from page 1.
+
 ```tsx
-import { useDataTable } from '../shared/components/DataTable';
-
 function AdvancedComponent() {
-  const [filters, setFilters] = useState({
-    type: 'all',
-    search: '',
-  });
-
-  const { data, isLoading, params, updateParams } = useDataTable(
-    (params) => MyService.getData({
-      ...params,
-      type: filters.type !== 'all' ? filters.type : undefined,
-      search: filters.search || undefined,
-    }),
-    { limit: 20, page: 1 }
-  );
-
-  const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-    updateParams({ page: 1 }); // Reset to first page
-  };
+  const [search, setSearch] = useState('');
 
   return (
     <div>
       {/* Your filter controls */}
-      <input 
-        value={filters.search}
-        onChange={(e) => handleFilterChange('search', e.target.value)}
-      />
-      
+      <input value={search} onChange={(e) => setSearch(e.target.value)} />
+
       <DataTable
-        queryFn={(params) => MyService.getData({ ...params, ...filters })}
+        key={search}
+        queryFn={(params) => MyService.getData(params)}
+        initialParams={{ search: search || undefined }}
         renderRow={({ item }) => <MyRowComponent item={item} />}
-        initialParams={{  }}
       />
     </div>
   );
@@ -139,22 +122,6 @@ interface DataTableMeta {
   totalPages: number;
   currentPage: number;
 }
-```
-
-## useDataTable Hook
-
-For more control over the data fetching, use the `useDataTable` hook:
-
-```tsx
-const {
-  data,           // Current data response
-  isLoading,      // Loading state
-  error,          // Error state
-  params,         // Current parameters
-  updateParams,   // Function to update parameters
-  resetParams,    // Function to reset parameters
-  refetch,        // Function to manually refetch
-} = useDataTable(queryFn, initialParams);
 ```
 
 ## DataTablePagination Props

@@ -4,13 +4,18 @@ import {
   useCallback, useEffect, useMemo, useState,
 } from 'react';
 import { AccountsService } from '../api/generated/services/AccountsService';
+import { activeAccountAtom } from '../atoms/accountAtoms';
 import {
   chainNameLookupCheckedAtAtom,
   chainNamesAtom,
   preferredChainNamesAtom,
 } from '../atoms/walletAtoms';
 import { CURRENT_NETWORK } from '../utils/constants';
-import { isPreferredChainNamePending, mergeServerChainName } from '../utils/preferredChainName';
+import {
+  currentPreferredChainName,
+  isPreferredChainNamePending,
+  mergeServerChainName,
+} from '../utils/preferredChainName';
 
 const CHAIN_NAME_REFRESH_INTERVAL = 1000 * 60 * 60; // 1 hour
 const CHAIN_NAME_RETRY_INTERVAL = 1000 * 60 * 5; // 5 minutes
@@ -159,6 +164,8 @@ export function useEnsureChainName(accountAddress?: string | null) {
 
   const setChainNames = useSetAtom(chainNamesAtom);
   const setCheckedAt = useSetAtom(chainNameLookupCheckedAtAtom);
+  const setPreferredNames = useSetAtom(preferredChainNamesAtom);
+  const activeAccount = useAtomValue(activeAccountAtom);
 
   const handleResult = useCallback((addr: string, results: Map<string, string>) => {
     if (!addr || !results.has(addr)) return;
@@ -175,7 +182,17 @@ export function useEnsureChainName(accountAddress?: string | null) {
       delete next[addr];
       return next;
     });
-  }, [setCheckedAt, setChainNames]);
+    // An account that owns no name has no preferred one either. The active
+    // account's entry is left to its sync, which reads the account directly.
+    if (!name && addr !== activeAccount) {
+      setPreferredNames((prev) => {
+        if (!prev[addr] || isPreferredChainNamePending(prev[addr])) return prev;
+        const next = { ...prev };
+        delete next[addr];
+        return next;
+      });
+    }
+  }, [activeAccount, setCheckedAt, setChainNames, setPreferredNames]);
 
   const handleError = useCallback((addr: string) => {
     const retryAt = Date.now() - CHAIN_NAME_REFRESH_INTERVAL + CHAIN_NAME_RETRY_INTERVAL;
@@ -201,11 +218,15 @@ export function useChainName(accountAddress: string, options?: { lookup?: boolea
   const normalizedAddress = normalizeAccountAddress(accountAddress);
   const chainNames = useAtomValue(chainNamesAtom);
   const preferredNames = useAtomValue(preferredChainNamesAtom);
+  const activeAccount = useAtomValue(activeAccountAtom);
   // The batch lookup returns the newest name the account owns; the name the
   // user picked as preferred (or just claimed) wins over it when known.
   const chainName = useMemo(
-    () => preferredNames[normalizedAddress]?.name || chainNames[normalizedAddress],
-    [chainNames, preferredNames, normalizedAddress],
+    () => currentPreferredChainName(
+      preferredNames[normalizedAddress],
+      !!normalizedAddress && normalizedAddress === activeAccount,
+    ) || chainNames[normalizedAddress],
+    [activeAccount, chainNames, preferredNames, normalizedAddress],
   );
   useEnsureChainName(options?.lookup === false ? undefined : normalizedAddress);
 
@@ -260,14 +281,15 @@ export function useStorePostSenderChainNames(posts: Array<PostWithSender | null 
     });
     // `public_name` is the name the API displays for the sender, which is the
     // preferred name when one is linked.
-    setPreferredNames((prev) => entries.reduce(
-      (acc, [address, name]) => (
-        isPreferredChainNamePending(acc[address], now)
-          ? acc
-          : mergeServerChainName(acc, address, { name: name.toLowerCase(), linked: null }, now)
-      ),
-      prev,
-    ));
+    setPreferredNames((prev) => entries.reduce((acc, [address, name]) => {
+      if (isPreferredChainNamePending(acc[address], now)) return acc;
+      const server = { name: name.toLowerCase(), linked: null };
+      const merged = mergeServerChainName(acc, address, server, now);
+      const seenAt = merged[address]?.seenAt ?? 0;
+      // Re-stamp an unchanged name only hourly, so feed renders don't rewrite storage.
+      if (merged === acc && now - seenAt < CHAIN_NAME_REFRESH_INTERVAL) return acc;
+      return { ...merged, [address]: { ...merged[address], seenAt: now } };
+    }, prev));
   }, [posts, setCheckedAt, setChainNames, setPreferredNames]);
 }
 

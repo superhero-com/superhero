@@ -26,8 +26,6 @@ import { useEnablePosting } from '../hooks/useEnablePosting';
 import { useRoomSession } from '../hooks/useRoomSession';
 import { MessageBubble } from '../components/MessageBubble';
 import { PostingBannerCard } from '../components/PostingBannerCard';
-import { isChatRelayConfigured } from '../core/relay-config';
-import ChatUnavailableNotice from '../components/ChatUnavailableNotice';
 
 const RoomView = () => {
   const { saleAddress = '' } = useParams();
@@ -90,8 +88,6 @@ const RoomView = () => {
   };
 
   const title = room ? `#${room.symbol}` : 'Community';
-
-  if (!isChatRelayConfigured()) return <ChatUnavailableNotice />;
 
   const renderComposer = () => {
     if (banner) {

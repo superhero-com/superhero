@@ -210,7 +210,6 @@ export class GatedRoomClient {
     saleAddress: string,
     onEvent: (event: NostrEvent) => void,
     options: {
-      isPrivate?: boolean;
       includeSystem?: boolean;
       onError?: (error: Error) => void;
     } = {},
@@ -237,7 +236,6 @@ export class GatedRoomClient {
     options: {
       until?: number;
       limit?: number;
-      isPrivate?: boolean;
       includeSystem?: boolean;
     } = {},
   ): Promise<NostrEvent[]> {

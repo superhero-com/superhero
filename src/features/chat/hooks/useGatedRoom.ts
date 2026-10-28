@@ -195,7 +195,6 @@ export function useGatedRoom(
       const history = await client
         .fetchRoomHistory(saleAddress, {
           limit: HISTORY_PAGE_SIZE,
-          isPrivate,
           includeSystem,
         })
         .catch((cause: unknown) => {
@@ -212,7 +211,7 @@ export function useGatedRoom(
         (event) => {
           if (!cancelled) upsertEvent(event);
         },
-        { isPrivate, includeSystem, onError },
+        { includeSystem, onError },
       );
       if (cancelled) {
         sub.close();
@@ -246,7 +245,6 @@ export function useGatedRoom(
       const older = await client.fetchRoomHistory(saleAddress, {
         until,
         limit: HISTORY_PAGE_SIZE,
-        isPrivate,
         includeSystem,
       });
       if (clientRef.current !== client) return;
@@ -264,7 +262,6 @@ export function useGatedRoom(
     }
   }, [
     saleAddress,
-    isPrivate,
     includeSystem,
     isLoadingEarlier,
     hasEarlier,

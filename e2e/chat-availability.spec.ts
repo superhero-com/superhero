@@ -3,7 +3,7 @@ import { test, expect, Page } from '@playwright/test';
 /**
  * Chat availability — the deploy-config contract, end to end.
  *
- * `InboxView` returns `<ChatUnavailableNotice />` before rendering anything when
+ * `ChatLayout` returns `<ChatUnavailableNotice />` before rendering anything when
  * `isChatRelayConfigured()` is false. That gate sits ABOVE the "New chat"
  * button, so a missing relay presents to the user as "the button is gone", not
  * as an error — exactly how the production outage looked.

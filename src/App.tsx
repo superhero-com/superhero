@@ -62,11 +62,30 @@ const FollowConnectionsModal = React.lazy(
   () => import('./features/social/components/FollowConnectionsModal'),
 );
 
+/**
+ * Chat fits the app to the visible viewport while the on-screen keyboard is open.
+ * The inset is read here rather than in `App`, so the viewport events it tracks
+ * re-render this container only, not every child it is handed.
+ */
+const AppContainer = ({ isChatRoute, children }: {
+  isChatRoute: boolean; children: React.ReactNode;
+}) => {
+  const keyboard = useKeyboardInset();
+  const keyboardOpen = isChatRoute && !!keyboard.inset;
+  return (
+    <div
+      className={`app-container${isChatRoute ? ' app-container--chat' : ''}${keyboardOpen ? ' chat-keyboard-open' : ''}`}
+      style={keyboardOpen ? { height: keyboard.visibleHeight } : undefined}
+    >
+      {children}
+    </div>
+  );
+};
+
 const App = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const isChatRoute = pathname === '/chat' || pathname.startsWith('/chat/');
-  const keyboard = useKeyboardInset();
   const isMobile = useIsMobile();
   const { initSdk, activeAccount, sdkInitialized } = useAeSdk();
   const {
@@ -195,10 +214,7 @@ const App = () => {
     <NotificationsProvider>
       {/* Mounted above the router so the relay pool survives route changes. */}
       <ChatProvider>
-        <div
-          className={`app-container${isChatRoute ? ' app-container--chat' : ''}${isChatRoute && keyboard.inset ? ' chat-keyboard-open' : ''}`}
-          style={isChatRoute && keyboard.inset ? { height: keyboard.visibleHeight } : undefined}
-        >
+        <AppContainer isChatRoute={isChatRoute}>
           <GlobalNewAccountEducation />
           <AppHeader />
           <div className="app-content">
@@ -265,7 +281,7 @@ const App = () => {
             open={installGuideOpen}
             onOpenChange={setInstallGuideOpen}
           />
-        </div>
+        </AppContainer>
       </ChatProvider>
     </NotificationsProvider>
   );

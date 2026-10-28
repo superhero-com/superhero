@@ -248,7 +248,13 @@ const ReplyToFeedItem = memo(({
         isActive && 'feed-post--active',
         isContextMuted && 'feed-post--context',
       )}
-      onClick={isActive ? undefined : handleOpen}
+      onClick={isActive ? undefined : (event) => {
+        // A nested reply opens itself. Not stopPropagation: document click
+        // listeners (hover cards, the composer's emoji picker) must still fire.
+        const card = (event.target as Element).closest('.feed-post');
+        if (card && card !== event.currentTarget && event.currentTarget.contains(card)) return;
+        handleOpen();
+      }}
       onKeyDown={isActive ? undefined : (event) => {
         if (event.target !== event.currentTarget) return;
         if (event.key === 'Enter' || event.key === ' ') {
@@ -484,7 +490,7 @@ const ReplyToFeedItem = memo(({
                 && (reply.total_comments ?? 0) > 0
               }
               threadDepth={isThreaded ? threadDepth + 1 : undefined}
-              onOpenPost={() => onOpenPost((reply as any)?.slug || String(reply.id).replace(/_v3$/, ''))}
+              onOpenPost={onOpenPost}
             />
           ))}
         </div>

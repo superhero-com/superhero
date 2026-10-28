@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import {
@@ -38,6 +38,9 @@ const posts: Record<string, any> = {
   '1_v3': post('1_v3', 'Original post text'),
   '2_v3': post('2_v3', 'First repost text', '1_v3', { total_comments: 1 }),
   '3_v3': post('3_v3', 'Second level reply', '2_v3'),
+  '4_v3': post('4_v3', 'Top reply', '1_v3', { total_comments: 1 }),
+  '5_v3': post('5_v3', 'Middle reply', '4_v3', { total_comments: 1 }),
+  '6_v3': post('6_v3', 'Deepest reply', '5_v3'),
 };
 
 const renderItem = (ui: React.ReactElement) => render(
@@ -73,5 +76,25 @@ describe('ReplyToFeedItem threads', () => {
     renderItem(<ReplyToFeedItem item={posts['2_v3']} hideParentContext threadDepth={0} onOpenPost={() => {}} />);
     const nested = await screen.findByText('Second level reply');
     expect(nested.closest('#replies-2_v3')).not.toBeNull();
+  });
+
+  it.each([
+    ['Middle reply', '5_v3'],
+    ['Deepest reply', '6_v3'],
+  ])('opens only the clicked nested reply (%s)', async (text, slug) => {
+    const onOpenPost = vi.fn();
+    renderItem(<ReplyToFeedItem item={posts['4_v3']} hideParentContext threadDepth={0} onOpenPost={onOpenPost} />);
+    fireEvent.click(await screen.findByText(text));
+    expect(onOpenPost).toHaveBeenCalledTimes(1);
+    expect(onOpenPost).toHaveBeenCalledWith(slug);
+  });
+
+  it('opens a nested reply from the keyboard', async () => {
+    const onOpenPost = vi.fn();
+    renderItem(<ReplyToFeedItem item={posts['4_v3']} hideParentContext threadDepth={0} onOpenPost={onOpenPost} />);
+    const card = (await screen.findByText('Deepest reply')).closest('article')!;
+    fireEvent.keyDown(card, { key: 'Enter' });
+    expect(onOpenPost).toHaveBeenCalledTimes(1);
+    expect(onOpenPost).toHaveBeenCalledWith('6_v3');
   });
 });

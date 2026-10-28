@@ -1,4 +1,6 @@
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import {
+  useAtom, useAtomValue, useSetAtom, useStore,
+} from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import {
   useCallback, useEffect, useMemo, useState,
@@ -242,9 +244,7 @@ type PostWithSender = {
 };
 
 export function useStorePostSenderChainNames(posts: Array<PostWithSender | null | undefined>) {
-  const setChainNames = useSetAtom(chainNamesAtom);
-  const setCheckedAt = useSetAtom(chainNameLookupCheckedAtAtom);
-  const setPreferredNames = useSetAtom(preferredChainNamesAtom);
+  const store = useStore();
 
   useEffect(() => {
     const names = posts.reduce<Record<string, string>>((acc, post) => {
@@ -256,41 +256,37 @@ export function useStorePostSenderChainNames(posts: Array<PostWithSender | null 
     const entries = Object.entries(names);
     if (!entries.length) return;
 
+    // This runs after every render of every feed item, and atomWithStorage rewrites
+    // the whole map to storage on every set, even an unchanged one. So each map is
+    // read first and set only when it changed.
     const now = Date.now();
-    setChainNames((prev) => {
-      let changed = false;
-      const next = { ...prev };
-      entries.forEach(([address, name]) => {
-        if (next[address] !== name) {
-          next[address] = name;
-          changed = true;
-        }
-      });
-      return changed ? next : prev;
-    });
-    setCheckedAt((prev) => {
-      let changed = false;
-      const next = { ...prev };
-      entries.forEach(([address]) => {
-        if (!prev[address] || now - prev[address] > CHAIN_NAME_REFRESH_INTERVAL) {
-          next[address] = now;
-          changed = true;
-        }
-      });
-      return changed ? next : prev;
-    });
+    const chainNames = store.get(chainNamesAtom);
+    if (entries.some(([address, name]) => chainNames[address] !== name)) {
+      store.set(chainNamesAtom, { ...chainNames, ...names });
+    }
+    const checkedAt = store.get(chainNameLookupCheckedAtAtom);
+    const due = entries.filter(([address]) => (
+      !checkedAt[address] || now - checkedAt[address] > CHAIN_NAME_REFRESH_INTERVAL
+    ));
+    if (due.length) {
+      const next = { ...checkedAt };
+      due.forEach(([address]) => { next[address] = now; });
+      store.set(chainNameLookupCheckedAtAtom, next);
+    }
     // `public_name` is the name the API displays for the sender, which is the
     // preferred name when one is linked.
-    setPreferredNames((prev) => entries.reduce((acc, [address, name]) => {
+    const preferred = store.get(preferredChainNamesAtom);
+    const nextPreferred = entries.reduce((acc, [address, name]) => {
       if (isPreferredChainNamePending(acc[address], now)) return acc;
       const server = { name: name.toLowerCase(), linked: null };
       const merged = mergeServerChainName(acc, address, server, now);
       const seenAt = merged[address]?.seenAt ?? 0;
-      // Re-stamp an unchanged name only hourly, so feed renders don't rewrite storage.
+      // An unchanged name is re-stamped only hourly.
       if (merged === acc && now - seenAt < CHAIN_NAME_REFRESH_INTERVAL) return acc;
       return { ...merged, [address]: { ...merged[address], seenAt: now } };
-    }, prev));
-  }, [posts, setCheckedAt, setChainNames, setPreferredNames]);
+    }, preferred);
+    if (nextPreferred !== preferred) store.set(preferredChainNamesAtom, nextPreferred);
+  }, [posts, store]);
 }
 
 export function useAddressByChainName(chainNameInput?: string) {

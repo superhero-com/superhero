@@ -84,6 +84,23 @@ describe('useStorePostSenderChainNames', () => {
     expect(renderStoreNames([]).current).toEqual({});
     expect(renderStoreNames([null, undefined]).current).toEqual({});
   });
+
+  it('does not write to storage again for names it already stored', () => {
+    const store = createStore();
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      createElement(Provider, { store }, children)
+    );
+    const posts = [{ sender: { address: 'ak_alice', public_name: 'alice.chain' } }];
+    // A new array on every render, as the feed passes one.
+    const { rerender } = renderHook(() => useStorePostSenderChainNames([...posts]), { wrapper });
+    const setItem = vi.spyOn(Storage.prototype, 'setItem');
+    try {
+      rerender();
+      expect(setItem).not.toHaveBeenCalled();
+    } finally {
+      setItem.mockRestore();
+    }
+  });
 });
 
 describe('useChainName', () => {

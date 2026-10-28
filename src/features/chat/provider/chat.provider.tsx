@@ -178,7 +178,22 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     clientRef.current = client;
     dmServiceRef.current = new DirectMessageService(client, identity);
     contactServiceRef.current = new ContactService();
-    profileServiceRef.current = new ProfileService(client, identity);
+    const profileService = new ProfileService(client, identity);
+    profileServiceRef.current = profileService;
+
+    // Once per peer per session, even when the peer has no profile: contacts'
+    // profiles are re-read on every refresh anyway.
+    const profileLookups = new Set<string>();
+    const lookUpProfile = (peer: string) => {
+      if (profileLookups.has(peer) || clientRef.current !== client) return;
+      profileLookups.add(peer);
+      client.subscribe([{ authors: [peer], kinds: [0] }]);
+      profileService.fetchProfile(peer)
+        .then((profile) => {
+          if (profile) setProfiles((prev) => ({ ...prev, [peer]: profile }));
+        })
+        .catch(() => {});
+    };
 
     const eventHandler = new NostrEventHandler(identity, {
       onDirectMessage: async (event, decrypted, otherPubkey) => {
@@ -213,11 +228,9 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
           const contact = await contactServiceRef.current!.ensureContact(otherPubkey);
           setContacts((prev) => ({ ...prev, [otherPubkey]: contact }));
 
-          if (!profilesRef.current[otherPubkey]) {
-            const profile = await profileServiceRef.current!.fetchProfile(otherPubkey);
-            if (profile) setProfiles((prev) => ({ ...prev, [otherPubkey]: profile }));
-            clientRef.current?.subscribe([{ authors: [otherPubkey], kinds: [0] }]);
-          }
+          // Not awaited: the queue runs one DM at a time, and a relay round-trip
+          // per peer would hold up every DM behind it.
+          if (!profilesRef.current[otherPubkey]) lookUpProfile(otherPubkey);
         } catch {
           // a single malformed DM must not break the queue
         }

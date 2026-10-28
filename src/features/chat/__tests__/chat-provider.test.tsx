@@ -12,15 +12,20 @@ import { saveMessages } from '../domains/direct-messages/dm.storage';
 import { saveChatManifest } from '../domains/conversations/conversations.storage';
 import { clearChatStore, setChatStore } from '../storage/chat-store';
 import { createInMemoryKeyValueStore, type KeyValueStore } from '../storage/kv-store';
-import type { DirectMessage } from '../core/types';
+import type { DirectMessage, NostrEvent, NostrFilter } from '../core/types';
 
-const UNLOCKED = { pubkey: 'me', identity: {}, isUnlocked: true };
+const identity = {
+  getPublicKey: async () => 'me',
+  nip04Decrypt: async (_peer: string, content: string) => content,
+};
+const UNLOCKED = { pubkey: 'me', identity, isUnlocked: true };
 const LOCKED = { pubkey: null, identity: null, isUnlocked: false };
 
 const mocks = vi.hoisted(() => ({
   session: null as unknown,
   store: null as unknown,
   fetchEvents: vi.fn(),
+  subscribe: vi.fn(),
   noop: () => {},
   clients: 0,
 }));
@@ -44,7 +49,7 @@ vi.mock('../nostr/nostr-client', () => ({
 
     fetchEvents = mocks.fetchEvents;
 
-    subscribe = mocks.noop;
+    subscribe = mocks.subscribe;
 
     on = mocks.noop;
 
@@ -84,7 +89,7 @@ const renderChat = async () => {
   const store = createStore();
   const view = render(<Provider store={store}>{ui()}</Provider>);
   await flush();
-  return { rerender: () => view.rerender(<Provider store={store}>{ui()}</Provider>) };
+  return { store, rerender: () => view.rerender(<Provider store={store}>{ui()}</Provider>) };
 };
 
 beforeEach(async () => {
@@ -92,6 +97,7 @@ beforeEach(async () => {
   mocks.session = UNLOCKED;
   mocks.clients = 0;
   mocks.fetchEvents.mockReset();
+  mocks.subscribe.mockReset();
   const store = createInMemoryKeyValueStore();
   mocks.store = store;
   setChatStore(store as KeyValueStore);
@@ -142,5 +148,31 @@ describe('ChatProvider startup', () => {
 
     await flush(10_000);
     expect(mocks.fetchEvents).toHaveBeenCalledTimes(startupCalls + 2);
+  });
+});
+
+describe('ChatProvider DM receive', () => {
+  const PEER = 'a'.repeat(64);
+  const dm = (id: string): NostrEvent => ({
+    id, kind: 4, pubkey: PEER, tags: [['p', 'me']], content: id, created_at: 1, sig: '',
+  });
+  const isProfileLookup = (filters: NostrFilter[]) => (
+    filters.length === 1 && filters[0].kinds?.[0] === 0 && filters[0].authors?.[0] === PEER
+  );
+
+  it('does not hold DMs behind a profile lookup, and looks each peer up once', async () => {
+    mocks.fetchEvents.mockImplementation(async (filters: NostrFilter[]) => {
+      if (isProfileLookup(filters)) return new Promise(() => {});
+      return filters[0]['#p'] ? [dm('d1'), dm('d2'), dm('d3')] : [];
+    });
+    const { store } = await renderChat();
+    await flush(100);
+
+    expect(store.get(dmMessagesAtom)[PEER]?.map((m) => m.content)).toEqual(['d1', 'd2', 'd3']);
+    const lookups = (fn: typeof mocks.subscribe) => (
+      fn.mock.calls.filter(([filters]) => isProfileLookup(filters))
+    );
+    expect(lookups(mocks.fetchEvents)).toHaveLength(1);
+    expect(lookups(mocks.subscribe)).toHaveLength(1);
   });
 });

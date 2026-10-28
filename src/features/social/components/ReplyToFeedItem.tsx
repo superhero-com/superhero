@@ -4,7 +4,7 @@ import {
   memo, useCallback, useEffect, useMemo, useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Languages, MessageCircle } from 'lucide-react';
 import { AspectMedia } from '@/components/AspectMedia';
 import { PostDto, PostsService } from '../../../api/generated';
@@ -20,6 +20,7 @@ import { useCompactFeedItemLayout } from './useCompactFeedItemLayout';
 import { useLinkDetection } from '../hooks/useLinkDetection';
 import { DetectedLinkPreview } from './DetectedLinkPreview';
 import { extractParentId } from '../utils/postParent';
+import { appendToThread, pendingReplies } from '../utils/pendingPosts';
 import { shouldOfferTranslation, translateUrl } from '../utils/translate';
 import PostAuthorHeader from './PostAuthorHeader';
 import PostContent from './PostContent';
@@ -121,6 +122,14 @@ const ReplyToFeedItem = memo(({
 
   // Nested replies state for this item
   const isThreaded = threadDepth !== undefined;
+  // In a thread only the top-level reply polls: its descendant walk (below)
+  // already fetches every nested reply's replies and hands them down.
+  const isThreadRoot = threadDepth === 0;
+  const isNestedReply = isThreaded && !isThreadRoot;
+  // Outside a thread, keep the app's default: an explicit 0 (or undefined)
+  // would refetch on every focus and remount.
+  const nestedStaleTime = isNestedReply ? { staleTime: Infinity } : {};
+  const queryClient = useQueryClient();
   const [showReplies, setShowReplies] = useState(
     isThreaded && threadDepth < MAX_THREAD_DEPTH && (item.total_comments ?? 0) > 0,
   );
@@ -137,7 +146,8 @@ const ReplyToFeedItem = memo(({
       return result?.items || [];
     },
     enabled: showReplies,
-    refetchInterval: 120 * 1000,
+    refetchInterval: isNestedReply ? false : 120 * 1000,
+    ...nestedStaleTime,
   });
   // A reply to a reply: also show the post that started the thread, so the
   // original post stays visible however deep the conversation goes.
@@ -192,14 +202,17 @@ const ReplyToFeedItem = memo(({
   // Compute total descendant comments (all levels) for this item
   const { data: descendantCount } = useQuery<number>({
     queryKey: ['post-desc-count', postId],
-    // Always enable for this post so counts can update from 0 → N over time.
-    enabled: !!postId,
+    // Always enable for this post so counts can update from 0 → N over time,
+    // except a nested reply without replies: its parent's list carries that.
+    enabled: !!postId && (!isNestedReply || (item.total_comments ?? 0) > 0),
     // Periodically refresh to keep counts from going stale.
-    refetchInterval: 120 * 1000,
+    refetchInterval: isNestedReply ? false : 120 * 1000,
+    ...nestedStaleTime,
     queryFn: async () => {
       const normalize = (id: string) => (String(id).endsWith('_v3') ? String(id) : `${String(id)}_v3`);
       const root = normalize(String(postId));
       const requestBudgetRef = { value: 150 }; // safety cap per item
+      const walked = new Map<string, PostDto[]>();
 
       const fetchAllPages = async (
         current: string,
@@ -224,13 +237,32 @@ const ReplyToFeedItem = memo(({
         if (queue.length === 0 || requestBudgetRef.value <= 0) return total;
         const [current, ...rest] = queue;
         const items = await fetchAllPages(current);
+        walked.set(current, items);
         const childIds = items
           .filter((child) => (child.total_comments ?? 0) > 0)
           .map((child) => normalize(String(child.id)));
         return processQueue(rest.concat(childIds), total + items.length);
       };
 
-      return processQueue([root]);
+      const total = await processQueue([root]);
+      // Only a walk that finished within budget has every nested list complete.
+      if (isThreadRoot && requestBudgetRef.value > 0) {
+        const countOf = (id: string): number => (walked.get(id) ?? [])
+          .reduce((sum, child) => sum + 1 + countOf(normalize(String(child.id))), 0);
+        walked.forEach((children) => children.forEach((child) => {
+          const replies = walked.get(normalize(String(child.id)));
+          if (!replies) return;
+          // The same first page the nested reply's own query would fetch.
+          const key = ['post-comments', child.id];
+          queryClient.setQueryData(key, replies.slice(0, 50));
+          // The pending-posts watcher skips manual writes: put back what the
+          // backend doesn't have yet, as the nested reply's own fetch did.
+          pendingReplies(String(child.id))
+            .forEach((reply) => appendToThread(queryClient, key, reply));
+          queryClient.setQueryData(['post-desc-count', child.id], countOf(normalize(String(child.id))));
+        }));
+      }
+      return total;
     },
   });
 
@@ -248,7 +280,13 @@ const ReplyToFeedItem = memo(({
         isActive && 'feed-post--active',
         isContextMuted && 'feed-post--context',
       )}
-      onClick={isActive ? undefined : handleOpen}
+      onClick={isActive ? undefined : (event) => {
+        // A nested reply opens itself. Not stopPropagation: document click
+        // listeners (hover cards, the composer's emoji picker) must still fire.
+        const card = (event.target as Element).closest('.feed-post');
+        if (card && card !== event.currentTarget && event.currentTarget.contains(card)) return;
+        handleOpen();
+      }}
       onKeyDown={isActive ? undefined : (event) => {
         if (event.target !== event.currentTarget) return;
         if (event.key === 'Enter' || event.key === ' ') {
@@ -484,7 +522,7 @@ const ReplyToFeedItem = memo(({
                 && (reply.total_comments ?? 0) > 0
               }
               threadDepth={isThreaded ? threadDepth + 1 : undefined}
-              onOpenPost={() => onOpenPost((reply as any)?.slug || String(reply.id).replace(/_v3$/, ''))}
+              onOpenPost={onOpenPost}
             />
           ))}
         </div>

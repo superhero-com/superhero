@@ -1,14 +1,18 @@
 import { createElement, type ReactNode } from 'react';
-import { renderHook } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 import {
-  beforeEach, describe, expect, it,
+  afterEach, beforeEach, describe, expect, it, vi,
 } from 'vitest';
 import {
   createStore, Provider, useAtomValue,
 } from 'jotai';
-import { chainNamesAtom, preferredChainNamesAtom } from '@/atoms/walletAtoms';
+import { activeAccountAtom } from '@/atoms/accountAtoms';
+import {
+  chainNameLookupCheckedAtAtom, chainNamesAtom, preferredChainNamesAtom,
+} from '@/atoms/walletAtoms';
+import { AccountsService } from '@/api/generated/services/AccountsService';
 import { useChainName, useStorePostSenderChainNames } from '@/hooks/useChainName';
-import { setPendingChainName } from '@/utils/preferredChainName';
+import { PREFERRED_CHAIN_NAME_SEEN_TTL_MS, setPendingChainName } from '@/utils/preferredChainName';
 
 type TestPost = {
   sender_address?: string | null;
@@ -85,25 +89,73 @@ describe('useStorePostSenderChainNames', () => {
 describe('useChainName', () => {
   const ADDRESS = 'ak_2swhLkgBPeeADxVTAVCJnZLY5NZtCFiM93JxsEaMuC59euuFRQ';
 
-  function renderName(setup: (store: ReturnType<typeof createStore>) => void) {
+  function renderName(setup: (store: ReturnType<typeof createStore>) => void, lookup = false) {
     const store = createStore();
     setup(store);
     const wrapper = ({ children }: { children: ReactNode }) => (
       createElement(Provider, { store }, children)
     );
-    return renderHook(() => useChainName(ADDRESS, { lookup: false }), { wrapper }).result;
+    const { result } = renderHook(() => useChainName(ADDRESS, { lookup }), { wrapper });
+    return { store, result };
   }
 
+  // The atoms persist to localStorage and reload it on mount.
+  beforeEach(() => window.localStorage.clear());
+  afterEach(() => vi.restoreAllMocks());
+
   it('shows the preferred name over the newest owned name', () => {
-    const result = renderName((store) => {
+    const { result } = renderName((store) => {
+      store.set(chainNamesAtom, { [ADDRESS]: 'newest.chain' });
+      store.set(preferredChainNamesAtom, { [ADDRESS]: { name: 'picked.chain', seenAt: Date.now() } });
+    });
+    expect(result.current.chainName).toBe('picked.chain');
+  });
+
+  it.each([
+    ['was never seen', undefined],
+    ['was last seen too long ago', Date.now() - PREFERRED_CHAIN_NAME_SEEN_TTL_MS],
+  ])("falls back to the owned name when another account's preferred name %s", (_, seenAt) => {
+    const { result } = renderName((store) => {
+      store.set(chainNamesAtom, { [ADDRESS]: 'newest.chain' });
+      store.set(preferredChainNamesAtom, { [ADDRESS]: { name: 'picked.chain', seenAt } });
+    });
+    expect(result.current.chainName).toBe('newest.chain');
+  });
+
+  it("keeps the active account's preferred name without a recent sighting", () => {
+    const { result } = renderName((store) => {
+      store.set(activeAccountAtom, ADDRESS);
       store.set(chainNamesAtom, { [ADDRESS]: 'newest.chain' });
       store.set(preferredChainNamesAtom, { [ADDRESS]: { name: 'picked.chain' } });
     });
     expect(result.current.chainName).toBe('picked.chain');
   });
 
+  it("drops another account's preferred name once the lookup finds no name", async () => {
+    vi.spyOn(AccountsService, 'getChainNamesForAddresses').mockResolvedValue({ [ADDRESS]: null } as any);
+    const { store, result } = renderName((s) => {
+      s.set(preferredChainNamesAtom, { [ADDRESS]: { name: 'expired.chain', seenAt: Date.now() } });
+    }, true);
+    await waitFor(() => expect(store.get(preferredChainNamesAtom)).toEqual({}));
+    expect(result.current.chainName).toBeUndefined();
+  });
+
+  it("leaves the active account's preferred name to its own sync", async () => {
+    const lookup = vi.spyOn(AccountsService, 'getChainNamesForAddresses')
+      .mockResolvedValue({ [ADDRESS]: null } as any);
+    const { store } = renderName((s) => {
+      s.set(activeAccountAtom, ADDRESS);
+      s.set(preferredChainNamesAtom, { [ADDRESS]: { name: 'picked.chain' } });
+    }, true);
+    await waitFor(() => (
+      expect(store.get(chainNameLookupCheckedAtAtom)[ADDRESS]).toBeGreaterThan(0)
+    ));
+    expect(lookup).toHaveBeenCalled();
+    expect(store.get(preferredChainNamesAtom)).toEqual({ [ADDRESS]: { name: 'picked.chain' } });
+  });
+
   it('shows a just-picked name right away', () => {
-    const result = renderName((store) => {
+    const { result } = renderName((store) => {
       store.set(chainNamesAtom, { [ADDRESS]: 'newest.chain' });
       store.set(preferredChainNamesAtom, setPendingChainName({}, ADDRESS, 'other.chain'));
     });
@@ -111,7 +163,7 @@ describe('useChainName', () => {
   });
 
   it('falls back to the owned name when no preferred one is known', () => {
-    const result = renderName((store) => {
+    const { result } = renderName((store) => {
       store.set(chainNamesAtom, { [ADDRESS]: 'newest.chain' });
       store.set(preferredChainNamesAtom, {});
     });
@@ -131,6 +183,27 @@ describe('useStorePostSenderChainNames preferred names', () => {
       ]),
       { wrapper },
     );
-    expect(store.get(preferredChainNamesAtom)).toEqual({ ak_erin: { name: 'picked.chain' } });
+    expect(store.get(preferredChainNamesAtom)).toEqual({
+      ak_erin: { name: 'picked.chain', seenAt: expect.any(Number) },
+    });
+  });
+
+  it.each([
+    ['keeps a recent sighting as is', 60_000, false],
+    ['re-stamps a sighting over an hour old', 2 * 60 * 60_000, true],
+  ])('%s', (_, age, restamped) => {
+    const seenAt = Date.now() - age;
+    const store = createStore();
+    store.set(preferredChainNamesAtom, { ak_erin: { name: 'picked.chain', seenAt } });
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      createElement(Provider, { store }, children)
+    );
+    renderHook(
+      () => useStorePostSenderChainNames([
+        { sender: { address: 'ak_erin', public_name: 'picked.chain' } },
+      ]),
+      { wrapper },
+    );
+    expect(store.get(preferredChainNamesAtom).ak_erin.seenAt! > seenAt).toBe(restamped);
   });
 });

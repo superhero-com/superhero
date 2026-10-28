@@ -12,12 +12,21 @@ import {
 export type PreferredChainNameEntry = {
   name: string | null;
   pendingUntil?: number;
+  /** When a post last showed this name for another account. */
+  seenAt?: number;
 };
 
 export type PreferredChainNames = Record<string, PreferredChainNameEntry>;
 
 /** How long a just-picked name wins over what the API still reports. */
 export const PREFERRED_CHAIN_NAME_PENDING_MS = 10 * 60 * 1000;
+
+/**
+ * How long a name seen in another account's posts wins over the hourly lookup
+ * (which returns the newest name the account owns, not its preferred one).
+ * Bounds how long a name that changed hands keeps showing on the old owner.
+ */
+export const PREFERRED_CHAIN_NAME_SEEN_TTL_MS = 24 * 60 * 60 * 1000;
 
 /** How often to re-read the account while a picked name is still pending. */
 export const PREFERRED_CHAIN_NAME_POLL_MS = 5_000;
@@ -59,6 +68,21 @@ export function isPreferredChainNamePending(
   now = Date.now(),
 ): boolean {
   return Boolean(entry?.pendingUntil && entry.pendingUntil > now);
+}
+
+/**
+ * The preferred name to show instead of the looked-up one, or null. The active
+ * account's entry is kept current by `usePreferredChainNameSync`; another
+ * account's only counts while it was seen recently.
+ */
+export function currentPreferredChainName(
+  entry: PreferredChainNameEntry | undefined,
+  isActiveAccount: boolean,
+  now = Date.now(),
+): string | null {
+  if (!entry?.name) return null;
+  if (isActiveAccount || isPreferredChainNamePending(entry, now)) return entry.name;
+  return entry.seenAt && now - entry.seenAt < PREFERRED_CHAIN_NAME_SEEN_TTL_MS ? entry.name : null;
 }
 
 /**

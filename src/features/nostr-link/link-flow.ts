@@ -44,14 +44,18 @@ export interface LinkNostrParams {
   signMessage: SignMessageFn;
 }
 
-// Optimistic confirmation is bounded, but an old accepted submission is still
-// not proof that registration is missing. Keep it pending until the API confirms
-// it, rather than starting another registration during a prolonged indexer lag.
+// The backend returns a txHash only once the link tx is mined and succeeded, so
+// a receipt stands in for the link through a prolonged indexer lag rather than
+// starting another registration. Past a day the API is trusted again: a link it
+// still lacks was lost or undone, and registering again is the way out.
+const SUBMISSION_BRIDGE_MS = 24 * 60 * 60_000;
+
 function submittedLink(api: string, address: string): string | null {
   const submitted = readNostrSubmission(api, address);
   if (!submitted) return null;
-  if (Date.now() - submitted.submittedAt >= 15 * 60_000) {
-    throw new Error('Chat registration is still awaiting confirmation. Please retry the check.');
+  if (Date.now() - submitted.submittedAt >= SUBMISSION_BRIDGE_MS) {
+    clearNostrSubmission(api, address);
+    return null;
   }
   return submitted.npub;
 }

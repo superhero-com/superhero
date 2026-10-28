@@ -601,6 +601,12 @@
   },
   "social": {
     "originalPost": "Исходный пост",
+    "newPosts": {
+      "show_one": "Показать {{count}} новый пост",
+      "show_few": "Показать {{count}} новых поста",
+      "show_many": "Показать {{count}} новых постов",
+      "show_other": "Показать {{count}} новых поста"
+    },
     "translatePost": "Перевести",
     "postDetail": {
       "title": "Публикация",

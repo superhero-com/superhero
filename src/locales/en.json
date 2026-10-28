@@ -2127,6 +2127,10 @@
   },
   "social": {
     "originalPost": "Original post",
+    "newPosts": {
+      "show_one": "Show {{count}} new post",
+      "show_other": "Show {{count}} new posts"
+    },
     "translatePost": "Translate",
     "copiedAddress": "Copied address",
     "profileTabs": {

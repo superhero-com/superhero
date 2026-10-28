@@ -31,6 +31,9 @@ const DirectReplies = ({
       return undefined;
     },
     initialPageParam: 1,
+    // No websocket event for new replies: refresh while the tab is visible.
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
   });
 
   const list: PostDto[] = useMemo(

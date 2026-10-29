@@ -1,4 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData, useMutation, useQuery, useQueryClient,
+} from '@tanstack/react-query';
 import { Contract, Encoded } from '@aeternity/aepp-sdk';
 import { GovernanceApi } from '../api/governance';
 import { useAeSdk } from './useAeSdk';
@@ -14,7 +16,9 @@ export const useGovernance = () => {
 
   // Polls query (combined smart contract + backend ordering/metrics)
   const usePolls = (params: { status: 'all' | 'open' | 'closed'; search?: string }) => useQuery({
-    queryKey: ['governance', 'polls', params],
+    // Search is applied client-side (select), so typing does not refetch the
+    // registry and both orderings on every keystroke.
+    queryKey: ['governance', 'polls', { status: params.status }],
     queryFn: async () => {
       const registry = await Contract.initialize<{
           polls:() => Map<number, {
@@ -30,26 +34,40 @@ export const useGovernance = () => {
             });
       const contractPolls = (await registry.polls()).decodedResult;
 
-      const { data } = await GovernanceApi.getPollOrdering(params.status === 'closed');
-      if (params.status === 'all') data.push(...(await GovernanceApi.getPollOrdering(true)).data);
+      // "All" needs both lists: fetch them in parallel instead of one after the other.
+      const orderings = params.status === 'all'
+        ? await Promise.all([
+          GovernanceApi.getPollOrdering(false),
+          GovernanceApi.getPollOrdering(true),
+        ])
+        : [await GovernanceApi.getPollOrdering(params.status === 'closed')];
+      const seen = new Set<string>();
+      const data = orderings
+        .flatMap((o) => o.data)
+        .filter((p) => {
+          const key = String(p.id);
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
 
       const height = await sdk.getHeight();
-      let merged = data.map(({ id, ...others }) => ({
+      return data.map(({ id, ...others }) => ({
         id,
         ...others,
-        title: contractPolls.get(BigInt(id)).title,
+        title: contractPolls.get(BigInt(id))?.title ?? '',
         endDate: new Date(Date.now() + (others.closeHeight - height) * 3 * 60 * 1000),
         status: (others.closeHeight == null || others.closeHeight > height
           ? 'open' : 'closed') as 'open' | 'closed',
       }));
-
-      const search = params.search?.trim().toLowerCase();
-      if (search) {
-        merged = merged.filter((p) => p.title.toLowerCase().includes(search));
-      }
-
-      return merged;
     },
+    select: (polls) => {
+      const search = params.search?.trim().toLowerCase();
+      return search ? polls.filter((p) => p.title.toLowerCase().includes(search)) : polls;
+    },
+    // Keep the current list on screen while another filter or search loads,
+    // so the page does not blank out and flash on every change.
+    placeholderData: keepPreviousData,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 

@@ -8,11 +8,13 @@ interface EmptyStateProps {
   error?: Error | null;
   hasSearch?: boolean;
   onRetry?: () => void;
+  /** Overrides the default title (e.g. a feed-specific empty message). */
+  title?: string;
 }
 
 // Component: Empty State
 const EmptyState = memo(({
-  type, error, hasSearch, onRetry,
+  type, error, hasSearch, onRetry, title: titleOverride,
 }: EmptyStateProps) => {
   const { t } = useTranslation();
   const getContent = () => {
@@ -40,7 +42,9 @@ const EmptyState = memo(({
     }
   };
 
-  const { title, subtitle, showRetry } = getContent();
+  const content = getContent();
+  const { subtitle, showRetry } = content;
+  const title = titleOverride ?? content.title;
 
   const getIcon = () => {
     switch (type) {

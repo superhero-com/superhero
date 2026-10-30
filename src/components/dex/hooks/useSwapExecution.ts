@@ -18,6 +18,7 @@ import { initializeContractTyped } from '../../../libs/initializeContractTyped';
 import { errorToUserMessage } from '../../../libs/errorMessages';
 import { TxPayloadType, useTransactionNotification } from '../../../features/transaction-notification/transaction-notification.context';
 import { SwapExecutionParams } from '../types/dex';
+import { track } from '../../../lib/journey';
 
 type WaeContractApi = ContractMethodsBase & {
   deposit: (options: { amount: any }) => Promise<{ hash?: string }>;
@@ -355,6 +356,7 @@ export function useSwapExecution() {
 
       // Tx is broadcast — hand off to the notification system for blockchain polling
       notifyPendingTx(swapPayload, txHash);
+      track('swap_done');
 
       return txHash;
     } catch (e: any) {

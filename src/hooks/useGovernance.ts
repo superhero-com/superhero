@@ -5,6 +5,7 @@ import { useAeSdk } from './useAeSdk';
 import { CONFIG } from '../config';
 import REGISTRY_WITH_EVENTS_ACI from '../api/GovernanceRegistryACI.json';
 import GOVERNANCE_POLL_ACI from '../api/GovernancePollACI.json';
+import { track } from '../lib/journey';
 
 export const useGovernance = () => {
   const { activeAccount: activeAccountUntyped, sdk } = useAeSdk();
@@ -126,6 +127,7 @@ export const useGovernance = () => {
               address: pollAddress,
             });
       await poll.vote(option);
+      track('governance_vote_done');
       await GovernanceApi.submitContractEvent('Vote', pollAddress);
     },
     onSuccess: (_, { pollAddress }) => {

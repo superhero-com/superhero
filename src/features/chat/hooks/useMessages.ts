@@ -8,6 +8,7 @@ import { useAtom, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo } from 'react';
 
 import { dmMessagesAtom } from '../domains/direct-messages/dm.state';
+import { track } from '../../../lib/journey';
 import { unreadCountsAtom } from '../domains/conversations/conversations.state';
 import { activeConversationIdAtom } from '../domains/ui.state';
 import { clearUnreadCount } from '../domains/conversations/conversations.storage';
@@ -75,6 +76,7 @@ export function useMessages(conversationId?: string) {
     if (!dmService) throw new Error('DM service not available');
     const pubkey = conversationType.id;
     const message = await dmService.sendMessage(pubkey, content);
+    track('chat_message_sent');
     setDMMessages((prev) => {
       const existing = prev[pubkey] || [];
       const isDuplicate = existing.some((m) => m.id === message.id

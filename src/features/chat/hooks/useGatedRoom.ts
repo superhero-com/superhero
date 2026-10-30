@@ -21,6 +21,7 @@ import { NostrKind } from '../core/constants';
 import type { NostrEvent } from '../core/types';
 import { useRoomsConfig } from './useRoomsConfig';
 import { useRoomSession } from './useRoomSession';
+import { track } from '../../../lib/journey';
 
 export type GatedMessageStatus = 'sending' | 'sent' | 'failed';
 
@@ -295,6 +296,7 @@ export function useGatedRoom(
 
       try {
         const eventId = await client.sendRoomMessage(saleAddress, trimmed);
+        track('chat_message_sent');
         // Relay echoes can arrive before OK. Replace the optimistic entry and
         // remove that echo so a successful send is rendered exactly once.
         if (clientRef.current !== client) return;

@@ -7,6 +7,7 @@ import React, {
 import { useTranslation } from 'react-i18next';
 import TIPPING_V3_ACI from 'tipping-contract/generated/Tipping_v3.aci.json';
 import { TxPayloadType, useTransactionNotification } from '@/features/transaction-notification';
+import { track } from '@/lib/journey';
 import '@/components/layout/RailCards.css';
 import './PostComposer.css';
 
@@ -500,6 +501,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
       );
 
       notifyConfirmed(txPayload);
+      track(isPost ? 'post_created' : 'reply_created');
 
       let newPostId: string;
       if (isPost) {

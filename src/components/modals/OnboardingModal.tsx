@@ -9,6 +9,7 @@ import { useAeSdk, useWalletConnect } from '@/hooks';
 import PasskeyConnectCard from '@/components/PasskeyConnectCard';
 import AgentOnboardCard from '@/components/AgentOnboardCard';
 import { isStandalone } from '@/utils/displayMode';
+import { track } from '@/lib/journey';
 import { MobileAppCard } from '@/components/MobileAppInstall';
 import chromeLogoUrl from '@/svg/brands/chrome-logo.svg';
 import firefoxLogoUrl from '@/svg/brands/firefox-logo.svg';
@@ -96,11 +97,14 @@ const OnboardingModal = ({ onClose, onConnected }: Props) => {
   const didAdvanceRef = useRef(false);
 
   useEffect(() => { if (pwa) loadWalletOnboarding().catch(() => {}); }, [pwa]);
+  // The "Connect wallet" and onboarding modals are this one component.
+  useEffect(() => { track('wallet_connect_open'); }, []);
 
   const advanceAfterConnect = useCallback((account: string) => {
     if (didAdvanceRef.current) return;
     didAdvanceRef.current = true;
     connectRequestedRef.current = false;
+    track('wallet_connected');
     onClose();
     onConnected?.(account);
   }, [onClose, onConnected]);

@@ -29,6 +29,7 @@ import { usePwaInstall } from './hooks/usePwaInstall';
 import { usePreferredChainNameSync } from './hooks/usePreferredChainName';
 import { useKeyboardInset } from './hooks/useKeyboardInset';
 import { isMobileDevice } from './utils/displayMode';
+import { useJourneyPageViews } from './lib/journey';
 
 const CookiesDialog = React.lazy(
   () => import('./components/modals/CookiesDialog'),
@@ -105,6 +106,8 @@ const App = () => {
     setInstallGuideOpen(true);
   }, [canPrompt, promptInstall]);
   const { loadAccountData } = useAccount();
+  // Anonymous journey steps: route pattern only, batched and sent in the background.
+  useJourneyPageViews(routes);
   // Keep the connected account's display name on the one it picked as preferred.
   usePreferredChainNameSync(activeAccount);
   const {

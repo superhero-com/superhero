@@ -2144,7 +2144,10 @@
         "reads": "القراءات",
         "interactionsPerHour": "معدّل النشاط"
       },
-      "customizePopularFeedAria": "تخصيص الموجز الشائع"
+      "customizePopularFeedAria": "تخصيص الموجز الشائع",
+      "following": "المتابَعون",
+      "followingEmptyNoFollows": "تابع أشخاصًا لترى منشوراتهم هنا.",
+      "followingEmptyNoPosts": "لم تنشر الحسابات التي تتابعها أي شيء بعد."
     },
     "showMore": "عرض {{count}} المزيد",
     "showLess": "عرض أقل",

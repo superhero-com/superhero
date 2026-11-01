@@ -634,7 +634,12 @@
       "next": "Следующие активы"
     },
     "trendingAssets": "Популярные активы",
-    "viewAll": "Все активы"
+    "viewAll": "Все активы",
+    "sortControls": {
+      "following": "Подписки",
+      "followingEmptyNoFollows": "Подпишитесь на людей, чтобы видеть их публикации здесь.",
+      "followingEmptyNoPosts": "Аккаунты, на которые вы подписаны, ещё ничего не опубликовали."
+    }
   },
   "dex": {
     "swapCard": {

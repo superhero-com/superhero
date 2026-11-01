@@ -2378,6 +2378,7 @@
       "subtitle": "Shape the future of the ecosystem through community-driven decisions",
       "active": "Active",
       "closing": "Closing",
+      "closed": "Closed",
       "searchLabel": "Search polls",
       "searchPlaceholder": "Find polls by title or description...",
       "filterByStatus": "Filter by status",

@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import type { Short } from './types';
+import { isShortsQuality, type ShortsQuality } from './shorts-quality';
 
 export type FeedMode = 'for-you' | 'following' | 'recent' | 'saved';
 export interface Preferences {
+  quality: ShortsQuality;
   mode: FeedMode; topics: string[]; language: string;
   blocked: string[]; hidden: string[]; saved: string[];
 }
 export const defaultPreferences: Preferences = {
-  mode: 'for-you', topics: [], language: 'all', blocked: [], hidden: [], saved: [],
+  quality: 'auto', mode: 'for-you', topics: [], language: 'all', blocked: [], hidden: [], saved: [],
 };
 const key = 'superhero.shorts.preferences.v1';
 export function rankShorts(feed: Short[], prefs: Preferences, topic = 'All', followed: readonly string[] = [], now = Date.now()): Short[] {
@@ -35,6 +37,7 @@ export function useShortsPreferences() {
       const saved = JSON.parse(localStorage.getItem(key) || '{}');
       return {
         ...defaultPreferences,
+        quality: isShortsQuality(saved.quality) ? saved.quality : 'auto',
         ...Object.fromEntries(['topics', 'blocked', 'hidden', 'saved'].map((field) => [field, Array.isArray(saved[field]) ? saved[field].filter((s: unknown) => typeof s === 'string').slice(0, 1000) : []])),
         mode: ['for-you', 'following', 'recent', 'saved'].includes(saved.mode) ? saved.mode : 'for-you',
         language: typeof saved.language === 'string' ? saved.language : 'all',

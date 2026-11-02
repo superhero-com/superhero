@@ -670,7 +670,7 @@ describe('Shorts wallet session and recovery', () => {
     mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
       if (path === '/uploads') {
         return {
-          id: 'new-upload', parts: [], partSize: 100, expires: Date.now() + 60000, complete: true,
+          id: 'new-upload', parts: [], partSize: 1048576, expires: Date.now() + 60000, complete: true, status: 'uploading',
         };
       }
       if (path === '/uploads/new-upload/finish') {
@@ -684,7 +684,7 @@ describe('Shorts wallet session and recovery', () => {
       return original(path, ...args);
     });
     const file = new File(['video'], 'owned.mp4', { type: 'video/mp4' });
-    Object.defineProperty(file, 'arrayBuffer', { value: async () => new ArrayBuffer(5) });
+    Object.defineProperty(file, 'slice', { value: () => ({ arrayBuffer: async () => new TextEncoder().encode('video').buffer }) });
     const data = new FormData(); data.set('file', file); data.set('title', 'Owned clip'); data.set('rights', 'true');
     let uploading: Promise<unknown>;
     act(() => { uploading = result.current.publishUpload(data, 'key'); });
@@ -701,7 +701,7 @@ describe('Shorts wallet session and recovery', () => {
     await act(async () => { await result.current.signIn(); });
     const original = mocks.request.getMockImplementation()!;
     const job = {
-      id: 'saved', parts: [0], partSize: 100, complete: false,
+      id: 'saved', parts: [0], partSize: 1048576, complete: false, status: 'uploading', expires: Date.now() + 60000,
     };
     const video = { ...clip, id: 'saved', creator: 'ak_creator' };
     let reads = 0;
@@ -721,7 +721,7 @@ describe('Shorts wallet session and recovery', () => {
       return original(path, ...args);
     });
     const file = new File(['video'], 'owned.mp4', { type: 'video/mp4' });
-    Object.defineProperty(file, 'arrayBuffer', { value: async () => new ArrayBuffer(5) });
+    Object.defineProperty(file, 'slice', { value: () => ({ arrayBuffer: async () => new TextEncoder().encode('video').buffer }) });
     const data = new FormData(); data.set('file', file); data.set('title', 'Owned clip'); data.set('rights', 'true');
     await act(async () => { await result.current.publishUpload(data, 'key'); });
     expect(result.current.uploadPublication?.status).toBe('published');
@@ -739,7 +739,7 @@ describe('Shorts wallet session and recovery', () => {
     await act(async () => { await hook.result.current.signIn(); });
     const original = mocks.request.getMockImplementation()!;
     const job = {
-      id: 'saved', parts: [0], partSize: 100, complete: false, status: 'queued',
+      id: 'saved', parts: [0], partSize: 1048576, complete: false, status: 'queued', expires: Date.now() + 60000,
     };
     let finishRead: (value: unknown) => void = () => undefined;
     let readSignal: AbortSignal | undefined;
@@ -752,7 +752,7 @@ describe('Shorts wallet session and recovery', () => {
       return original(path, ...args);
     });
     const file = new File(['video'], 'owned.mp4', { type: 'video/mp4' });
-    Object.defineProperty(file, 'arrayBuffer', { value: async () => new ArrayBuffer(5) });
+    Object.defineProperty(file, 'slice', { value: () => ({ arrayBuffer: async () => new TextEncoder().encode('video').buffer }) });
     const data = new FormData(); data.set('file', file); data.set('title', 'Owned clip'); data.set('rights', 'true');
     let uploading: Promise<unknown>;
     act(() => { uploading = hook.result.current.publishUpload(data, 'key'); });
@@ -905,7 +905,7 @@ describe('Connection-only local Studio', () => {
     mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
       if (path === '/uploads') {
         return {
-          id: 'draft', parts: [], partSize: 100, complete: true, expires: Date.now() + 60000,
+          id: 'draft', parts: [], partSize: 1048576, complete: true, status: 'uploading', expires: Date.now() + 60000,
         };
       }
       if (path === '/uploads/draft/finish') {
@@ -924,7 +924,7 @@ describe('Connection-only local Studio', () => {
     const hook = renderHook(useShorts);
     await waitFor(() => expect(hook.result.current.authenticated).toBe(true));
     const file = new File(['video'], 'owned.mp4', { type: 'video/mp4' });
-    Object.defineProperty(file, 'arrayBuffer', { value: async () => new ArrayBuffer(5) });
+    Object.defineProperty(file, 'slice', { value: () => ({ arrayBuffer: async () => new TextEncoder().encode('video').buffer }) });
     const data = new FormData(); data.set('file', file); data.set('title', 'Owned clip');
     await act(async () => { await hook.result.current.publishUpload(data, 'connected-draft'); });
     expect(hook.result.current.preparedUpload?.video.id).toBe('draft');
@@ -1093,7 +1093,7 @@ it('verifies the existing wallet once and continues the requested upload without
   mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
     if (path === '/uploads') {
       return {
-        id: 'draft', parts: [], partSize: 100, complete: true, expires: Date.now() + 60000,
+        id: 'draft', parts: [], partSize: 1048576, complete: true, status: 'uploading', expires: Date.now() + 60000,
       };
     }
     if (path === '/uploads/draft/finish') {
@@ -1112,7 +1112,7 @@ it('verifies the existing wallet once and continues the requested upload without
   const hook = renderHook(useShorts);
   await waitFor(() => expect(hook.result.current.config).toBeDefined());
   const file = new File(['video'], 'owned.mp4', { type: 'video/mp4' });
-  Object.defineProperty(file, 'arrayBuffer', { value: async () => new ArrayBuffer(5) });
+  Object.defineProperty(file, 'slice', { value: () => ({ arrayBuffer: async () => new TextEncoder().encode('video').buffer }) });
   const data = new FormData(); data.set('file', file); data.set('title', 'Owned clip');
   mocks.sign.mockRejectedValueOnce(new Error('Rejected by user'));
   await act(async () => { await hook.result.current.publishUpload(data, 'draft-key'); });
@@ -1137,7 +1137,7 @@ it('publishes for free and resumes a confirmed video after a lost response witho
   mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
     if (path === '/uploads') {
       return {
-        id: 'free', parts: [], partSize: 100, complete: true, expires: Date.now() + 60000,
+        id: 'free', parts: [], partSize: 1048576, complete: true, status: 'uploading', expires: Date.now() + 60000,
       };
     }
     if (path === '/uploads/free/finish') {
@@ -1162,7 +1162,7 @@ it('publishes for free and resumes a confirmed video after a lost response witho
   const { result } = renderHook(useShorts);
   await waitFor(() => expect(result.current.authenticated).toBe(true));
   const file = new File(['video'], 'owned.mp4');
-  Object.defineProperty(file, 'arrayBuffer', { value: async () => new ArrayBuffer(5) });
+  Object.defineProperty(file, 'slice', { value: () => ({ arrayBuffer: async () => new TextEncoder().encode('video').buffer }) });
   const data = new FormData(); data.set('file', file);
   await act(async () => { await result.current.publishUpload(data, 'same-video'); });
   expect(result.current.uploadPublication?.status).toBe('error');
@@ -1214,5 +1214,114 @@ describe('Paged Studio integration', () => {
     act(() => { mocks.actor = 'ak_other'; hook.rerender(); });
     expect(hook.result.current.dashboard).toBeUndefined();
     expect(hook.result.current.studioVideo.data).toBeUndefined();
+  });
+});
+
+describe('durable upload creation', () => {
+  const capability = {
+    version: 1, transport: 'direct-s3-v1', format: 'original-file-v1', maxBytes: 100000000, partSize: 1048576, minDuration: 2, maxDuration: 60, creation: 'request-key-v1',
+  };
+  const data = () => {
+    const file = new File(['video'], 'video.mp4', { type: 'video/mp4' });
+    Object.defineProperty(file, 'slice', { value: () => ({ arrayBuffer: async () => new TextEncoder().encode('video').buffer }) });
+    const form = new FormData(); form.set('file', file); form.set('title', 'Original'); form.set('topic', 'Art'); form.set('rights', 'true'); return form;
+  };
+  const connect = async () => {
+    const hook = renderHook(useShorts);
+    await waitFor(() => expect(hook.result.current.config).toBeDefined());
+    await act(async () => { await hook.result.current.signIn(); });
+    return hook;
+  };
+  it('persists before creation and recovers the same request after remount and a limit/format rollback', async () => {
+    vi.stubGlobal('crypto', (await import('node:crypto')).webcrypto);
+    const original = mocks.request.getMockImplementation()!;
+    let limits = capability; let accepted: Record<string, unknown> | undefined; let lose = true;
+    const video = { ...clip, id: 'recovered', creator: 'ak_creator' };
+    mocks.request.mockImplementation(async (path: string, body?: Record<string, unknown>, ...args: unknown[]) => {
+      if (path === '/config') return { ...await original(path), uploads: limits };
+      if (path === '/uploads') {
+        const key = Object.keys(localStorage).find((candidate) => candidate.endsWith('.creation.v1'))!;
+        const pending = JSON.parse(localStorage.getItem(key)!);
+        expect(body?.requestKey).toBe(pending.key);
+        if (lose) { accepted = body; throw new TypeError('Response lost'); }
+        expect(body).toEqual(accepted);
+        return {
+          id: 'recovered', requestKey: body!.requestKey, source: pending.source, parts: [0], partSize: 1048576, transport: 'direct-s3-v1', expires: 1, complete: true, status: 'ready', video,
+        };
+      }
+      if (path === '/recovered/publication') return { ...video, publicationStatus: 'draft' };
+      if (path === '/recovered/publish') return { ...video, publicationStatus: 'published' };
+      return original(path, body, ...args);
+    });
+    const first = await connect();
+    await act(async () => { await first.result.current.publishUpload(data(), 'draft'); });
+    expect(first.result.current.uploadPublication?.status).toBe('error'); first.unmount();
+    limits = {
+      ...capability, format: 'legacy-directory-v1', maxBytes: 1, creation: undefined as never,
+    }; lose = false;
+    const second = await connect(); expect(second.result.current.uploadMaxBytes).toBe(5);
+    await act(async () => { await second.result.current.publishUpload(data(), 'draft'); });
+    expect(second.result.current.uploadPublication?.status).toBe('published');
+    expect(mocks.request.mock.calls.filter(([path]) => path === '/uploads')).toHaveLength(2);
+    expect(Object.keys(localStorage).filter((key) => key.endsWith('.creation.v1'))).toHaveLength(0);
+  });
+  it('does not create an upload when pending recovery cannot be saved', async () => {
+    vi.stubGlobal('crypto', (await import('node:crypto')).webcrypto);
+    const original = mocks.request.getMockImplementation()!;
+    mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => (
+      path === '/config' ? { ...await original(path), uploads: capability } : original(path, ...args)
+    ));
+    const hook = await connect();
+    const write = Storage.prototype.setItem;
+    const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
+      if (key.endsWith('.creation.v1')) throw new Error('Storage blocked');
+      write.call(this, key, value);
+    });
+    try {
+      await act(async () => { await hook.result.current.publishUpload(data(), 'draft'); });
+      expect(hook.result.current.message).toContain('Allow browser storage');
+      expect(mocks.request.mock.calls.some(([path]) => path === '/uploads')).toBe(false);
+    } finally { spy.mockRestore(); }
+  });
+  it('does not automatically replace an expired keyed request', async () => {
+    vi.stubGlobal('crypto', (await import('node:crypto')).webcrypto);
+    const { ShortsApiError } = await import('../api');
+    const original = mocks.request.getMockImplementation()!;
+    const keys: unknown[] = [];
+    mocks.request.mockImplementation(async (path: string, body?: Record<string, unknown>, ...args: unknown[]) => {
+      if (path === '/config') return { ...await original(path), uploads: capability };
+      if (path === '/uploads') {
+        keys.push(body?.requestKey);
+        if (keys.length === 1) throw new TypeError('Response lost');
+        throw new ShortsApiError('Expired', 410);
+      }
+      return original(path, body, ...args);
+    });
+    const hook = await connect();
+    await act(async () => { await hook.result.current.publishUpload(data(), 'draft'); });
+    await act(async () => { await hook.result.current.publishUpload(data(), 'draft'); });
+    expect(keys).toHaveLength(2); expect(keys[0]).toBe(keys[1]);
+    expect(hook.result.current.message).toContain('Submit again');
+    await act(async () => { await hook.result.current.publishUpload(data(), 'draft'); });
+    expect(keys).toHaveLength(3); expect(keys[2]).not.toBe(keys[0]);
+  });
+  it('requires the creation echo and preserves its key across deliberate retries', async () => {
+    vi.stubGlobal('crypto', (await import('node:crypto')).webcrypto);
+    const original = mocks.request.getMockImplementation()!;
+    const keys: unknown[] = [];
+    mocks.request.mockImplementation(async (path: string, body?: Record<string, unknown>, ...args: unknown[]) => {
+      if (path === '/config') return { ...await original(path), uploads: capability };
+      if (path === '/uploads') { keys.push(body?.requestKey); return { id: 'ignored-key' }; }
+      return original(path, body, ...args);
+    });
+    const hook = await connect();
+    await act(async () => { await hook.result.current.publishUpload(data(), 'draft'); });
+    expect(hook.result.current.message).toContain('did not confirm upload recovery');
+    await act(async () => { await hook.result.current.publishUpload(data(), 'draft'); });
+    expect(keys).toHaveLength(2); expect(keys[0]).toBe(keys[1]);
+    expect(mocks.request.mock.calls.some(([path]) => String(path).includes('/parts/'))).toBe(false);
+    act(() => hook.result.current.resetUpload());
+    await act(async () => { await hook.result.current.publishUpload(data(), 'new-draft'); });
+    expect(keys[2]).not.toBe(keys[0]);
   });
 });

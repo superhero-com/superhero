@@ -1,13 +1,29 @@
 import { playbackRetryDelay, PLAYBACK_RETRY_WINDOW_MS, waitForPlaybackRetry } from './playback-retry';
 import { ShortsApiError } from './api';
+import type { QualitySnapshot } from './shorts-qoe';
 
 const STREAM_ORIGIN = (import.meta.env.VITE_SHORTS_STREAM_URL || 'http://127.0.0.1:3335').replace(/\/$/, '');
+
+export async function shortsQualityReport(id: string, token: string, snapshot: QualitySnapshot, signal: AbortSignal) {
+  const response = await fetch(`${STREAM_ORIGIN}/videos/${encodeURIComponent(id)}/quality`, {
+    method: 'POST',
+    credentials: 'omit',
+    cache: 'no-store',
+    redirect: 'error',
+    keepalive: true,
+    headers: { 'Content-Type': 'application/json', 'X-Playback-Token': token },
+    body: JSON.stringify(snapshot),
+    signal: AbortSignal.any([signal, AbortSignal.timeout(5000)]),
+  });
+  await response.body?.cancel();
+  if (!response.ok) throw new Error('Quality measurement unavailable');
+}
 
 export function shortsMediaUrl(id: string, file: 'poster.jpg' | 'captions.vtt') {
   return `${STREAM_ORIGIN}/videos/${encodeURIComponent(id)}/${file}`;
 }
 
-export type PlaybackSession = { status: 'preparing' } | { status: 'ready'; manifest: string; expiresAt: number; token: string };
+export type PlaybackSession = { status: 'preparing'; quality?: { token: string; expiresAt: number } } | { status: 'ready'; manifest: string; expiresAt: number; token: string };
 
 export async function shortsPlaybackSession(
   id: string,
@@ -37,7 +53,15 @@ export async function shortsPlaybackSession(
   const response = await request(0);
   if (!response.ok) throw new Error('Video playback is unavailable');
   const value = await response.json();
-  if (response.status === 202 && value.status === 'preparing') return { status: 'preparing' };
+  if (response.status === 202 && value.status === 'preparing') {
+    if (value.quality === undefined) return { status: 'preparing' };
+    const { token, expiresAt } = value.quality || {};
+    if (typeof token !== 'string' || token.length > 512 || !/^v[23]\.[A-Za-z0-9_.-]+$/.test(token)
+      || !Number.isSafeInteger(expiresAt) || expiresAt <= Date.now() || expiresAt > Date.now() + 3600000) {
+      throw new Error('Invalid quality measurement session');
+    }
+    return { status: 'preparing', quality: { token, expiresAt } };
+  }
   const base = new URL(STREAM_ORIGIN);
   const manifest = new URL(value.manifest, base);
   if (value.status !== 'ready' || manifest.origin !== base.origin
@@ -63,6 +87,6 @@ export async function shortsPlaybackProof(id: string, token: string): Promise<st
     throw new ShortsApiError('Playback measurement unavailable', response.status);
   }
   const value = await response.json();
-  if (typeof value.proof !== 'string' || value.proof.length > 2048 || !/^m1\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]{43}$/.test(value.proof)) throw new Error('Invalid playback measurement');
+  if (typeof value.proof !== 'string' || value.proof.length > 2048 || !/^m[12]\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]{43}$/.test(value.proof)) throw new Error('Invalid playback measurement');
   return value.proof;
 }

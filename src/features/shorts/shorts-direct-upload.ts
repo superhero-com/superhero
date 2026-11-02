@@ -1,4 +1,24 @@
+import { sha256 as incrementalSha256 } from '@noble/hashes/sha2.js';
+import { bytesToHex } from '@noble/hashes/utils.js';
 import { request, ShortsApiError } from './api';
+import { ORIGINAL_UPLOAD_MAX_BYTES, UPLOAD_PART_BYTES } from './shorts-upload-policy';
+
+export async function hashUploadFile(file: Blob, assertCurrent: () => unknown) {
+  if (!Number.isSafeInteger(file.size) || file.size < 1 || file.size > ORIGINAL_UPLOAD_MAX_BYTES) throw new Error('Invalid video size.');
+  const hash = incrementalSha256.create();
+  try {
+    for (let offset = 0; offset < file.size; offset += UPLOAD_PART_BYTES) {
+      assertCurrent();
+      const end = Math.min(file.size, offset + UPLOAD_PART_BYTES);
+      // eslint-disable-next-line no-await-in-loop -- Keep only one source chunk in memory.
+      const chunk = new Uint8Array(await file.slice(offset, end).arrayBuffer());
+      assertCurrent();
+      if (chunk.byteLength !== end - offset) throw new Error('The original file changed while reading it.');
+      hash.update(chunk);
+    }
+    return bytesToHex(hash.digest());
+  } finally { hash.destroy(); }
+}
 
 export interface UploadEncryption {
   key: string;

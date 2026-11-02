@@ -14,6 +14,8 @@ const state = (overrides: Partial<State> = {}) => ({
   config: { topics: ['All', 'Art', 'Technology'] },
   busy: false,
   authenticated: true,
+  uploadMaxBytes: 40 * 1048576,
+  uploadLimitLabel: '40 MiB',
   actor: 'ak_creator',
   dashboard: { shorts: [], account: { available: '0' } },
   publishUpload: publish,
@@ -47,6 +49,21 @@ beforeEach(() => {
 });
 
 describe('Free three-step upload', () => {
+  it('waits for upload limits before accepting a picker or dropped file after reload', () => {
+    const view = render(<ShortsUpload s={state({ uploadMaxBytes: 0, uploadLimitLabel: undefined })} />);
+    expect(screen.getByLabelText('Video file')).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Choose video' })).toBeDisabled();
+    const files = [new File(['owned media'], 'owned.mp4', { type: 'video/mp4' })];
+    fireEvent.change(screen.getByLabelText('Video file'), { target: { files } });
+    fireEvent.drop(screen.getByRole('region', { name: 'Video upload' }), { dataTransfer: { files } });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Preview your video')).not.toBeInTheDocument();
+    view.rerender(<ShortsUpload s={state()} />);
+    expect(screen.getByLabelText('Video file')).toBeEnabled();
+    selectVideo();
+    expect(screen.getByRole('button', { name: 'Next: Details' })).toBeEnabled();
+  });
+
   it('validates file type, size and duration with three steps and no hosting controls', () => {
     render(<ShortsUpload s={state()} />);
     expect(screen.getByRole('list', { name: 'Create a Short progress' }).children).toHaveLength(3);
@@ -56,10 +73,51 @@ describe('Free three-step upload', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('MP4 or MOV');
     const large = new File(['x'], 'large.mp4'); Object.defineProperty(large, 'size', { value: 41 * 1024 * 1024 });
     fireEvent.change(screen.getByLabelText('Video file'), { target: { files: [large] } });
-    expect(screen.getByRole('alert')).toHaveTextContent('under 40 MB');
+    expect(screen.getByRole('alert')).toHaveTextContent('up to 40 MiB');
     selectVideo(61); expect(screen.getByRole('alert')).toHaveTextContent('2–60 seconds');
     selectVideo(); expect(screen.getByRole('button', { name: 'Next: Details' })).toBeEnabled();
     expect(screen.queryByText('Hosting')).not.toBeInTheDocument(); expect(publish).not.toHaveBeenCalled();
+  });
+
+  it('allows an original MOV that the browser cannot preview to reach server preparation', () => {
+    render(<ShortsUpload s={state()} />);
+    const file = new File(['owned HEVC original'], 'camera.mov', { type: 'video/quicktime' });
+    fireEvent.change(screen.getByLabelText('Video file'), { target: { files: [file] } });
+    fireEvent.error(screen.getByLabelText('Preview your video'));
+    expect(screen.getByRole('status')).toHaveTextContent('You can still upload it');
+    expect(screen.getByRole('button', { name: 'Next: Details' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Next: Details' }));
+    fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Camera original' } });
+    fireEvent.change(screen.getByLabelText('Main topic'), { target: { value: 'Art' } });
+    fireEvent.click(screen.getByLabelText(/I have the rights/));
+    fireEvent.click(screen.getByRole('button', { name: 'Next: Review' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Publish' }));
+    expect(publish).toHaveBeenCalledOnce();
+    expect((publish.mock.calls[0][0] as FormData).get('file')).toBe(file);
+  });
+
+  it('rechecks a replacement file after an unavailable preview', () => {
+    render(<ShortsUpload s={state()} />);
+    fireEvent.change(screen.getByLabelText('Video file'), {
+      target: { files: [new File(['owned media'], 'camera.mov', { type: 'video/quicktime' })] },
+    });
+    fireEvent.error(screen.getByLabelText('Preview your video'));
+    expect(screen.getByRole('button', { name: 'Next: Details' })).toBeEnabled();
+    fireEvent.change(screen.getByLabelText('Video file'), {
+      target: { files: [new File(['replacement'], 'next.mp4', { type: 'video/mp4' })] },
+    });
+    expect(screen.getByRole('button', { name: 'Next: Details' })).toBeDisabled();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    const video = screen.getByLabelText('Preview your video');
+    Object.defineProperties(video, {
+      duration: { configurable: true, value: 61 },
+      videoWidth: { value: 720 },
+      videoHeight: { value: 1280 },
+    });
+    fireEvent.loadedMetadata(video);
+    fireEvent.error(video);
+    expect(screen.getByRole('alert')).toHaveTextContent('2–60 seconds');
+    expect(screen.getByRole('button', { name: 'Next: Details' })).toBeDisabled();
   });
 
   it('preserves editable details and independent disclosures and publishes only from Review', () => {

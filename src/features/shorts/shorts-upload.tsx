@@ -26,6 +26,7 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
   const [file, setFile] = useState<File | undefined>(s.uploadDraft?.file);
   const [preview, setPreview] = useState('');
   const [info, setInfo] = useState<VideoInfo>();
+  const [previewUnavailable, setPreviewUnavailable] = useState(false);
   const [fileError, setFileError] = useState('');
   const [dragging, setDragging] = useState(false);
   const [title, setTitle] = useState(s.uploadDraft?.title ?? '');
@@ -44,7 +45,9 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
   const publishing = !!s.uploadPublication;
   const verifying = !publishing && s.busy && s.walletPending && !s.uploadStage;
   const preparing = !publishing && s.busy && !!s.uploadStage;
-  const canContinue = !!file && !!info && !fileError;
+  const canChoose = !s.busy && s.uploadMaxBytes > 0;
+  const canContinue = !!file && (!!info || previewUnavailable) && !fileError;
+  const metadataStatus = previewUnavailable ? 'Preview unavailable' : 'Reading video…';
   const uploading = s.uploadStage === 'uploading';
   const processing = s.uploadStage === 'processing';
   const phase = processing ? 2 : Number(uploading);
@@ -90,16 +93,16 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
     requestAnimationFrame(() => heading.current?.focus());
   };
   const choose = (files: File[]) => {
-    if (s.busy || !files.length) return;
-    s.clearMessage(); setDragging(false); setInfo(undefined); setFileError('');
+    if (!canChoose || !files.length) return;
+    s.clearMessage(); setDragging(false); setInfo(undefined); setFileError(''); setPreviewUnavailable(false);
     setFile(undefined); setRights(false);
     if (files.length !== 1) { setFileError('Choose one video for this Short.'); return; }
     const next = files[0];
     if (!/\.(mp4|mov)$/i.test(next.name)) {
       setFileError('Choose an MP4 or MOV video.'); return;
     }
-    if (!next.size || next.size > 40 * 1024 * 1024) {
-      setFileError('Choose a video under 40 MB that isn’t empty.'); return;
+    if (!next.size || next.size > s.uploadMaxBytes) {
+      setFileError(s.uploadLimitLabel ? `Choose a non-empty video up to ${s.uploadLimitLabel}, or resume your saved file.` : 'Upload settings are unavailable. Please reload.'); return;
     }
     setRevision((value) => value + 1); setFile(next);
   };
@@ -193,7 +196,7 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                   className={`su-dropzone ${dragging ? 'dragging' : ''} ${file ? 'has-file' : ''}`}
                   role="region"
                   aria-label="Video upload"
-                  onDragOver={(event) => { event.preventDefault(); if (!s.busy) setDragging(true); }}
+                  onDragOver={(event) => { event.preventDefault(); if (canChoose) setDragging(true); }}
                   onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setDragging(false); }}
                   onDrop={drop}
                 >
@@ -204,13 +207,13 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                     aria-label="Video file"
                     type="file"
                     accept="video/mp4,video/quicktime,.mp4,.mov"
-                    disabled={s.busy}
+                    disabled={!canChoose}
                     onChange={(event) => { const control = event.currentTarget; choose(Array.from(control.files || [])); control.value = ''; }}
                   />
                   <div className="su-upload-mark"><CloudUpload size={34} aria-hidden="true" /></div>
                   <h3>{file ? 'Your moment is in.' : 'Drop your video here'}</h3>
                   <p>{file ? file.name : 'Or choose a file from your device.'}</p>
-                  <button type="button" className={file ? '' : 'primary'} disabled={s.busy} onClick={() => input.current?.click()}>
+                  <button type="button" className={file ? '' : 'primary'} disabled={!canChoose} onClick={() => input.current?.click()}>
                     {file ? 'Change video' : 'Choose video'}
                     {' '}
                     <ArrowRight size={16} aria-hidden="true" />
@@ -222,7 +225,7 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                       {' '}
                       MB
                     </span>
-                    <span>{info ? durationLabel(info.duration) : 'Reading video…'}</span>
+                    <span>{info ? durationLabel(info.duration) : metadataStatus}</span>
                     {info && (
                     <span>
                       {info.width}
@@ -234,8 +237,11 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                     )}
                   </div>
                   )}
+                  {previewUnavailable && (
+                  <small role="status">This browser can’t preview this video. You can still upload it; we’ll check the file during preparation.</small>
+                  )}
                   <small>
-                    {!file && 'MP4 or MOV · 2–60 seconds · Up to 40 MB · '}
+                    {!file && `MP4 or MOV · 2–60 seconds · ${s.uploadLimitLabel ? `Up to ${s.uploadLimitLabel}` : 'Loading upload limits…'} · `}
                     Vertical 9:16 recommended
                   </small>
                 </div>
@@ -353,7 +359,7 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
             <span>Preview</span>
           </div>
           <div className={`su-player ${preview ? 'with-video' : ''}`}>
-            {preview ? (
+            {preview && !previewUnavailable ? (
               <video
                 key={preview}
                 src={preview}
@@ -368,7 +374,9 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                   }
                   setInfo({ duration: media.duration, width: media.videoWidth, height: media.videoHeight });
                 }}
-                onError={() => { setFileError('This video couldn’t be previewed. Try an MP4 with H.264 video.'); setInfo(undefined); }}
+                onError={() => {
+                  setPreviewUnavailable(true); setInfo(undefined);
+                }}
               >
                 <track kind="captions" />
               </video>
@@ -376,9 +384,13 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
               <div className="su-preview-empty">
                 <div className="su-orbit"><Clapperboard size={38} aria-hidden="true" /></div>
                 <p>
-                  A little moment.
-                  <br />
-                  <strong>A whole new audience.</strong>
+                  {previewUnavailable ? 'Preview unavailable in this browser.' : (
+                    <>
+                      A little moment.
+                      <br />
+                      <strong>A whole new audience.</strong>
+                    </>
+                  )}
                 </p>
               </div>
             )}

@@ -1,4 +1,6 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import {
+  act, fireEvent, render, screen,
+} from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import {
   beforeEach, describe, expect, it, vi,
@@ -7,6 +9,8 @@ import { ShortsViewer } from '../shorts-viewer';
 import type { Short } from '../types';
 import { defaultPreferences } from '../shorts-preferences';
 
+type EndCallback = (() => void) | undefined;
+const hlsCallbacks = vi.hoisted(() => new Map<string, EndCallback>());
 vi.mock('../shorts-creator', () => ({
   ShortsCreator: ({ address }: { address: string }) => <div>{address}</div>,
   ShortsCreatorAvatar: () => null,
@@ -15,11 +19,23 @@ vi.mock('../shorts-follow', () => ({ ShortsFollow: () => null }));
 vi.mock('../use-short-hls', async () => {
   const { useEffect } = await import('react');
   return {
-    useShortHls: (ref: { current: HTMLVideoElement | null }, id: string, warm: boolean) => {
+    useShortHls: (
+      ref: { current: HTMLVideoElement | null },
+      id: string,
+      warm: boolean,
+      _shouldPlay: () => boolean,
+      _session: string | undefined,
+      options: { onEnded?: () => void },
+    ) => {
+      hlsCallbacks.set(id, options.onEnded);
       useEffect(() => {
-        if (warm) ref.current?.setAttribute('src', `blob:hls/${id}`);
+        const element = ref.current;
+        if (warm) element?.setAttribute('src', `blob:hls/${id}`);
+        return () => element?.removeAttribute('src');
       }, [ref, id, warm]);
-      return { status: 'ready', token: 'measured-token', retry: vi.fn() };
+      return {
+        status: 'ready', token: warm ? 'measured-token' : '', choices: [], resetQuality: vi.fn(), retry: vi.fn(),
+      };
     },
   };
 });
@@ -75,6 +91,7 @@ it('offers accessible pagination retry and a latest-feed action without replacin
 });
 let playing: WeakMap<HTMLMediaElement, boolean>;
 beforeEach(() => {
+  hlsCallbacks.clear();
   HTMLDialogElement.prototype.showModal = function showModal() { this.open = true; };
   HTMLDialogElement.prototype.close = function close() { this.open = false; };
   playing = new WeakMap();
@@ -201,6 +218,24 @@ describe('Shorts playback lifecycle', () => {
     });
     expect(props.onPlayback.mock.calls.filter((call) => call[2] === 2)).toHaveLength(1);
   });
+  it('uses the same loop for a confirmed HLS EOF stall without counting the unplayed tail', () => {
+    const props = { ...makeProps(), feed: [{ ...clips[0], duration: 2 }] };
+    const { videos } = mount(props);
+    let now = performance.now();
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    [0.5, 1, 1.5, 1.973].forEach((position) => {
+      now += 500; videos[0].currentTime = position; fireEvent.timeUpdate(videos[0]);
+    });
+    fireEvent.waiting(videos[0]);
+    act(() => hlsCallbacks.get('one')?.());
+    expect(videos[0].currentTime).toBe(0);
+    expect(videos[0].paused).toBe(false);
+    expect(props.onPlayback).toHaveBeenLastCalledWith('one', expect.any(String), 1.973, 'measured-token');
+    fireEvent.playing(videos[0]);
+    expect(screen.queryByText('Loading video…')).not.toBeInTheDocument();
+    now += 500; videos[0].currentTime = 0.5; fireEvent.timeUpdate(videos[0]);
+    expect(props.onPlayback.mock.calls.filter((call) => call[2] === 1.973)).toHaveLength(1);
+  });
 });
 
 describe('Shared video content cover', () => {
@@ -262,4 +297,40 @@ describe('Long feed memory bounds', () => {
     expect(screen.getByRole('button', { name: 'Previous Short' })).not.toBeDisabled();
     expect(screen.getByRole('button', { name: 'Next Short' })).not.toBeDisabled();
   });
+});
+
+it('warms only the active and next video; Data Saver and backgrounding release extra sources', () => {
+  const props = {
+    ...makeProps(),
+    personal: undefined,
+    feed: [...clips, { ...clips[0], id: 'three' }, { ...clips[1], id: 'four' }],
+  };
+  const view = render(<MemoryRouter><ShortsViewer {...props} /></MemoryRouter>);
+  const scroller = screen.getByRole('region', { name: 'Shorts video feed' });
+  Object.defineProperty(scroller, 'clientHeight', { value: 600 });
+  fireEvent.scroll(scroller, { target: { scrollTop: 600 } });
+  const sources = () => Array.from(view.container.querySelectorAll('video[src]')).map((video) => video.getAttribute('src'));
+  expect(sources()).toEqual(['blob:hls/two', 'blob:hls/three']);
+  fireEvent.change(view.container.querySelector('[data-short-id="two"] select')!, { target: { value: 'data-saver' } });
+  expect(sources()).toEqual(['blob:hls/two']);
+  vi.spyOn(document, 'hidden', 'get').mockReturnValue(true);
+  fireEvent(document, new Event('visibilitychange'));
+  expect(sources()).toEqual([]);
+});
+
+it('warms the next eligible clip within the window without loading a covered video', () => {
+  const feed: Short[] = [clips[0], { ...clips[1], contentWarning: 'unreviewed' }, { ...clips[0], id: 'three' }];
+  const view = render(<MemoryRouter><ShortsViewer {...makeProps()} feed={feed} /></MemoryRouter>);
+  expect(view.container.querySelector('[data-short-id="one"] video')).toHaveAttribute('src', 'blob:hls/one');
+  expect(view.container.querySelector('[data-short-id="two"] video')).toBeNull();
+  expect(view.container.querySelector('[data-short-id="three"] video')).toHaveAttribute('src', 'blob:hls/three');
+});
+
+it('shows Play immediately after pausing, before a source change can cancel the queued pause event', () => {
+  const view = render(<MemoryRouter><ShortsViewer {...makeProps()} feed={[clips[0]]} /></MemoryRouter>);
+  const video = view.container.querySelector('video')!;
+  vi.spyOn(video, 'paused', 'get').mockReturnValue(false);
+  fireEvent.play(video);
+  fireEvent.click(screen.getByRole('button', { name: 'Pause video' }));
+  expect(screen.getByRole('button', { name: 'Play video' })).not.toBeDisabled();
 });

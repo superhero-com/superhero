@@ -9,6 +9,8 @@ import {
   Volume2, VolumeX, X, EyeOff, Eye, RefreshCw, MessageCircle,
 } from 'lucide-react';
 import { shortsMediaUrl } from './shorts-media';
+import { qualityModes, isShortsQuality, type ShortsQuality } from './shorts-quality';
+import { useShortsQoe } from './use-shorts-qoe';
 import { useShortHls } from './use-short-hls';
 import { PlaybackProgress } from './shorts-playback-progress';
 import { ShortsContentWarning } from './shorts-content-warning';
@@ -51,8 +53,9 @@ type Props = {
 const time = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
 
 const ShortPlayer = ({
-  short, active, warm, muted, onMute, onLike, onComments, onDetails, onShare, busy, onPlayback, onSave, saved, measurementSession, pricing,
+  short, active, warm, quality, onQuality, muted, onMute, onLike, onComments, onDetails, onShare, busy, onPlayback, onSave, saved, measurementSession, pricing,
 }: {
+  quality: ShortsQuality; onQuality: (mode: ShortsQuality) => void;
   short: Short; active: boolean; warm: boolean; muted: boolean; busy: boolean;
   onComments?: () => void;
   onMute: () => void; onLike: () => void; onDetails: () => void; onShare: () => void;
@@ -77,11 +80,14 @@ const ShortPlayer = ({
   const warningKey = `${short.id}:${warning}:${short.guidelines?.status}`;
   const [revealedFor, setRevealedFor] = useState('');
   const covered = !!warning && revealedFor !== warningKey;
-  const hls = useShortHls(video, short.id, warm && !covered, () => active && !manuallyPaused.current, measurementSession);
-  const measurementToken = useRef(hls.token);
-  measurementToken.current = hls.token;
-  const hasFailed = failed || hls.status === 'error';
-  const loading = waiting || (warm && hls.status !== 'ready' && hls.status !== 'error');
+  const measurementToken = useRef('');
+  const observeQuality = useShortsQoe(video, short.id, {
+    active: active && !covered,
+    enabled: !!onPlayback && !!measurementSession,
+    mode: quality,
+    token: measurementToken,
+    shouldPlay: () => active && !manuallyPaused.current,
+  });
   useEffect(() => { if (!warning) setRevealedFor(''); }, [warning]);
   const measure = useCallback((final = false) => {
     if (!playbackRef.current || !playbackStarted.current || !measurementToken.current) return;
@@ -98,6 +104,28 @@ const ShortPlayer = ({
       measurement.current.sent = seconds;
     }
   }, [short.duration, short.id]);
+  const loop = useCallback(() => {
+    const element = video.current;
+    if (!element) return;
+    progress.current.sample(element.currentTime, active && !document.hidden && !waiting);
+    measure(true);
+    element.currentTime = 0;
+    progress.current.resetPosition(0);
+    if (active && !manuallyPaused.current) element.play().catch(() => setPaused(true));
+  }, [active, measure, waiting]);
+  const hls = useShortHls(
+    video,
+    short.id,
+    warm && !covered,
+    () => active && !manuallyPaused.current,
+    measurementSession,
+    {
+      quality, active, observe: observeQuality, onEnded: loop,
+    },
+  );
+  if (hls.token) measurementToken.current = hls.token;
+  const hasFailed = failed || hls.status === 'error';
+  const loading = waiting || (warm && hls.status !== 'ready' && hls.status !== 'error');
   const measured = !!onPlayback;
   useEffect(() => {
     measurement.current = { id: crypto.randomUUID(), sent: -1, day: new Date().toISOString().slice(0, 10) };
@@ -134,7 +162,7 @@ const ShortPlayer = ({
       element.play().catch(() => setPaused(true));
     } else {
       manuallyPaused.current = true;
-      element.pause();
+      element.pause(); setPaused(true);
     }
   }, [hasFailed, covered]);
   useEffect(() => {
@@ -185,26 +213,42 @@ const ShortPlayer = ({
                 progress.current.sample(video.current?.currentTime || 0, active && !document.hidden && !waiting);
                 setPaused(true); measure(true);
               }}
-              onEnded={() => {
-                const element = video.current;
-                if (!element) return;
-                progress.current.sample(element.currentTime, active && !document.hidden && !waiting);
-                measure(true);
-                element.currentTime = 0;
-                progress.current.resetPosition(0);
-                if (active && !manuallyPaused.current) element.play().catch(() => setPaused(true));
-              }}
+              onEnded={loop}
               onWaiting={() => setWaiting(true)}
+              onCanPlay={() => setWaiting(false)}
               onPlaying={() => { progress.current.resetPosition(video.current?.currentTime || 0); setWaiting(false); setFailed(false); }}
               onError={() => { if (warm) { setFailed(true); setWaiting(false); } }}
               onTimeUpdate={updateTime}
-              onLoadedMetadata={() => setDuration(video.current?.duration || short.duration)}
+              onLoadedMetadata={() => {
+                setDuration(video.current?.duration || short.duration);
+                setPaused(video.current?.paused ?? true);
+              }}
               onSeeking={() => { progress.current.resetPosition(video.current?.currentTime || 0); }}
               onSeeked={() => { progress.current.resetPosition(video.current?.currentTime || 0); }}
             >
               <track kind="captions" src={short.captions ? shortsMediaUrl(short.id, 'captions.vtt') : undefined} srcLang={short.language || 'en'} label="Creator captions" />
             </video>
             <button type="button" className="sv-play-surface" aria-label={paused ? `Play ${short.title}` : `Pause ${short.title}`} onClick={toggle} disabled={!active || hasFailed} tabIndex={active ? 0 : -1} />
+            <div className="sv-quality">
+              <label>
+                <span className="sr-only">Playback quality</span>
+                <select
+                  aria-label="Playback quality"
+                  value={hls.selection || quality}
+                  onChange={(event) => {
+                    const { value } = event.target;
+                    if (isShortsQuality(value)) {
+                      if (value === quality) hls.resetQuality();
+                      onQuality(value);
+                    } else hls.selectLevel(value);
+                  }}
+                >
+                  {qualityModes.map((mode) => <option key={mode.value} value={mode.value}>{mode.label}</option>)}
+                  {!!hls.choices?.length && <optgroup label="Available resolutions">{hls.choices.map((choice) => <option key={choice.key} value={choice.key}>{choice.label}</option>)}</optgroup>}
+                </select>
+              </label>
+              {hls.currentQuality && <span>{hls.currentQuality}</span>}
+            </div>
             <div className="sv-top-controls">
               <button type="button" className="sv-round" aria-label={paused ? 'Play video' : 'Pause video'} onClick={toggle} disabled={hasFailed}>
                 {paused ? <Play size={21} fill="currentColor" /> : <Pause size={21} fill="currentColor" />}
@@ -314,6 +358,9 @@ export const ShortsViewer = ({
   const scroller = useRef<HTMLDivElement>(null);
   const [activeId, setActiveId] = useState('');
   const [muted, setMuted] = useState(true);
+  const [localQuality, setLocalQuality] = useState<ShortsQuality>('auto');
+  const quality = personal?.preferences.quality || localQuality;
+  const onQuality = (mode: ShortsQuality) => { setLocalQuality(mode); personal?.update({ quality: mode }); };
   const [details, setDetails] = useState<Short>();
   const [followPending, setFollowPending] = useState(false);
   const [filters, setFilters] = useState(false);
@@ -346,6 +393,8 @@ export const ShortsViewer = ({
   const index = Math.max(0, feed.findIndex((video) => video.id === activeId));
   const windowStart = Math.max(0, index - 2);
   const windowEnd = Math.min(feed.length, index + 3);
+  const nextWarm = feed.findIndex((short, i) => i > index && i < windowEnd
+    && !short.contentWarning && short.moderation !== 'rejected');
   useEffect(() => { pagination?.focus(feed[index]?.id || ''); }, [pagination, feed, index]);
   useEffect(() => {
     if (pagination?.next && !pagination.loading && !pagination.error && !suspended && visible
@@ -401,7 +450,7 @@ export const ShortsViewer = ({
   const share = async (short: Short) => {
     const url = new URL(window.location.href);
     url.searchParams.set('short', short.id);
-    try { await navigator.clipboard.writeText(url.href); setNotice('Link copied. This preview opens on your local machine.'); } catch { setNotice('Your browser could not copy the link.'); }
+    try { await navigator.clipboard.writeText(url.href); setNotice('Link copied.'); } catch { setNotice('Your browser could not copy the link.'); }
   };
   return (
     <div className="sv-viewer">
@@ -455,7 +504,9 @@ export const ShortsViewer = ({
                   pricing={pricing}
                   short={short}
                   active={i === index && !suspended && !details && !filters && !reporting && visible}
-                  warm={Math.abs(i - index) <= 1}
+                  warm={visible && (i === index || (quality !== 'data-saver' && i === nextWarm))}
+                  quality={quality}
+                  onQuality={onQuality}
                   muted={muted}
                   onMute={() => setMuted((value) => !value)}
                   busy={busy}

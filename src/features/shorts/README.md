@@ -74,7 +74,7 @@ updated API. See the API's `src/shorts/DIRECT-UPLOADS.md` for the rollout guide.
 
 The consumer view shows one portrait video per viewport with vertical scroll snapping. Desktop has previous/next controls; touch screens use native vertical scrolling. Arrow keys navigate, Space/K toggles playback, and M toggles sound when a text field or control is not focused. Playback starts muted, pauses offscreen, pauses in hidden browser tabs and pauses while dialogs are open. Explicit user pauses survive closing an overlay.
 
-The action rail opens the Like confirmation, copies a local deep link, or opens video details/reporting. A seek bar supports keyboard and pointer interaction. Seeking does not count toward the two-second preview view threshold. Discovery preferences are available through the For you menu; upload and creator Studio have separate routes from watching. Studio has its own sidebar and hides the global app sidebar/header; the main shell returns when leaving Studio.
+The action rail opens the Like confirmation, copies the Short's share link, or opens video details/reporting. A seek bar supports keyboard and pointer interaction. Seeking does not count toward the two-second preview view threshold. Discovery preferences are available through the For you menu; upload and creator Studio have separate routes from watching. Studio has its own sidebar and hides the global app sidebar/header; the main shell returns when leaving Studio.
 
 Run the playback regression tests with `npm test -- --run src/features/shorts/__tests__/shorts-viewer.test.tsx`.
 
@@ -86,6 +86,14 @@ Creator API access is shared through an app-level Jotai session and cached in se
 The composer has three numbered steps: **Video → Details → Review**. Previous/Next controls stay in the fixed bottom bar. Guests can choose a local video and enter details before connecting through Superhero's shared wallet dialog. Studio reuses the main sidebar's wallet component. The first connection preserves the guest draft; switching an existing account clears private composer state.
 
 **Publish** starts resumable transfer, media preparation, IPFS verification and operator-funded registration. The review step and preview stay in place beneath a progress overlay. Successful publication offers Watch & share and Studio. Failures preserve the draft and resume the same upload/publication on retry. Publishing an existing private draft uses the same API operation. No creator payment or transaction signature is requested.
+
+The picker displays the server-advertised upload limit. Missing capabilities keep the legacy 40 MiB limit; invalid capabilities disable new uploads. Original-file capability is bounded by the active contract and never exceeds 100,000,000 decimal bytes. Whole-file SHA-256 is computed through 1 MiB slices without materializing the entire file. New original-format uploads require a matching server confirmation before transfer.
+
+Local video preview is optional when the browser cannot decode a supported MP4 or MOV file. The picker still checks extension and size, and rejects an invalid duration when the browser can read it. Preparation validates the unchanged original on the server before publication.
+
+An accepted upload can resume after a limit reduction: local recovery metadata permits selecting the saved source, then authenticated status, the full digest and the metadata fingerprint must match before transferring parts. Local metadata alone never authorizes a larger new upload.
+
+When the hosted API advertises `creation: request-key-v1`, the browser saves a random request key and bounded source identity before its first creation request. It requires the server to echo that key before sending video parts. Lost replies, reloads and capability rollbacks reuse the saved key and expected format. Storage failures block creation; a rejected echo preserves recovery. Expired keyed requests stop the attempt instead of automatically allocating another session. The user can explicitly choose Start a new upload to clear recovery. Queued or processing jobs may be recovered after their original transfer window closes. Recovery is scoped to API, network, contract and account; it never contains tokens or encryption grants.
 
 Hosted upload sessions advertise `direct-s3-v1`. The browser encrypts each 1 MiB
 chunk using a key scoped to that object, then PUTs it to a short-lived MinIO URL.
@@ -122,6 +130,35 @@ Final page-exit reporting remains best effort because it needs two requests.
 Audience metrics are estimates, not proof of human attention, and never authorize
 rewards. Deploy the matching API and streaming protocol with this player.
 
+Playback quality diagnostics use the same measured-player boundary: both a
+measurement callback and session must be present. Only the active player records
+first rendered frame, displayed rendition time, switches, stalls lasting at least
+250 ms, fatal error categories and available dropped-frame counters. Pauses,
+seeks, preloads and hidden-tab time are excluded from played time. Browsers without
+video-frame callbacks label their first-frame approximation as `playing`.
+
+The player coalesces cumulative snapshots every five seconds and on exit, with one
+request in flight, one pending snapshot and a ten-minute/256-snapshot window.
+Reports omit URLs, wallet addresses, source references and browser identifiers.
+They use the short-lived measured playback token in a header; packaging responses
+can supply a token before the first frame. Token renewal preserves the observation,
+while a source-version replacement starts a separately labelled observation.
+Diagnostics are best effort: failures before an authorized session cannot be sent,
+and older origins can ignore this feature without interrupting playback. Diagnostic
+reports never add views, watch qualification or rewards.
+
+Browser report version 3 also measures completed presentation freezes separately
+from rebuffering. Frame callbacks provide presentation timestamps and cumulative
+presented-frame counts, so delayed JavaScript callbacks alone do not imply a
+freeze. Declared or observed cadence accounts for low frame rates and playback
+speed. Pause, seek, source replacement and backgrounding reset the comparison.
+An excess presentation gap of at least 250 ms is recorded when frames resume;
+an unfinished gap cannot be inferred safely. The fields remain `null` until
+cadence and frame metadata support measurement. Freeze time can overlap played
+or stalled time and must not be added to those counters. Servers must accept
+version 3 before these additional diagnostics can be collected; rejected reports
+remain best effort and do not interrupt playback.
+
 Studio preserves the last successful report during background updates, exposes retry actions for unavailable data, and disables claims if the account balance refresh fails. Refresh requests both account and performance updates. No new wallet signing or authorization path is introduced.
 
 ## Comments
@@ -134,7 +171,18 @@ does not change an existing contract's bytecode.
 
 ## Playback service
 
-Run `make start` in `superhero-video-streaming` alongside the API and IPFS. Feed records carry IDs and metadata. `shorts-media.ts` requests a short-lived HLS session; `use-short-hls.ts` attaches hls.js/MediaSource (`blob:`) or native HLS on supported Safari versions. Set `VITE_SHORTS_STREAM_URL` to the playback origin (default `http://127.0.0.1:3335`). Public bytes no longer go through the API. A background worker converts the private IPFS source once into a pinned 540p HLS rendition with two-second segments. Publication enqueues preparation, and existing videos need no re-upload. A video awaiting preparation shows “Preparing video.” Cache eviction only re-fetches prepared segments. The viewer mounts at most five nearby cards; the current and adjacent videos buffer a few seconds, while distant players unmount, abort requests and destroy their MediaSource. An authenticated edge shares immutable segment bytes across sessions after validating every request. Sessions renew before expiry while preserving position and explicit pauses. Temporary 429/503 responses on playback sessions, playlists and segments get at most two automatic retries, respecting Retry-After (seconds or HTTP date). Retries must start within 30 seconds; longer server delays and exhausted retries show Try again. Media retries reuse the same signed URL and byte range, preserve the player and its explicit pause, and cancel when it becomes cold or unmounts. Authentication and unavailable-content responses are not retried by this backpressure path; the existing one-time expired-link renewal remains separate. Native HLS uses the same session retry but its media loading is controlled by the browser. Other source failures show retry guidance, with no full-MP4 fallback. The previous `/videos/:id/video.mp4` endpoint returns 410. Upload object-URL previews and authenticated review previews keep their existing flow. HLS and signed URLs discourage direct-file links but are not DRM or download prevention. Run the HLS lifecycle/session tests with `npm test -- --run src/features/shorts/__tests__/shorts-hls.test.tsx`.
+Adaptive Auto playback starts near the source's available 720 tier and uses
+measured bandwidth for subsequent selections. It keeps up to six seconds ahead
+at the 1080 tier and four at lower tiers, with segment-boundary overshoot. On a
+safe upgrade to 1080, Hls.js's seamless next-level switch can replace queued
+lower-quality video while retaining the current fragment. Manual selection,
+pause and playback position remain authoritative. The next item's session waits
+three seconds to avoid competing with startup; activation bypasses that delay.
+Inactive MSE players use a short buffer and cap automatic preloading near the
+available 480 tier. Native HLS keeps the same session lifecycle but the browser
+owns its rendition and buffering decisions.
+
+Run `make start` in `superhero-video-streaming` alongside the API and IPFS. Feed records carry IDs and metadata. `shorts-media.ts` requests a short-lived HLS session; `use-short-hls.ts` attaches hls.js/MediaSource (`blob:`) or native HLS on supported Safari versions. Set `VITE_SHORTS_STREAM_URL` to the playback origin (default `http://127.0.0.1:3335`). Public bytes no longer go through the API. A background worker packages registered original-derived tracks into pinned adaptive HLS with two-second segments, without another lossy encode. Legacy sources retain the compatible 540p preparation path until an adaptive delivery is selected. Publication enqueues preparation, and existing videos need no re-upload. A video awaiting preparation shows “Preparing video.” Cache eviction only re-fetches prepared segments. The viewer mounts at most five nearby cards; the active and next eligible item may buffer, while distant players unmount, abort requests and destroy their MediaSource. An authenticated edge shares immutable segment bytes across sessions after validating every request. Sessions renew before expiry while preserving position and explicit pauses. Temporary 429/503 responses on playback sessions, playlists and segments get at most two automatic retries, respecting Retry-After (seconds or HTTP date). Retries must start within 30 seconds; longer server delays and exhausted retries show Try again. Media retries reuse the same signed URL and byte range, preserve the player and its explicit pause, and cancel when it becomes cold or unmounts. Authentication and unavailable-content responses are not retried by this backpressure path; the existing one-time expired-link renewal remains separate. Native HLS uses the same session retry but its media loading is controlled by the browser. Other source failures show retry guidance, with no full-MP4 fallback. The previous `/videos/:id/video.mp4` endpoint returns 410. Upload object-URL previews and authenticated review previews keep their existing flow. HLS and signed URLs discourage direct-file links but are not DRM or download prevention. Run the HLS lifecycle/session tests with `npm test -- --run src/features/shorts/__tests__/shorts-hls.test.tsx`.
 
 
 ## Live indexing updates

@@ -1,5 +1,6 @@
 import type { ShortsRelease } from './shorts-release';
 import type { ShortsContractPolicy } from './shorts-contract-policy';
+import type { UploadCapability } from './shorts-upload-policy';
 
 export interface Short {
   contentWarning?: 'feed-excluded' | 'unreviewed';
@@ -42,6 +43,7 @@ export interface Account {
   rewardAccounts?: { contract: string; available: string }[];
 }
 export interface Config {
+  uploads?: UploadCapability;
   likeMode?: 'free' | 'paid';
   likeSponsorship?: {
     enabled: boolean; gasLimit: number; gasPrice: string; maxFee: string; ttlBlocks: number;

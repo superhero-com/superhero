@@ -64,3 +64,14 @@ describe('local Shorts discovery', () => {
     localStorage.clear();
   });
 });
+
+it('persists quality modes and migrates older or invalid preference records to Auto', () => {
+  localStorage.setItem('superhero.shorts.preferences.v1', JSON.stringify({ quality: 'unsupported' }));
+  const first = renderHook(() => useShortsPreferences());
+  expect(first.result.current.preferences.quality).toBe('auto');
+  act(() => first.result.current.update({ quality: 'data-saver' }));
+  first.unmount();
+  const restored = renderHook(() => useShortsPreferences());
+  expect(restored.result.current.preferences.quality).toBe('data-saver');
+  restored.unmount(); localStorage.clear();
+});

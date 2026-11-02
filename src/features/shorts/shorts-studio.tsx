@@ -315,10 +315,13 @@ const VideoDetail = ({ s }: { s: State }) => {
             </div>
             <details>
               <summary>Storage details</summary>
-              <p>Immutable package CID</p>
+              <p>Published content CID</p>
               <code>{video.cid}</code>
             </details>
-            <small>Published metadata belongs to the immutable package. Upload a new revision to change the video or its captions.</small>
+            <small>
+              This CID identifies the immutable content published for your Short.
+              Upload a new revision to change the video or its captions.
+            </small>
           </div>
           {s.preview?.id === video.id && <video src={s.preview.url} controls playsInline className="ss-upload-preview"><track kind="captions" /></video>}
         </section>
@@ -522,6 +525,7 @@ export const ShortsStudio = ({ s }: { s: State }) => {
         {s.message && (page !== 'upload' || s.messageTone === 'error') && (
         <div className={`sh-notice ss-message ${s.messageTone}`} role={s.messageTone === 'error' ? 'alert' : 'status'}>
           <span>{s.message}</span>
+          {page === 'upload' && s.messageTone === 'error' && <button type="button" disabled={s.busy} onClick={s.resetUpload}>Start a new upload</button>}
           <button type="button" onClick={s.clearMessage} aria-label="Dismiss message">×</button>
         </div>
         )}

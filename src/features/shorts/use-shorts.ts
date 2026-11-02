@@ -21,12 +21,18 @@ import { useShortsSocial } from './use-shorts-social';
 import { useShortsWalletTransactions, WalletActionPending } from './use-shorts-wallet-transactions';
 import type { WalletMethod } from './shorts-wallet-journal';
 import { request, SHORTS_API, ShortsApiError } from './api';
-import { uploadDirectPart } from './shorts-direct-upload';
+import { hashUploadFile, uploadDirectPart } from './shorts-direct-upload';
+import {
+  ORIGINAL_UPLOAD_MAX_BYTES, readSavedUpload, uploadCapability, uploadSelectionLimit, uploadSizeLabel, uploadSourceSnapshot, validateUploadSession,
+} from './shorts-upload-policy';
 import { verifyShortsRelease, type ShortsRelease } from './shorts-release';
 import { createShortsRefresh, subscribeShortsUpdates } from './shorts-updates';
 import {
   retryableUploadRead, uploadResumeKey, waitForPreparedShort, type UploadSession,
 } from './shorts-upload-session';
+import {
+  readUploadCreation, saveUploadCreation, confirmUploadCreation, uploadCreationKey,
+} from './shorts-upload-creation';
 import type {
   Config, Dashboard, Review, Short, Performance, UploadDraft, StudioContentPage, StudioVideo,
 } from './types';
@@ -511,9 +517,16 @@ sponsorshipToken,
       throw error;
     } finally { setWalletPending(false); }
   }, 'Wallet connected. You can now send your Like.', true);
+  const currentUploadCapability = uploadCapability(config);
+  const resumeStorageKey = config && actor ? uploadResumeKey(SHORTS_API, config.network, config.contract, actor) : '';
+  const savedUpload = resumeStorageKey ? readSavedUpload(resumeStorageKey) : undefined;
+  const pendingCreation = resumeStorageKey ? readUploadCreation(resumeStorageKey) : undefined;
+  const uploadMaxBytes = currentUploadCapability ? Math.max(uploadSelectionLimit(currentUploadCapability.maxBytes, savedUpload), pendingCreation?.source.bytes || 0) : 0;
+  const uploadLimitLabel = currentUploadCapability ? uploadSizeLabel(currentUploadCapability.maxBytes) : undefined;
   const prepareUpload = async (data: FormData, key: string) => {
     const file = data.get('file') as File;
-    if (!file?.size || file.size > 40 * 1024 * 1024) throw new Error('Choose a video smaller than 40 MB.');
+    if (!currentUploadCapability) throw new Error('Upload settings are unavailable. Please reload.');
+    if (!file?.size || file.size > ORIGINAL_UPLOAD_MAX_BYTES) throw new Error('Choose a video within the supported upload limit.');
     if (!token) await ensureCreatorSession();
     uploadRequest.current?.abort();
     const controller = new AbortController();
@@ -532,24 +545,66 @@ sponsorshipToken,
       description: String(data.get('description') || ''), language: String(data.get('language') || 'und'), captions: String(data.get('captions') || ''), synthetic: data.get('synthetic') === 'true', sponsored: data.get('sponsored') === 'true',
     };
     const metadata = {
-      title: String(data.get('title')), topic: String(data.get('topic')), rights: data.get('rights') === 'true', bytes: file.size, sha256: await hash(await file.arrayBuffer()), details,
+      title: String(data.get('title')), topic: String(data.get('topic')), rights: data.get('rights') === 'true', bytes: file.size, sha256: await hashUploadFile(file, uploadAuth), details,
     };
     const fingerprint = await hash(new TextEncoder().encode(JSON.stringify(metadata)).buffer);
     const storageKey = uploadResumeKey(SHORTS_API, config!.network, config!.contract, actor);
     let resume: UploadSession | undefined;
-    let saved: { fingerprint?: string; id?: string } = {};
-    try { saved = JSON.parse(localStorage.getItem(storageKey) || '{}') || {}; } catch { /* Local resume storage is optional. */ }
-    if (saved.fingerprint === fingerprint && saved.id) {
+    const saved = readSavedUpload(storageKey);
+    let pending = readUploadCreation(storageKey, true);
+    if (pending?.fingerprint !== fingerprint) pending = undefined;
+    if (pending && (pending.source.bytes !== metadata.bytes || pending.source.sha256 !== metadata.sha256)) throw new Error('The pending upload does not match this file. Start a new upload to continue.');
+    const expire = () => {
+      localStorage.removeItem(uploadCreationKey(storageKey));
+      localStorage.removeItem(storageKey);
+      throw new Error('Your previous upload expired. Submit again to start a new upload.');
+    };
+    if (saved?.fingerprint === fingerprint) {
       try {
         resume = await request<UploadSession>(`/uploads/${saved.id}`, undefined, uploadAuth(), options);
+        validateUploadSession(resume, metadata, saved.id);
       } catch (error) {
         uploadAuth();
+        if (pending) {
+          if (error instanceof ShortsApiError && error.status === 410) expire();
+          throw error;
+        }
         // A network outage must not create a second upload in place of a saved job.
         if (!(error instanceof ShortsApiError && [404, 410].includes(error.status))) throw error;
       }
     }
-    if (!resume) resume = await request<UploadSession>('/uploads', metadata, uploadAuth(), options);
-    try { localStorage.setItem(storageKey, JSON.stringify({ id: resume.id, expires: resume.expires, fingerprint })); } catch { /* Uploading still works without persisted resume. */ }
+    if (!resume) {
+      if (!pending && file.size > currentUploadCapability.maxBytes) throw new Error(`New uploads are limited to ${uploadSizeLabel(currentUploadCapability.maxBytes)}. To resume a saved file, keep its original upload details.`);
+      if (!pending && config?.uploads?.creation === 'request-key-v1') {
+        pending = {
+          key: crypto.randomUUID(),
+          fingerprint,
+          source: {
+            bytes: metadata.bytes, sha256: metadata.sha256, maxBytes: currentUploadCapability.maxBytes, format: config.uploads.format,
+          },
+          expectedFormat: config.uploads.format,
+        };
+        saveUploadCreation(storageKey, pending);
+      }
+      const expectedFormat = pending?.expectedFormat || (config?.uploads?.format === 'original-file-v1' ? 'original-file-v1' : undefined);
+      const original = expectedFormat === 'original-file-v1';
+      try {
+        resume = await request<UploadSession>('/uploads', { ...metadata, ...(expectedFormat ? { expectedFormat } : {}), ...(pending ? { requestKey: pending.key } : {}) }, uploadAuth(), options);
+      } catch (error) {
+        uploadAuth();
+        if (pending && error instanceof ShortsApiError && error.status === 410) expire();
+        throw error;
+      }
+      uploadAuth();
+      if (pending) confirmUploadCreation(resume, pending);
+      if (original && resume.source?.format !== 'original-file-v1') throw new Error('The server did not confirm original-file upload support. Reload upload settings.');
+    }
+    validateUploadSession(resume, metadata);
+    try {
+      localStorage.setItem(storageKey, JSON.stringify({
+        id: resume.id, expires: resume.expires, fingerprint, source: uploadSourceSnapshot(resume.source),
+      }));
+    } catch { /* Uploading still works without persisted resume. */ }
     const count = Math.ceil(file.size / resume.partSize);
     setUploadStage('uploading');
     for (let i = 0; i < count && !resume.complete; i += 1) {
@@ -624,7 +679,10 @@ sponsorshipToken,
       requireLogin();
       setPreparedUpload({ video: published, key });
       setUploadPublication({ shortId: short.id, status: 'published' });
-      try { localStorage.removeItem(uploadResumeKey(SHORTS_API, config!.network, config!.contract, actor)); } catch { /* Session-only storage. */ }
+      try {
+        const resumeKey = uploadResumeKey(SHORTS_API, config!.network, config!.contract, actor);
+        localStorage.removeItem(resumeKey); localStorage.removeItem(uploadCreationKey(resumeKey));
+      } catch { /* Session-only storage. */ }
     } catch (error) {
       if (currentAddress.current === actor) setUploadPublication({ shortId: short?.id, status: error instanceof PublicationReviewPending ? 'reviewing' : 'error' });
       throw error;
@@ -702,6 +760,8 @@ sponsorshipToken,
     busy,
     walletRecovery,
     uploadProgress,
+    uploadMaxBytes,
+    uploadLimitLabel,
     uploadDraft,
     setUploadDraft,
     uploadEpoch,
@@ -712,6 +772,12 @@ sponsorshipToken,
     dismissPublication: () => { if (!actionLock.current) setUploadPublication(undefined); },
     resetUpload: () => {
       if (actionLock.current) return;
+      try {
+        if (resumeStorageKey) {
+          localStorage.removeItem(resumeStorageKey);
+          localStorage.removeItem(uploadCreationKey(resumeStorageKey));
+        }
+      } catch { setMessage('Could not clear upload recovery. Allow browser storage and try again.'); setMessageTone('error'); return; }
       setUploadDraft(undefined); setPreparedUpload(undefined);
       setUploadPublication(undefined); setMessage('');
       setUploadProgress(undefined); setUploadStage(undefined); setUploadEpoch((value) => value + 1);

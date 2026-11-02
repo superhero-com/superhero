@@ -1,7 +1,10 @@
 import { ShortsApiError } from './api';
 import type { Short } from './types';
+import type { UploadSource } from './shorts-upload-policy';
 
 export interface UploadSession {
+  requestKey?: string;
+  source?: UploadSource;
   id: string;
   parts: number[];
   partSize: number;

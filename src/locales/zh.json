@@ -3001,6 +3001,25 @@
       "copyFailed": "无法复制。请选择地址并手动复制。",
       "unavailable": "不可用",
       "missingCreator": "创建者信息尚未加载。"
+    },
+    "priceAlerts": {
+      "title": "价格提醒",
+      "hint": "当 {{name}} 达到你设定的价格时提醒你一次。",
+      "thisToken": "该代币",
+      "direction": "方向",
+      "above": "高于",
+      "below": "低于",
+      "target": "目标价格（AE）",
+      "set": "设置提醒",
+      "signing": "请在钱包中签名…",
+      "saved": "提醒已设置，到价时通知你一次。",
+      "invalidTarget": "请输入大于 0 的价格，例如 0.01。",
+      "failed": "无法保存提醒，请重试。",
+      "active": "你的提醒",
+      "whenAbove": "高于 {{target}} AE 时",
+      "whenBelow": "低于 {{target}} AE 时",
+      "remove": "删除提醒",
+      "firedCount_other": "已发送 {{count}} 条提醒"
     }
   },
   "errors": {

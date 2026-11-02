@@ -3082,6 +3082,26 @@
       "copyFailed": "Couldn’t copy. Select the address and copy it manually.",
       "unavailable": "Unavailable",
       "missingCreator": "Creator information hasn’t loaded yet."
+    },
+    "priceAlerts": {
+      "title": "Price alert",
+      "hint": "Get notified once when {{name}} reaches your price.",
+      "thisToken": "this token",
+      "direction": "Direction",
+      "above": "Above",
+      "below": "Below",
+      "target": "Target price in AE",
+      "set": "Set alert",
+      "signing": "Sign in wallet…",
+      "saved": "Alert set. You will be notified once.",
+      "invalidTarget": "Enter a price above 0, like 0.01.",
+      "failed": "Could not save the alert. Try again.",
+      "active": "Your alerts",
+      "whenAbove": "When above {{target}} AE",
+      "whenBelow": "When below {{target}} AE",
+      "remove": "Remove alert",
+      "firedCount_one": "{{count}} alert already sent",
+      "firedCount_other": "{{count}} alerts already sent"
     }
   },
   "errors": {

@@ -115,7 +115,7 @@ function publicPolicy(p: Config['policy']) {
 }
 
 export async function verifyShortsRelease(config: Config, expected: Trust = trust()) {
-  if (!hexHash(expected.pin)) throw new Error('Wallet actions are not configured for this Shorts release.');
+  if (!hexHash(expected.pin)) throw new Error('Studio and wallet actions aren’t configured for this website. Your wallet connection is unchanged.');
   const release = canonicalShortsRelease(config?.release);
   if (await shortsDigest(JSON.stringify(release)) !== expected.pin) throw new Error('This Shorts release does not match the website. Please refresh or contact support.');
   if (release.network !== 'ae_uat' || release.network !== expected.network

@@ -13,6 +13,41 @@ vi.mock('@/components/layout/app-header/HeaderWalletButton', () => ({
 vi.mock('@/components/ConnectWalletButton', () => ({ ConnectWalletButton: () => <button type="button">Shared connect dialog</button> }));
 
 describe('Studio main-wallet identity', () => {
+  it('shows a retryable setup failure instead of an endless skeleton or wallet prompt', () => {
+    const refreshNow = vi.fn();
+    render(
+      <MemoryRouter>
+        <ShortsStudio s={{
+          section: 'overview',
+          actor: 'ak_connected',
+          authenticated: false,
+          configError: 'Studio settings couldn’t load. Check your connection and try again.',
+          refreshNow,
+        } as unknown as Parameters<typeof ShortsStudio>[0]['s']}
+        />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent('Studio settings couldn’t load');
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Open Studio' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    expect(refreshNow).toHaveBeenCalledOnce();
+  });
+  it('explains a signed session without asking for another wallet connection', () => {
+    render(
+      <MemoryRouter>
+        <ShortsStudio s={{
+          section: 'overview',
+          actor: 'ak_connected',
+          authenticated: false,
+          config: { creatorAccess: 'signed-session' },
+        } as unknown as Parameters<typeof ShortsStudio>[0]['s']}
+        />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText(/Your wallet is connected/)).toHaveTextContent('does not send a transaction or charge a fee');
+    expect(screen.getByText('ak_connected')).toBeVisible();
+  });
   it('shows the connected account without redundant sign-in or switch-wallet buttons', () => {
     const signIn = vi.fn();
     render(

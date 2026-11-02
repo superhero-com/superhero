@@ -70,6 +70,8 @@ export function useShorts() {
   const videoId = section === 'video' ? location.pathname.split('/')[4] : undefined;
   const [topic, setTopic] = useState('All');
   const [config, setConfig] = useState<Config>();
+  const [configError, setConfigError] = useState('');
+  const [releaseError, setReleaseError] = useState('');
   const [paymentRelease, setPaymentRelease] = useState<ShortsRelease>();
   const connectionOnly = config?.creatorAccess === 'connected-wallet';
   const [creatorConnecting, setCreatorConnecting] = useState(false);
@@ -137,6 +139,8 @@ export function useShorts() {
   );
   const [review, setReview] = useState<Review[]>([]);
   const [preview, setPreview] = useState<{ id: string; url: string }>();
+  const previewRequest = useRef<AbortController | undefined>(undefined);
+  useEffect(() => () => { previewRequest.current?.abort(); }, [creatorScope]);
   const [busy, setBusy] = useState(false);
   const [uploadDraft, setUploadDraft] = useState<UploadDraft>();
   const [uploadEpoch, setUploadEpoch] = useState(0);
@@ -197,9 +201,19 @@ export function useShorts() {
     generation.current += 1;
     const gen = generation.current;
     try {
-      const c = await request<Config>('/config');
-      const payment = await verifyShortsRelease(c).catch(() => undefined);
+      const c = await request<Config>('/config', undefined, undefined, { timeout: 20000 }).catch((error) => {
+        if (gen === generation.current) setConfigError('Studio settings couldn’t load. Check your connection and try again.');
+        throw error;
+      });
+      if (gen !== generation.current) return;
+      setConfigError('');
+      let verificationError = '';
+      const payment = await verifyShortsRelease(c).catch((error) => {
+        verificationError = error instanceof Error ? error.message : 'Shorts release verification failed. Please try again.';
+        return undefined;
+      });
       if (gen !== generation.current || currentFeedSource.current !== feedSource) return;
+      setReleaseError(verificationError);
       if (c.catalogPaging && tab === 'feed' && !sharedId) {
         const key = JSON.stringify([SHORTS_API, actor, c.network, c.contract, c.bytecodeHash, feedSource]);
         if (feedPager.current?.key !== key || feedPager.current.window.stopped) {
@@ -719,7 +733,9 @@ sponsorshipToken,
     paymentRelease,
     measurementSession,
     authenticated,
-    restoringCreatorSession: !!actor && (!config || creatorConnecting || (connectionOnly && !authenticated && !creatorConnectionError)),
+    restoringCreatorSession: !!actor && ((!config && !configError) || creatorConnecting || (connectionOnly && !authenticated && !creatorConnectionError)),
+    configError,
+    releaseError,
     creatorConnectionError,
     signIn,
     connectForLike,
@@ -805,9 +821,25 @@ sponsorshipToken,
       approved ? 'Approved for the feed.' : 'Excluded from the feed.',
     ),
     reviewClip: (id: string) => perform(async () => {
-      const response = await fetch(`${SHORTS_API}/api/shorts/review-media/${id}`, { headers: { Authorization: `Bearer ${requireLogin()}` } });
-      if (!response.ok) throw new Error('Preview unavailable. Sign in as the creator or operator.');
-      setPreview({ id, url: URL.createObjectURL(await response.blob()) });
+      const scope = creatorScope;
+      const controller = new AbortController();
+      previewRequest.current?.abort(); previewRequest.current = controller;
+      try {
+        const response = await fetch(`${SHORTS_API}/api/shorts/review-media/${encodeURIComponent(id)}`, {
+          headers: { Authorization: `Bearer ${requireLogin()}` },
+          signal: AbortSignal.any([controller.signal, AbortSignal.timeout(30000)]),
+          cache: 'no-store',
+        });
+        if (!response.ok) throw new Error('Preview unavailable. Sign in as the creator or operator.');
+        if (!/^(video\/|application\/octet-stream)/i.test(response.headers.get('Content-Type') || '')) {
+          throw new Error('The preview service didn’t return a video. Please try again.');
+        }
+        const media = await response.blob();
+        controller.signal.throwIfAborted();
+        if (currentCreatorScope.current !== scope) throw new Error('Wallet changed. Reopen your Short to preview it.');
+        requireLogin();
+        setPreview({ id, url: URL.createObjectURL(media) });
+      } finally { if (previewRequest.current === controller) previewRequest.current = undefined; }
     }, 'Private review preview loaded.'),
     appeal: (id: string, explanation: string) => perform(() => request(`/${id}/appeal`, { message: explanation }, requireLogin()), 'Your request for another feed review has been submitted.'),
     report: (id: string, reportId: string, reason: string, detail: string) => perform(async () => {

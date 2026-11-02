@@ -1,7 +1,8 @@
 import { useLayoutEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  CheckCircle2, ChevronDown, Clock3, Info, LoaderCircle, Pencil, TriangleAlert,
+  CheckCircle2, ChevronDown, Clock3, Globe2, Hash, Info, LoaderCircle, Megaphone,
+  Pencil, ShieldCheck, Sparkles, TriangleAlert,
 } from 'lucide-react';
 import type { useShorts } from './use-shorts';
 import type { Short } from './types';
@@ -16,20 +17,54 @@ export const UploadReview = ({
   <div className="su-review">
     <section className="su-review-short" aria-label="Your Short">
       <div className="su-review-heading">
-        <h3>{video.title}</h3>
+        <span>THE DETAILS</span>
         <button type="button" disabled={busy} onClick={onEdit}>
           <Pencil size={14} aria-hidden="true" />
           Edit details
         </button>
       </div>
-      <div className="su-tags">
-        <span>{video.topic}</span>
-        <span>{languageLabel}</span>
-        {video.synthetic && <span>AI-altered</span>}
-        {video.sponsored && <span>Sponsored</span>}
-      </div>
+      <h3>{video.title}</h3>
       {video.description && <p className="su-description">{video.description}</p>}
+      <dl className="su-review-facts">
+        <div>
+          <dt>
+            <Hash size={14} aria-hidden="true" />
+            Topic
+          </dt>
+          <dd>{video.topic}</dd>
+        </div>
+        <div>
+          <dt>
+            <Globe2 size={14} aria-hidden="true" />
+            Language
+          </dt>
+          <dd>{languageLabel}</dd>
+        </div>
+      </dl>
+      {(video.synthetic || video.sponsored) && (
+      <div className="su-tags">
+        {video.synthetic && (
+        <span>
+          <Sparkles size={13} aria-hidden="true" />
+          AI-altered
+        </span>
+        )}
+        {video.sponsored && (
+        <span>
+          <Megaphone size={13} aria-hidden="true" />
+          Sponsored
+        </span>
+        )}
+      </div>
+      )}
     </section>
+    <div className="su-review-ready">
+      <ShieldCheck size={22} aria-hidden="true" />
+      <div>
+        <strong>Ready when you are.</strong>
+        <span>Rights confirmed · Free to publish</span>
+      </div>
+    </div>
     <div className="su-review-help">
       <details>
         <summary>
@@ -39,7 +74,10 @@ export const UploadReview = ({
         </summary>
         <div>
           <p>Publishing is free. Superhero covers storage and publishing costs.</p>
-          <p>Once published, your link is ready to share. Playback may still be preparing. You can manage your Short in Studio.</p>
+          <p>
+            Your share link is ready after publication. Playback may take a little longer.
+            Manage your Short in Studio.
+          </p>
         </div>
       </details>
     </div>

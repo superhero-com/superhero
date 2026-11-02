@@ -1,11 +1,11 @@
-import { NETWORKS } from '@/config';
 import HeaderWalletButton from '@/components/layout/app-header/HeaderWalletButton';
 import { useEffect, useRef, useState } from 'react';
-import { Link, NavLink, useSearchParams } from 'react-router-dom';
 import {
-  ArrowLeft, ArrowUpRight, BarChart3, Clapperboard, Coins, LayoutDashboard, Plus, RefreshCw, ShieldCheck,
+  Link, Navigate, NavLink, useSearchParams,
+} from 'react-router-dom';
+import {
+  ArrowLeft, ArrowUpRight, BarChart3, Clapperboard, LayoutDashboard, Plus, RefreshCw, ShieldCheck,
 } from 'lucide-react';
-import { shortsUnit, type ShortsPricing } from './shorts-pricing';
 import { shortsMediaUrl } from './shorts-media';
 import { StudioContent as Content } from './shorts-studio-content';
 import { ShortsUpload } from './shorts-upload';
@@ -73,155 +73,6 @@ const SafetyReceipt = ({ safety, busy, retry }: { safety?: VisualSafety; busy: b
 );
 export const shortDate = (n: number) => (n ? new Date(n).toLocaleDateString(undefined, { dateStyle: 'medium', timeZone: 'UTC' }) : 'Not activated');
 const number = (n: number) => n.toLocaleString(undefined, { maximumFractionDigits: 1 });
-const transactionUrl = (tx: string, network?: ShortsPricing['network']) => (network ? `${NETWORKS[network].EXPLORER_URL}/transactions/${encodeURIComponent(tx)}` : undefined);
-const Metric = ({ label, value, detail }: { label: string; value: string; detail: string }) => (
-  <div className="ss-metric">
-    <span>{label}</span>
-    <strong>{value}</strong>
-    <small>{detail}</small>
-  </div>
-);
-const actionLabel: Record<string, string> = {
-  PaidLike: 'Creator reward', Claimed: 'Rewards claimed', Published: 'Short published', Withdrawn: 'Short withdrawn',
-};
-const Ledger = ({ s }: { s: State }) => {
-  const [kind, setKind] = useState('all');
-  const [limit, setLimit] = useState(10);
-  const p = s.performance;
-  if (!p) {
-    return s.performanceError
-      ? <DataError message={s.performanceError} retry={s.refreshPerformance} />
-      : <StudioSkeleton page="activity" label="Loading your activity…" />;
-  }
-  const rows = p.finance.entries.filter((e) => e.at >= p.start && e.at < p.end
-    && ['PaidLike', 'Claimed'].includes(e.action) && (kind === 'all' || e.action === kind))
-    .sort((a, b) => b.at - a.at);
-  const stale = p.finance.stale || !!s.performanceError;
-  return (
-    <section className="ss-panel ss-ledger">
-      <div className="sh-section-head">
-        <div>
-          <h2>Reward activity</h2>
-          <p>{`${shortDate(p.start)} – ${shortDate(p.end - 1)} · UTC`}</p>
-        </div>
-        <label className="ss-select" htmlFor="shorts-activity-period">
-          Activity period
-          <select id="shorts-activity-period" value={s.days} onChange={(e) => s.setDays(Number(e.target.value))}>{[7, 28, 90].map((days) => <option key={days} value={days}>{`Last ${days} days`}</option>)}</select>
-        </label>
-      </div>
-      <div className="ss-ledger-summary">
-        <span>
-          Earned in this period
-          <b>{stale ? 'Updating…' : `${p.finance.earned} ${shortsUnit(s.paymentRelease?.network)}`}</b>
-        </span>
-        <span>
-          Confirmed Likes
-          <b>{stale ? '—' : p.finance.paidLikes}</b>
-        </span>
-      </div>
-      {stale && (
-      <div className="ss-inline-error" role="alert">
-        Activity couldn’t be updated. Entries below may be out of date.
-        <button type="button" onClick={s.refreshPerformance}>Retry activity</button>
-      </div>
-      )}
-      {!stale && p.finance.pending > 0 && <p className="sh-notice" role="status">{`${p.finance.pending} account transaction${p.finance.pending === 1 ? ' is' : 's are'} awaiting confirmation. Pending rewards aren’t included in period earnings yet.`}</p>}
-      <div className="ss-status-filters" role="group" aria-label="Activity type">{[['all', 'All activity'], ['PaidLike', 'Earned'], ['Claimed', 'Claims']].map(([value, label]) => <button type="button" key={value} aria-pressed={kind === value} onClick={() => { setKind(value); setLimit(10); }}>{label}</button>)}</div>
-      {rows.length ? (
-        <div className="ss-table-wrap ss-responsive-table">
-          <table className="ss-activity-table">
-            <thead>
-              <tr>
-                <th scope="col">Activity</th>
-                <th scope="col">Date (UTC)</th>
-                <th scope="col">Amount</th>
-                <th scope="col">Receipt</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.slice(0, limit).map((e) => (
-                <tr key={e.id}>
-                  <td className="ss-activity-identity">
-                    <b>{actionLabel[e.action] || e.action}</b>
-                    <small className="ss-cell-note">{e.confirmed ? 'Confirmed' : 'Pending confirmation'}</small>
-                    {e.shortId && <Link className="ss-text-link" to={`/shorts/studio/video/${encodeURIComponent(e.shortId)}`}>{s.dashboard?.shorts.find((v) => v.id === e.shortId)?.title || 'View Short'}</Link>}
-                  </td>
-                  <td data-label="Date">{shortDate(e.at)}</td>
-                  <td data-label={e.action === 'Claimed' ? 'To wallet' : 'Earned'} className={e.action === 'PaidLike' ? 'ss-earned' : ''}>
-                    {`${e.amountAe} ${shortsUnit(s.paymentRelease?.network)}`}
-                    <small className="ss-cell-note">{e.action === 'Claimed' ? 'Transferred to wallet' : 'Your creator share'}</small>
-                  </td>
-                  <td className="ss-activity-receipt">
-                    {s.paymentRelease ? (
-                      <a className="ss-text-link" href={transactionUrl(e.tx, s.paymentRelease.network)} target="_blank" rel="noreferrer">
-                        View receipt
-                        <ArrowUpRight size={14} />
-                      </a>
-                    ) : <span>Receipt unavailable</span>}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="ss-empty">
-          <Coins size={28} />
-          <h3>{stale ? 'Activity is unavailable' : 'No activity in this period'}</h3>
-          <p>{stale ? 'Try again to load your reward history.' : 'Try a different period. Likes do not carry a payment.'}</p>
-        </div>
-      )}
-      {p.finance.truncated && <p className="ss-measurement-note">Showing the latest 200 receipts. Totals and charts include all activity in the selected period.</p>}
-      {rows.length > limit && <button type="button" className="ss-load-more" onClick={() => setLimit(limit + 10)}>Show more activity</button>}
-      <details className="ss-measurement-note">
-        <summary>About reward activity</summary>
-        <p>{`Activity is confirmed after ${p.finance.confirmationsRequired} network confirmations. Last updated: ${p.finance.syncedAt ? new Date(p.finance.syncedAt).toLocaleString() : 'Waiting for first update'}. Claims move existing rewards to your wallet; they are not new earnings. Available rewards above are independent of this date filter.`}</p>
-      </details>
-    </section>
-  );
-};
-const Rewards = ({ s, compact = false }: { s: State; compact?: boolean }) => {
-  const a = s.dashboard!.account;
-  const freeLikes = s.config?.likeMode === 'free';
-  const hasRewards = !freeLikes && Number(a.available) > 0;
-  const earlier = (a.rewardAccounts ?? (s.config?.previousContract ? [{ contract: s.config.previousContract, available: a.previousAvailable || '0' }] : [])).filter((item) => Number(item.available) > 0);
-  const rewardMessage = hasRewards ? 'Transfer these rewards to your connected wallet.' : 'Likes are free and do not generate rewards.';
-  return (
-    <section className={`ss-rewards ${compact ? 'ss-rewards--compact' : ''}`} aria-label="Available rewards">
-      <div>
-        <span className="sh-eyebrow">AVAILABLE TO CLAIM</span>
-        <h2>
-          {a.available}
-          {' '}
-          <span>{shortsUnit(s.paymentRelease?.network)}</span>
-        </h2>
-        <p>{s.dashboardError ? 'Balance may be out of date. Refresh before claiming.' : rewardMessage}</p>
-      </div>
-      {compact ? (
-        <Link className="ss-button" to="/shorts/studio/revenue">
-          {hasRewards || earlier.length > 0 ? 'View & claim rewards' : 'View revenue'}
-          {' '}
-          <ArrowUpRight size={15} />
-        </Link>
-      ) : !freeLikes && (
-        <div className="ss-claim-action">
-          <button type="button" className="primary" disabled={s.busy || !hasRewards || !!s.dashboardError} onClick={() => s.setClaimReview(true)}>
-            {hasRewards ? 'Review claim' : 'No rewards to claim'}
-            <ArrowUpRight size={17} />
-          </button>
-          <small>You review and approve in your wallet. A network fee applies.</small>
-        </div>
-      )}
-      {earlier.map((reward) => (
-        <div className="ss-previous-rewards" key={reward.contract}>
-          <p>{`${reward.available} ${shortsUnit(s.paymentRelease?.network)} in earlier rewards is available separately.`}</p>
-          <code className="sh-address">{reward.contract}</code>
-          {!compact && <button type="button" disabled={s.busy || !!s.dashboardError} onClick={() => (s.claimReward ? s.claimReward(reward.contract) : s.claimPrevious())}>Claim earlier rewards</button>}
-        </div>
-      ))}
-    </section>
-  );
-};
 const NextSteps = ({ s }: { s: State }) => {
   const videos = s.dashboard!.shorts;
   const drafts = s.dashboard!.library?.draft ?? videos.filter((v) => publicationStatus(v) === 'draft').length;
@@ -265,7 +116,7 @@ const NextSteps = ({ s }: { s: State }) => {
 const VideoDetail = ({ s }: { s: State }) => {
   const [appeal, setAppeal] = useState('');
   const [params] = useSearchParams();
-  const panel = ['analytics', 'revenue'].includes(params.get('panel') || '') ? params.get('panel') : 'details';
+  const panel = params.get('panel') === 'analytics' ? 'analytics' : 'details';
   const remote = s.config?.studioPaging ? s.studioVideo : undefined;
   const video = remote ? remote.data?.video : s.dashboard?.shorts.find((v) => v.id === s.videoId);
   if (remote?.error) return <DataError message={remote.error} retry={remote.retry} />;
@@ -283,7 +134,7 @@ const VideoDetail = ({ s }: { s: State }) => {
         <span className={`ss-pill ${publicationStatus(video)}`}>{{ published: 'Published', draft: 'Draft', withdrawn: 'Withdrawn' }[publicationStatus(video)]}</span>
       </div>
       <nav className="ss-section-tabs ss-video-tabs" aria-label="Short sections">
-        {['details', 'analytics', 'revenue'].map((value) => <Link key={value} to={{ search: `?panel=${value}` }} aria-current={panel === value ? 'page' : undefined}>{value[0].toUpperCase() + value.slice(1)}</Link>)}
+        {['details', 'analytics'].map((value) => <Link key={value} to={{ search: `?panel=${value}` }} aria-current={panel === value ? 'page' : undefined}>{value[0].toUpperCase() + value.slice(1)}</Link>)}
       </nav>
       {panel === 'details' && (
       <>
@@ -347,7 +198,6 @@ const VideoDetail = ({ s }: { s: State }) => {
       </>
       )}
       {panel === 'analytics' && <Analytics s={s} />}
-      {panel === 'revenue' && <Ledger key={s.days} s={s} />}
     </>
   );
 };
@@ -464,12 +314,15 @@ export const ShortsStudio = ({ s }: { s: State }) => {
   const [params] = useSearchParams();
   const layout = useRef<HTMLDivElement>(null);
   useEffect(() => { layout.current?.scrollIntoView?.({ block: 'start', behavior: 'instant' }); }, [page, s.videoId]);
-  const loading = page !== 'upload' && (s.restoringCreatorSession || (s.authenticated && !s.dashboard && !s.dashboardError));
+  const accessError = s.configError || (s.actor && !s.authenticated ? s.releaseError : '');
+  const signInLabel = s.creatorConnectionError ? 'Try again' : 'Open Studio';
+  const loading = page !== 'upload' && !accessError && (s.restoringCreatorSession || (s.authenticated && !s.dashboard && !s.dashboardError));
   const index = page === 'video' && s.config?.studioPaging ? s.studioVideo.data?.index : s.dashboard?.index;
+  if (page === 'revenue') return <Navigate to="/shorts/studio" replace />;
   const titles: Record<string, string> = {
-    overview: 'Overview', content: 'Content', analytics: 'Analytics', revenue: 'Revenue', upload: 'Create a Short', video: 'Short details', review: 'Review & safety',
+    overview: 'Overview', content: 'Content', analytics: 'Analytics', upload: 'Create a Short', video: 'Short details', review: 'Review & safety',
   };
-  if (page === 'video') titles.video = { analytics: 'Short analytics', revenue: 'Short revenue' }[params.get('panel') || ''] || 'Short details';
+  if (page === 'video') titles.video = { analytics: 'Short analytics' }[params.get('panel') || ''] || 'Short details';
   return (
     <div ref={layout} className={`ss-layout ss-page-${page}`}>
       <aside className="ss-sidebar">
@@ -487,7 +340,7 @@ export const ShortsStudio = ({ s }: { s: State }) => {
         </Link>
         <nav aria-label="Creator Studio">
           {[
-            ['', 'Overview', LayoutDashboard], ['/content', 'Content', Clapperboard], ['/analytics', 'Analytics', BarChart3], ['/revenue', 'Revenue', Coins], ['/upload', 'Create Short', Plus], ...(s.isOperator ? [['/review', 'Moderation', ShieldCheck]] : []),
+            ['', 'Overview', LayoutDashboard], ['/content', 'Content', Clapperboard], ['/analytics', 'Analytics', BarChart3], ['/upload', 'Create Short', Plus], ...(s.isOperator ? [['/review', 'Moderation', ShieldCheck]] : []),
           ].map(([path, label, Icon]) => {
             const Glyph = Icon as typeof Plus; return (
               <NavLink key={String(path)} onClick={s.clearMessage} end to={`/shorts/studio${path}`} className={({ isActive }) => (isActive || (path === '/content' && page === 'video') ? 'selected' : '')}>
@@ -499,6 +352,7 @@ export const ShortsStudio = ({ s }: { s: State }) => {
         </nav>
         <section className="ss-sidebar-account" aria-label="Your Superhero wallet">
           <HeaderWalletButton />
+          {s.actor && <span className="ss-wallet-address">{s.actor}</span>}
         </section>
       </aside>
       <main className="ss-main">
@@ -508,7 +362,7 @@ export const ShortsStudio = ({ s }: { s: State }) => {
             <h1>{titles[page] || 'Creator Studio'}</h1>
           </div>
           <div className="ss-header-actions">
-            {['overview', 'content', 'revenue'].includes(page) && (
+            {['overview', 'content'].includes(page) && (
             <Link className="ss-button primary" to="/shorts/studio/upload">
               <Plus size={17} />
               Create Short
@@ -522,28 +376,38 @@ export const ShortsStudio = ({ s }: { s: State }) => {
           </div>
         </header>
         )}
-        {s.message && (page !== 'upload' || s.messageTone === 'error') && (
+        {s.message && !accessError && (page !== 'upload' || s.messageTone === 'error') && (
         <div className={`sh-notice ss-message ${s.messageTone}`} role={s.messageTone === 'error' ? 'alert' : 'status'}>
           <span>{s.message}</span>
           {page === 'upload' && s.messageTone === 'error' && <button type="button" disabled={s.busy} onClick={s.resetUpload}>Start a new upload</button>}
           <button type="button" onClick={s.clearMessage} aria-label="Dismiss message">×</button>
         </div>
         )}
-        {!s.authenticated && !s.restoringCreatorSession && page !== 'upload' ? (
+        {accessError && (
+        <div className="ss-panel ss-data-error" role="alert">
+          <div>
+            <h2>Studio is temporarily unavailable</h2>
+            <p>{accessError}</p>
+          </div>
+          <button type="button" disabled={s.busy} onClick={s.refreshNow}>Try again</button>
+        </div>
+        )}
+        {!accessError && !s.authenticated && !s.restoringCreatorSession && page !== 'upload' ? (
           <div className="ss-welcome ss-panel">
             <BarChart3 size={45} />
-            <h2>{{ content: 'Your content, all in one place', revenue: 'Your audience’s support adds up' }[page] || 'Welcome to your creator space'}</h2>
-            <p>{{ content: 'Find your uploads, check their status and manage each Short.', revenue: 'View recorded rewards and claims.' }[page] || 'See your latest Shorts, audience activity and rewards here.'}</p>
+            <h2>{page === 'content' ? 'Your content, all in one place' : 'Welcome to your creator space'}</h2>
+            <p>{page === 'content' ? 'Find your uploads, check their status and manage each Short.' : 'See your latest Shorts and audience activity here.'}</p>
             {s.actor ? (
               <>
+                {s.config?.creatorAccess === 'signed-session' && <p className="ss-access-note">Your wallet is connected. Approve a sign-in message to open your private Studio. This does not send a transaction or charge a fee.</p>}
                 {s.creatorConnectionError && <small role="alert">{s.creatorConnectionError}</small>}
-                <button type="button" className="primary" disabled={s.busy} onClick={s.signIn}>{s.creatorConnectionError ? 'Try again' : 'Open Studio'}</button>
+                <button type="button" className="primary" disabled={s.busy} onClick={s.signIn}>{s.walletPending ? 'Waiting for wallet…' : signInLabel}</button>
               </>
             ) : <p>Connect using the wallet button in the Studio navigation to see your account.</p>}
           </div>
         ) : null}
-        {s.authenticated && s.dashboardError && page !== 'upload' && <DataError message={s.dashboardError} retry={s.refreshNow} />}
-        {s.authenticated && index?.stale && page !== 'upload' && page !== 'content' && <p className="ss-measurement-note" role="status">Publication status and Likes are catching up with the network. Your wallet balance is read separately.</p>}
+        {s.authenticated && s.dashboardError && !accessError && page !== 'upload' && <DataError message={s.dashboardError} retry={s.refreshNow} />}
+        {s.authenticated && index?.stale && page !== 'upload' && page !== 'content' && <p className="ss-measurement-note" role="status">Publication status and Likes are catching up with the network.</p>}
         {loading && <StudioSkeleton page={page} label={s.restoringCreatorSession ? 'Opening your Studio…' : 'Loading your Studio…'} />}
         {page === 'upload' && <ShortsUpload key={s.uploadEpoch} s={s} />}
         {s.authenticated && s.dashboard && !loading && (
@@ -553,30 +417,12 @@ export const ShortsStudio = ({ s }: { s: State }) => {
               <Analytics s={s} compact />
               <div className="ss-overview-grid">
                 <Content s={s} compact />
-                <div>
-                  <Rewards s={s} compact />
-                  <NextSteps s={s} />
-                </div>
+                <NextSteps s={s} />
               </div>
             </>
             )}
             {page === 'content' && <Content s={s} />}
             {page === 'analytics' && <Analytics s={s} />}
-            {page === 'revenue' && (
-            <>
-              <Rewards s={s} />
-              <div className="ss-metrics ss-revenue-metrics">
-                <Metric label="Lifetime earned" value={`${s.dashboard.account.earned} ${shortsUnit(s.paymentRelease?.network)}`} detail="Recorded creator rewards" />
-                <Metric label="Claimed to wallet" value={`${s.dashboard.account.claimed} ${shortsUnit(s.paymentRelease?.network)}`} detail="Total rewards you’ve already collected" />
-                <div className="ss-metric ss-revenue-explainer">
-                  <span>Likes are free</span>
-                  <p>Likes show appreciation without a payment. Superhero covers the network fee.</p>
-                  <small>Superhero pays for hosting your Shorts.</small>
-                </div>
-              </div>
-              <Ledger key={s.days} s={s} />
-            </>
-            )}
             {page === 'video' && <VideoDetail s={s} />}
             {page === 'review' && (s.isOperator ? <ReviewQueue s={s} /> : <p>Operator sign-in is required for moderation.</p>)}
             {!Object.keys(titles).includes(page) && (

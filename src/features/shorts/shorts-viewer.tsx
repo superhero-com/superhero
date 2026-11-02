@@ -6,17 +6,20 @@ import { Link } from 'react-router-dom';
 import {
   Bookmark, Captions, ArrowDown, ArrowLeft, ArrowUp, ChevronDown, Clapperboard,
   Flag, Info, Maximize2, Pause, Play, Plus, Share2, SlidersHorizontal,
-  Volume2, VolumeX, X, EyeOff, Eye, RefreshCw, MessageCircle,
+  Volume2, VolumeX, X, EyeOff, Eye, RefreshCw,
 } from 'lucide-react';
 import { shortsMediaUrl } from './shorts-media';
-import { qualityModes, isShortsQuality, type ShortsQuality } from './shorts-quality';
+import type { ShortsQuality } from './shorts-quality';
 import { useShortsQoe } from './use-shorts-qoe';
 import { useShortHls } from './use-short-hls';
 import { PlaybackProgress } from './shorts-playback-progress';
 import { ShortsContentWarning } from './shorts-content-warning';
 import { ShortsDialog } from './shorts-dialog';
 import { ShortsLikeButton } from './shorts-like-button';
-import { ShortsCreator, ShortsCreatorAvatar } from './shorts-creator';
+import { ShortsCommentButton } from './shorts-comment-button';
+import { ShortsPlaybackSettings } from './shorts-playback-settings';
+import { ShortsPlayerSkeleton, ShortsVideoLoading } from './shorts-player-skeleton';
+import { ShortsCreator } from './shorts-creator';
 import { ShortsFollow } from './shorts-follow';
 import type { useShortsSocial } from './use-shorts-social';
 import type { useShortsPreferences } from './shorts-preferences';
@@ -69,6 +72,7 @@ const ShortPlayer = ({
   const [duration, setDuration] = useState(short.duration);
   const [failed, setFailed] = useState(false);
   const [waiting, setWaiting] = useState(false);
+  const [hasFrame, setHasFrame] = useState(false);
   const manuallyPaused = useRef(false);
   const playbackStarted = useRef(false);
   const progress = useRef(new PlaybackProgress(short.duration));
@@ -125,7 +129,7 @@ const ShortPlayer = ({
   );
   if (hls.token) measurementToken.current = hls.token;
   const hasFailed = failed || hls.status === 'error';
-  const loading = waiting || (warm && hls.status !== 'ready' && hls.status !== 'error');
+  const loading = waiting || (warm && !hasFailed && (!hasFrame || hls.status !== 'ready'));
   const measured = !!onPlayback;
   useEffect(() => {
     measurement.current = { id: crypto.randomUUID(), sent: -1, day: new Date().toISOString().slice(0, 10) };
@@ -169,7 +173,7 @@ const ShortPlayer = ({
     if (!active || covered) return undefined;
     const keydown = (event: KeyboardEvent) => {
       if (event.repeat || event.altKey || event.ctrlKey || event.metaKey) return;
-      if (event.target instanceof Element && event.target.closest('button,a,input,select,textarea,dialog,[contenteditable="true"]')) return;
+      if (event.target instanceof Element && event.target.closest('button,a,input,select,textarea,dialog,[role="menu"],[contenteditable="true"]')) return;
       if ([' ', 'k', 'K'].includes(event.key)) { event.preventDefault(); toggle(); }
       if (['m', 'M'].includes(event.key)) { event.preventDefault(); onMute(); }
     };
@@ -215,8 +219,10 @@ const ShortPlayer = ({
               }}
               onEnded={loop}
               onWaiting={() => setWaiting(true)}
-              onCanPlay={() => setWaiting(false)}
-              onPlaying={() => { progress.current.resetPosition(video.current?.currentTime || 0); setWaiting(false); setFailed(false); }}
+              onEmptied={() => { setHasFrame(false); setWaiting(false); }}
+              onLoadedData={() => setHasFrame(true)}
+              onCanPlay={() => { setHasFrame(true); setWaiting(false); }}
+              onPlaying={() => { progress.current.resetPosition(video.current?.currentTime || 0); setHasFrame(true); setWaiting(false); setFailed(false); }}
               onError={() => { if (warm) { setFailed(true); setWaiting(false); } }}
               onTimeUpdate={updateTime}
               onLoadedMetadata={() => {
@@ -229,26 +235,6 @@ const ShortPlayer = ({
               <track kind="captions" src={short.captions ? shortsMediaUrl(short.id, 'captions.vtt') : undefined} srcLang={short.language || 'en'} label="Creator captions" />
             </video>
             <button type="button" className="sv-play-surface" aria-label={paused ? `Play ${short.title}` : `Pause ${short.title}`} onClick={toggle} disabled={!active || hasFailed} tabIndex={active ? 0 : -1} />
-            <div className="sv-quality">
-              <label>
-                <span className="sr-only">Playback quality</span>
-                <select
-                  aria-label="Playback quality"
-                  value={hls.selection || quality}
-                  onChange={(event) => {
-                    const { value } = event.target;
-                    if (isShortsQuality(value)) {
-                      if (value === quality) hls.resetQuality();
-                      onQuality(value);
-                    } else hls.selectLevel(value);
-                  }}
-                >
-                  {qualityModes.map((mode) => <option key={mode.value} value={mode.value}>{mode.label}</option>)}
-                  {!!hls.choices?.length && <optgroup label="Available resolutions">{hls.choices.map((choice) => <option key={choice.key} value={choice.key}>{choice.label}</option>)}</optgroup>}
-                </select>
-              </label>
-              {hls.currentQuality && <span>{hls.currentQuality}</span>}
-            </div>
             <div className="sv-top-controls">
               <button type="button" className="sv-round" aria-label={paused ? 'Play video' : 'Pause video'} onClick={toggle} disabled={hasFailed}>
                 {paused ? <Play size={21} fill="currentColor" /> : <Pause size={21} fill="currentColor" />}
@@ -260,16 +246,26 @@ const ShortPlayer = ({
                 Hide video
               </button>
               )}
-              <div>
+              <div className="sv-control-group">
                 <button type="button" className="sv-round" aria-label={muted ? 'Unmute video' : 'Mute video'} onClick={onMute} aria-pressed={!muted}>
                   {muted ? <VolumeX size={21} /> : <Volume2 size={21} />}
                 </button>
                 {short.captions && <button type="button" className="sv-round" aria-label="Toggle captions" aria-pressed={captions} onClick={() => setCaptions((v) => !v)}><Captions size={21} /></button>}
                 <button type="button" className="sv-round sv-fullscreen" aria-label="Toggle fullscreen" onClick={fullscreen}><Maximize2 size={19} /></button>
+                <ShortsPlaybackSettings
+                  active={active}
+                  quality={quality}
+                  selection={hls.selection}
+                  choices={hls.choices}
+                  currentQuality={hls.currentQuality}
+                  onQuality={(mode) => { if (mode === quality) hls.resetQuality(); onQuality(mode); }}
+                  onResolution={hls.selectLevel}
+                  onDetails={onDetails}
+                />
               </div>
             </div>
             {paused && !hasFailed && !loading && <div className="sv-play-indicator" aria-hidden="true"><Play size={32} fill="currentColor" /></div>}
-            {loading && !hasFailed && active && <div className="sv-loading" role="status">{hls.status === 'preparing' ? 'Preparing video…' : 'Loading video…'}</div>}
+            {loading && !hasFailed && active && <ShortsVideoLoading buffering={hasFrame} preparing={hls.status === 'preparing'} />}
             {hasFailed && (
             <div className="sv-video-error" role="status">
               <p>This Short couldn’t load.</p>
@@ -322,29 +318,25 @@ const ShortPlayer = ({
           </>
         )}
       </div>
-      <div className="sv-actions" aria-label="Video actions">
+      <div className="sv-actions" role="group" aria-label="Video actions">
+        {!covered && <ShortsLikeButton pricing={pricing} count={short.likes} liked={short.liked} disabled={busy || short.mine} onLike={onLike} />}
         {!covered && onComments && (
+        <ShortsCommentButton id={short.id} active={active} onClick={onComments} />
+        )}
+        {!covered && onSave && (
         <div className="sv-action">
-          <button type="button" className="sv-action-button" aria-label="Video comments" onClick={onComments}><MessageCircle size={23} /></button>
-          <span>Comments</span>
+          <button type="button" className="sv-action-button" aria-label={saved ? 'Unsave Short' : 'Save Short'} title={saved ? 'Unsave Short' : 'Save Short'} aria-pressed={saved} onClick={onSave}><Bookmark size={23} fill={saved ? 'currentColor' : 'none'} /></button>
         </div>
         )}
-        {!covered && <ShortsLikeButton pricing={pricing} count={short.likes} liked={short.liked} disabled={busy || short.mine} onLike={onLike} />}
         <div className="sv-action">
-          <button type="button" className="sv-action-button" aria-label="Copy Short link" onClick={onShare}><Share2 size={23} /></button>
-          <span>Share</span>
+          <button type="button" className="sv-action-button" aria-label="Copy Short link" title="Share" onClick={onShare}><Share2 size={23} /></button>
         </div>
+        {covered && (
         <div className="sv-action">
           <button type="button" className="sv-action-button" aria-label="Video details and report" onClick={onDetails}><Info size={24} /></button>
           <span>Details</span>
         </div>
-        {!covered && onSave && (
-        <div className="sv-action">
-          <button type="button" className="sv-action-button" aria-label={saved ? 'Unsave Short' : 'Save Short'} aria-pressed={saved} onClick={onSave}><Bookmark size={23} fill={saved ? 'currentColor' : 'none'} /></button>
-          <span>{saved ? 'Saved' : 'Save'}</span>
-        </div>
         )}
-        {!covered && <ShortsCreatorAvatar address={short.creator} size={36} />}
       </div>
     </div>
   );
@@ -438,8 +430,8 @@ export const ShortsViewer = ({
   }, [feed.length]);
   useEffect(() => {
     const handle = (event: KeyboardEvent) => {
-      if (suspended || details || filters || reporting || event.altKey || event.ctrlKey || event.metaKey) return;
-      if (event.target instanceof Element && event.target.closest('input,select,textarea,dialog,[contenteditable="true"]')) return;
+      if (event.defaultPrevented || suspended || details || filters || reporting || event.altKey || event.ctrlKey || event.metaKey) return;
+      if (event.target instanceof Element && event.target.closest('input,select,textarea,dialog,[role="menu"],[contenteditable="true"]')) return;
       if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
         event.preventDefault(); navigate(index + (event.key === 'ArrowDown' ? 1 : -1));
       }
@@ -523,7 +515,7 @@ export const ShortsViewer = ({
             );
           })}
           {!unavailable && windowEnd < feed.length && <div aria-hidden="true" style={{ height: `${(feed.length - windowEnd) * 100}%` }} />}
-          {(!feed.length || unavailable) && (
+          {!feed.length && !ready && !pagination?.error && !message ? <ShortsPlayerSkeleton /> : (!feed.length || unavailable) && (
             <div className="sv-empty">
               <Clapperboard size={38} />
               <h2>{emptyTitle}</h2>
@@ -557,7 +549,7 @@ export const ShortsViewer = ({
           <button type="button" aria-label="Next Short" onClick={() => navigate(index + 1)} disabled={index === feed.length - 1}><ArrowDown size={24} /></button>
         </div>
         )}
-        {!shared && (
+        {!shared && feed.length > 0 && (
         <div className="sv-scroll-hint">
           Scroll to discover
           <ArrowDown size={12} />

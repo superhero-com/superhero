@@ -1,16 +1,14 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowUpRight, Clapperboard } from 'lucide-react';
-import { shortsUnit } from './shorts-pricing';
 import './shorts-studio-analytics.css';
 import { shortsMediaUrl } from './shorts-media';
 import { StudioSkeleton } from './shorts-studio-skeleton';
-import { dailyCreatorRevenue } from './shorts-trends';
 import type { Performance } from './types';
 import type { useShorts } from './use-shorts';
 
 type State = ReturnType<typeof useShorts>;
-type Measure = 'views' | 'reach' | 'watchSeconds' | 'averageSeconds' | 'completion' | 'earned' | 'paidLikes';
+type Measure = 'views' | 'reach' | 'watchSeconds' | 'averageSeconds' | 'completion';
 type Metric = { key: Measure; label: string; value: string; detail: string };
 const number = (n: number) => n.toLocaleString(undefined, { maximumFractionDigits: 1 });
 const duration = (n: number) => {
@@ -33,25 +31,22 @@ const metricCopy = (metric: Metric) => (
     <small>{metric.detail}</small>
   </>
 );
-const Trend = ({ p, metrics, unit }: { p: Performance; metrics: Metric[]; unit: string }) => {
+const Trend = ({ p, metrics }: { p: Performance; metrics: Metric[] }) => {
   const [selected, setSelected] = useState<Measure>(metrics[0].key);
   const metric = metrics.find((item) => item.key === selected) || metrics[0];
   const measure = metric.key;
-  const financial = measure === 'earned' || measure === 'paidLikes';
-  const revenue = dailyCreatorRevenue(p);
-  const series = p.series.map((row, i) => ({ ...row, ...revenue[i], earned: Number(revenue[i].earnedAe) }));
-  const unavailable = (at: number) => (financial ? p.finance.stale : at + 86400000 <= p.since);
+  const { series } = p;
+  const unavailable = (at: number) => at + 86400000 <= p.since;
   const values = series.map((row) => (unavailable(row.at) ? null : row[measure]));
-  const maximum = measure === 'completion' ? 1 : Math.max(measure === 'earned' ? 0.01 : 1, ...values.map((v) => v ?? 0));
+  const maximum = measure === 'completion' ? 1 : Math.max(1, ...values.map((v) => v ?? 0));
   const label = (value: number) => {
-    if (measure === 'earned') return `${number(value)} ${unit}`;
     if (measure === 'completion') return `${number(value * 100)}%`;
     if (measure === 'watchSeconds' || measure === 'averageSeconds') return duration(value);
     return number(value);
   };
   const valueLabel = (i: number) => {
-    if (values[i] === null) return financial && p.finance.stale ? 'Syncing' : 'Not measured';
-    return measure === 'earned' ? `${series[i].earnedAe} ${unit}` : label(values[i]!);
+    if (values[i] === null) return 'Not measured';
+    return label(values[i]!);
   };
   const points = values.map((value, i) => (value === null ? null : {
     x: values.length === 1 ? 500 : 8 + (i / (values.length - 1)) * 984,
@@ -80,7 +75,7 @@ const Trend = ({ p, metrics, unit }: { p: Performance; metrics: Metric[]; unit: 
               <path d={path} className="ss-chart-line" vectorEffect="non-scaling-stroke" />
               {points.map((point, i) => point && (
                 <circle key={series[i].at} cx={point.x} cy={point.y} r="3" className="ss-chart-point">
-                  <title>{`${date(series[i].at)}: ${measure === 'earned' ? `${series[i].earnedAe} ${unit}` : label(values[i]!)}`}</title>
+                  <title>{`${date(series[i].at)}: ${label(values[i]!)}`}</title>
                 </circle>
               ))}
             </svg>
@@ -90,7 +85,7 @@ const Trend = ({ p, metrics, unit }: { p: Performance; metrics: Metric[]; unit: 
               <span>{label(0)}</span>
             </div>
           </div>
-        ) : <div className="ss-chart-empty">{financial && p.finance.stale ? 'Reward history is updating.' : 'No measured activity for this metric yet.'}</div>}
+        ) : <div className="ss-chart-empty">No measured activity for this metric yet.</div>}
         <div className="ss-chart-axis">
           <span>{date(p.start)}</span>
           <span>{date(p.end - 1)}</span>
@@ -220,14 +215,8 @@ export const StudioAnalytics = ({ s, compact = false }: { s: State; compact?: bo
     completion: {
       key: 'completion', label: 'Completion rate', value: m.completion === null ? '—' : `${number(m.completion * 100)}%`, detail: 'Watched at least 95% of the video',
     },
-    paidLikes: {
-      key: 'paidLikes', label: 'Paid Likes', value: p.finance.stale ? '—' : number(p.finance.paidLikes), detail: 'Confirmed in this period',
-    },
-    earned: {
-      key: 'earned', label: 'Creator earnings', value: p.finance.stale ? 'Syncing…' : `${p.finance.earned} ${shortsUnit(s.paymentRelease?.network)}`, detail: 'After the treasury share',
-    },
   };
-  let keys: Measure[] = ['views', 'watchSeconds', 'paidLikes', 'earned'];
+  let keys: Measure[] = ['views', 'watchSeconds', 'reach', 'completion'];
   if (!compact && section === 'reach') keys = ['views', 'reach'];
   if (!compact && section === 'engagement') keys = ['watchSeconds', 'averageSeconds', 'completion'];
   const selectedMetrics = keys.map((key) => metrics[key]);
@@ -255,7 +244,7 @@ export const StudioAnalytics = ({ s, compact = false }: { s: State; compact?: bo
         </div>
       </div>
       {compact ? <div className="ss-metrics ss-metrics-strip">{selectedMetrics.map((metric) => <div className="ss-metric" key={metric.key}>{metricCopy(metric)}</div>)}</div>
-        : <Trend key={`${section}-${s.videoId || 'channel'}`} p={p} metrics={selectedMetrics} unit={shortsUnit(s.paymentRelease?.network)} />}
+        : <Trend key={`${section}-${s.videoId || 'channel'}`} p={p} metrics={selectedMetrics} />}
       {!compact && (
         <div className="ss-two-col ss-analytics-cards">
           {section !== 'engagement' && <Sources p={p} />}
@@ -277,7 +266,7 @@ export const StudioAnalytics = ({ s, compact = false }: { s: State; compact?: bo
             {p.partial ? 'Partial data · ' : ''}
             About these numbers
           </summary>
-          <p>Audience metrics are estimates. Automated traffic can still affect these numbers. Views do not determine your rewards.</p>
+          <p>Audience metrics are estimates. Automated traffic can still affect these numbers.</p>
           <p>{`Playback measurement started ${date(p.since)}. ${p.partial ? 'This period has partial coverage. ' : ''}Views and watch time are counted automatically. Views require 2 seconds, capped at one per browser, Short and UTC day. History is retained for 90 days.`}</p>
           <p>Watch time includes unique played segments from qualified views, capped at the video length per daily view. Watch hours = watch seconds ÷ 3,600. Shorter totals display in seconds or minutes.</p>
           <p>{`Browser reach: ${number(m.reach)} distinct browsers, not people. Daily reach must not be added to calculate period reach.`}</p>

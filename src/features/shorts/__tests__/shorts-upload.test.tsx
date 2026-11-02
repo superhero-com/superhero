@@ -40,7 +40,7 @@ const details = () => {
   selectVideo();
   fireEvent.click(screen.getByRole('button', { name: 'Next: Details' }));
   fireEvent.change(screen.getByLabelText(/Title/), { target: { value: '  My story  ' } });
-  fireEvent.change(screen.getByLabelText('Main topic'), { target: { value: 'Technology' } });
+  fireEvent.change(screen.getByRole('combobox', { name: 'Main topic' }), { target: { value: 'Technology' } });
   fireEvent.click(screen.getByLabelText(/I have the rights/));
 };
 beforeEach(() => {
@@ -75,6 +75,7 @@ describe('Free three-step upload', () => {
     fireEvent.change(screen.getByLabelText('Video file'), { target: { files: [large] } });
     expect(screen.getByRole('alert')).toHaveTextContent('up to 40 MiB');
     selectVideo(61); expect(screen.getByRole('alert')).toHaveTextContent('2–60 seconds');
+    expect(screen.getByRole('heading', { name: 'Try another moment.' })).toBeVisible();
     selectVideo(); expect(screen.getByRole('button', { name: 'Next: Details' })).toBeEnabled();
     expect(screen.queryByText('Hosting')).not.toBeInTheDocument(); expect(publish).not.toHaveBeenCalled();
   });
@@ -88,7 +89,7 @@ describe('Free three-step upload', () => {
     expect(screen.getByRole('button', { name: 'Next: Details' })).toBeEnabled();
     fireEvent.click(screen.getByRole('button', { name: 'Next: Details' }));
     fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Camera original' } });
-    fireEvent.change(screen.getByLabelText('Main topic'), { target: { value: 'Art' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Main topic' }), { target: { value: 'Art' } });
     fireEvent.click(screen.getByLabelText(/I have the rights/));
     fireEvent.click(screen.getByRole('button', { name: 'Next: Review' }));
     fireEvent.click(screen.getByRole('button', { name: 'Publish' }));
@@ -106,6 +107,7 @@ describe('Free three-step upload', () => {
     fireEvent.change(screen.getByLabelText('Video file'), {
       target: { files: [new File(['replacement'], 'next.mp4', { type: 'video/mp4' })] },
     });
+    expect(screen.getByRole('heading', { name: 'Reading your video…' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Next: Details' })).toBeDisabled();
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
     const video = screen.getByLabelText('Preview your video');
@@ -122,12 +124,18 @@ describe('Free three-step upload', () => {
 
   it('preserves editable details and independent disclosures and publishes only from Review', () => {
     render(<ShortsUpload s={state()} />); details();
+    expect(screen.getByRole('textbox', { name: 'Title' })).toBeRequired();
+    expect(screen.getByRole('combobox', { name: 'Main topic' })).toBeRequired();
+    expect(screen.getByLabelText(/I have the rights/)).toBeRequired();
+    expect(screen.getByRole('status')).toHaveTextContent('Required details complete');
+    expect(screen.getAllByRole('switch').every((c) => !(c as HTMLInputElement).checked)).toBe(true);
     expect(screen.getByLabelText('Timed captions')).not.toBeVisible();
     fireEvent.click(screen.getByRole('switch', { name: /AI-generated/ }));
     fireEvent.click(screen.getByRole('switch', { name: /Sponsored/ }));
     expect(screen.getAllByRole('switch').every((c) => (c as HTMLInputElement).checked)).toBe(true);
     fireEvent.click(screen.getByLabelText(/I have the rights/));
     expect(screen.getByRole('button', { name: 'Next: Review' })).toBeDisabled();
+    expect(screen.getByRole('status')).toHaveTextContent('Still needed: publishing rights.');
     fireEvent.click(screen.getByLabelText(/I have the rights/));
     fireEvent.click(screen.getByRole('button', { name: 'Next: Review' }));
     expect(publish).not.toHaveBeenCalled();
@@ -154,6 +162,23 @@ describe('Free three-step upload', () => {
     expect(publish).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Publish' })).toBeEnabled();
   });
+
+  it.each([[false, false], [true, false], [false, true]])(
+    'allows independent labels through Review (AI: %s, sponsored: %s)',
+    (synthetic, sponsored) => {
+      render(<ShortsUpload s={state()} />); details();
+      if (synthetic) fireEvent.click(screen.getByRole('switch', { name: /AI-generated/ }));
+      if (sponsored) fireEvent.click(screen.getByRole('switch', { name: /Sponsored/ }));
+      fireEvent.click(screen.getByRole('button', { name: 'Next: Review' }));
+      const review = within(screen.getByRole('region', { name: 'Your Short' }));
+      expect(!!review.queryByText('AI-altered')).toBe(synthetic);
+      expect(!!review.queryByText('Sponsored')).toBe(sponsored);
+      fireEvent.click(screen.getByRole('button', { name: 'Publish' }));
+      const data = publish.mock.calls[0][0] as FormData;
+      expect(data.get('synthetic')).toBe(String(synthetic));
+      expect(data.get('sponsored')).toBe(String(sponsored));
+    },
+  );
 
   it('keeps Review, preview and footer mounted during upload, publication, failure and completion', () => {
     const view = (overrides: Partial<State> = {}) => <MemoryRouter><ShortsUpload s={state(overrides)} /></MemoryRouter>;

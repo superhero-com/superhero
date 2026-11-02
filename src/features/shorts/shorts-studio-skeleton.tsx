@@ -2,20 +2,9 @@ const Placeholder = ({ shape = 'line' }: { shape?: 'line' | 'label' | 'value' | 
   <span className={`ss-skeleton ss-skeleton--${shape}`} />
 );
 
-const RewardsSkeleton = () => (
-  <div className="ss-rewards ss-skeleton-rewards">
-    <div className="ss-skeleton-copy">
-      <Placeholder shape="label" />
-      <Placeholder shape="value" />
-      <Placeholder />
-    </div>
-    <Placeholder shape="button" />
-  </div>
-);
-
 const MetricsSkeleton = ({ chart = false }: { chart?: boolean }) => (
   <div className={chart ? 'ss-metric-tabs' : 'ss-metrics ss-metrics-strip'}>
-    {['views', 'reach', 'watch', 'rewards'].map((metric) => (
+    {['views', 'reach', 'watch', 'completion'].map((metric) => (
       <div className="ss-metric" key={metric}>
         <Placeholder shape="label" />
         <Placeholder shape="value" />
@@ -80,15 +69,13 @@ export const StudioSkeleton = ({ page = 'overview', label = 'Loading your Studio
   <div className="ss-loading" role="status">
     <span className="ss-loading-label">{label}</span>
     <div aria-hidden="true">
-      {page === 'revenue' && <RewardsSkeleton />}
       {['overview', 'analytics', 'summary'].includes(page) && <AnalyticsSkeleton compact={page !== 'analytics'} />}
       {page === 'overview' && (
       <div className="ss-overview-grid">
         <ListSkeleton thumbnails />
-        <RewardsSkeleton />
+        <ListSkeleton />
       </div>
       )}
-      {page === 'revenue' && <MetricsSkeleton />}
       {page === 'video' && (
         <div className="ss-panel ss-skeleton-copy">
           <Placeholder shape="label" />

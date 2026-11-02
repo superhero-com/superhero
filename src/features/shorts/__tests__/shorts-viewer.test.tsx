@@ -1,5 +1,5 @@
 import {
-  act, fireEvent, render, screen,
+  act, fireEvent, render, screen, within,
 } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import {
@@ -11,11 +11,13 @@ import { defaultPreferences } from '../shorts-preferences';
 
 type EndCallback = (() => void) | undefined;
 const hlsCallbacks = vi.hoisted(() => new Map<string, EndCallback>());
+const qualityControls = vi.hoisted(() => ({ reset: vi.fn(), select: vi.fn() }));
 vi.mock('../shorts-creator', () => ({
   ShortsCreator: ({ address }: { address: string }) => <div>{address}</div>,
   ShortsCreatorAvatar: () => null,
 }));
 vi.mock('../shorts-follow', () => ({ ShortsFollow: () => null }));
+vi.mock('../api', async (original) => ({ ...await original<typeof import('../api')>(), request: vi.fn().mockResolvedValue({ comments: '4' }) }));
 vi.mock('../use-short-hls', async () => {
   const { useEffect } = await import('react');
   return {
@@ -34,7 +36,15 @@ vi.mock('../use-short-hls', async () => {
         return () => element?.removeAttribute('src');
       }, [ref, id, warm]);
       return {
-        status: 'ready', token: warm ? 'measured-token' : '', choices: [], resetQuality: vi.fn(), retry: vi.fn(),
+        status: 'ready',
+        token: warm ? 'measured-token' : '',
+        choices: [{
+          key: 'level:720', index: 0, size: 720, label: '720 × 1280',
+        }],
+        currentQuality: '720 × 1280',
+        resetQuality: qualityControls.reset,
+        selectLevel: qualityControls.select,
+        retry: vi.fn(),
       };
     },
   };
@@ -112,6 +122,38 @@ const mount = (props = makeProps()) => {
   return { ...view, region, videos: [...view.container.querySelectorAll('video')] };
 };
 describe('Shorts playback lifecycle', () => {
+  it('reserves the player layout only while the feed is loading', () => {
+    const props = { ...makeProps(), feed: [], ready: false };
+    const view = render(<MemoryRouter><ShortsViewer {...props} /></MemoryRouter>);
+    expect(screen.getByRole('status', { name: 'Loading Shorts' })).toBeVisible();
+    expect(screen.queryByText('No Shorts in this feed yet')).not.toBeInTheDocument();
+    view.rerender(<MemoryRouter><ShortsViewer {...props} ready /></MemoryRouter>);
+    expect(screen.queryByRole('status', { name: 'Loading Shorts' })).not.toBeInTheDocument();
+    expect(screen.getByText('No Shorts in this feed yet')).toBeVisible();
+    view.rerender(
+      <MemoryRouter>
+        <ShortsViewer
+          {...props}
+          pagination={{
+            error: 'Offline', more: vi.fn(), restart: vi.fn(), focus: vi.fn(),
+          }}
+        />
+      </MemoryRouter>,
+    );
+    expect(screen.queryByRole('status', { name: 'Loading Shorts' })).not.toBeInTheDocument();
+    expect(screen.getByText('Couldn’t load Shorts')).toBeVisible();
+  });
+  it('waits for a decoded frame and keeps it visible during buffering', () => {
+    const { videos } = mount({ ...makeProps(), feed: [clips[0]] });
+    expect(screen.getByRole('status', { name: 'Loading video…' })).toHaveTextContent('Loading video');
+    fireEvent.canPlay(videos[0]);
+    expect(screen.queryByRole('status', { name: /video…/ })).not.toBeInTheDocument();
+    fireEvent.waiting(videos[0]);
+    expect(screen.getByRole('status', { name: 'Buffering video…' })).toHaveTextContent('Buffering video');
+    expect(videos[0]).toBeVisible();
+    fireEvent.playing(videos[0]);
+    expect(screen.queryByRole('status', { name: /video…/ })).not.toBeInTheDocument();
+  });
   it('shows a regular free Like and sponsored network fee, then disables an unavailable offer', () => {
     const props = {
       ...makeProps(),
@@ -123,7 +165,8 @@ describe('Shorts playback lifecycle', () => {
     const view = render(<MemoryRouter><ShortsViewer {...props} /></MemoryRouter>);
     expect(screen.getByRole('button', { name: 'Like' })).toBeEnabled();
     expect(screen.getByText('Mainnet')).toBeVisible();
-    fireEvent.click(screen.getByRole('button', { name: 'Video details and report' }));
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Playback settings' }), { key: 'Enter' });
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Video details and report' }));
     expect(screen.getByText('Likes are free. Superhero covers the network fee.')).toBeVisible();
     expect(screen.queryByText(/Each Like costs|to the creator and/)).not.toBeInTheDocument();
     view.rerender(<MemoryRouter><ShortsViewer {...props} pricing={undefined} /></MemoryRouter>);
@@ -311,7 +354,8 @@ it('warms only the active and next video; Data Saver and backgrounding release e
   fireEvent.scroll(scroller, { target: { scrollTop: 600 } });
   const sources = () => Array.from(view.container.querySelectorAll('video[src]')).map((video) => video.getAttribute('src'));
   expect(sources()).toEqual(['blob:hls/two', 'blob:hls/three']);
-  fireEvent.change(view.container.querySelector('[data-short-id="two"] select')!, { target: { value: 'data-saver' } });
+  fireEvent.keyDown(within(view.container.querySelector('[data-short-id="two"]')! as HTMLElement).getByRole('button', { name: 'Playback settings' }), { key: 'Enter' });
+  fireEvent.click(screen.getByRole('menuitemradio', { name: /Data Saver/ }));
   expect(sources()).toEqual(['blob:hls/two']);
   vi.spyOn(document, 'hidden', 'get').mockReturnValue(true);
   fireEvent(document, new Event('visibilitychange'));
@@ -333,4 +377,38 @@ it('shows Play immediately after pausing, before a source change can cancel the 
   fireEvent.play(video);
   fireEvent.click(screen.getByRole('button', { name: 'Pause video' }));
   expect(screen.getByRole('button', { name: 'Play video' })).not.toBeDisabled();
+});
+
+it('keeps quality on demand, preserves Auto reset, and groups the primary social actions', async () => {
+  const props = { ...makeProps(), feed: [clips[0]], onComments: vi.fn() };
+  const { videos, region, rerender } = mount(props);
+  const actions = within(screen.getByRole('group', { name: 'Video actions' }));
+  expect(await actions.findByLabelText('4 comments')).toHaveTextContent('4');
+  expect(actions.queryByText(/^(Comments|Save|Saved|Share)$/)).not.toBeInTheDocument();
+  expect(actions.getAllByRole('button').map((button) => button.getAttribute('aria-label')))
+    .toEqual(['Like', 'Video comments', 'Save Short', 'Copy Short link']);
+  fireEvent.click(actions.getByRole('button', { name: 'Video comments' }));
+  expect(props.onComments).toHaveBeenCalledWith(clips[0]);
+  expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  const settings = screen.getByRole('button', { name: 'Playback settings' });
+  vi.mocked(region.scrollTo).mockClear();
+  fireEvent.keyDown(settings, { key: 'ArrowDown' });
+  expect(region.scrollTo).not.toHaveBeenCalled();
+  expect(screen.getByRole('menuitemradio', { name: /Auto/ })).toHaveAttribute('aria-checked', 'true');
+  expect(videos[0].paused).toBe(false);
+  vi.mocked(region.scrollTo).mockClear();
+  fireEvent.keyDown(screen.getByRole('menuitemradio', { name: /Auto/ }), { key: 'ArrowDown' });
+  expect(region.scrollTo).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Resolution' }));
+  expect(screen.getByRole('menu', { name: 'Video resolution' })).toContainElement(document.activeElement as HTMLElement);
+  fireEvent.click(screen.getByRole('menuitemradio', { name: '720 × 1280' }));
+  expect(qualityControls.select).toHaveBeenCalledWith('level:720');
+  expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  fireEvent.keyDown(settings, { key: 'Enter' });
+  fireEvent.click(screen.getByRole('menuitemradio', { name: /Auto/ }));
+  expect(qualityControls.reset).toHaveBeenCalledOnce();
+  expect(props.personal.update).toHaveBeenCalledWith({ quality: 'auto' });
+  fireEvent.keyDown(settings, { key: 'Enter' });
+  rerender(<MemoryRouter><ShortsViewer {...props} suspended /></MemoryRouter>);
+  expect(screen.queryByRole('menu')).not.toBeInTheDocument();
 });

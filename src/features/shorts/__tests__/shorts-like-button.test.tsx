@@ -17,7 +17,7 @@ describe('Animated Like feedback', () => {
       pricing={pricing}
     />);
     expect(screen.getByRole('button', { name: 'Like' })).toBeEnabled();
-    expect(screen.getByText('Like', { selector: '.sv-like-action > span' })).toBeVisible();
+    expect(screen.getByRole('status')).toHaveTextContent('2 Likes');
     expect(screen.queryByText(/test AE/)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Like' }));
     expect(onLike).toHaveBeenCalledOnce();

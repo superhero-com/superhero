@@ -420,6 +420,43 @@ describe('Shorts wallet session and recovery', () => {
     expect(result.current.feed[0].views).toBe(1);
     expect(mocks.request).toHaveBeenLastCalledWith('/video/playback', expect.objectContaining({ id: event.id, session: event.session, seconds: 4 }), undefined, { keepalive: true, timeout: 10000 });
   });
+  it('stops restoring Studio when initial configuration fails and recovers on retry', async () => {
+    const original = mocks.request.getMockImplementation()!;
+    mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
+      if (path === '/config') throw new Error('Offline');
+      return original(path, ...args);
+    });
+    const { result } = renderHook(useShorts);
+    await waitFor(() => expect(result.current.configError).toMatch(/settings couldn’t load/));
+    expect(result.current.restoringCreatorSession).toBe(false);
+    expect(mocks.sign).not.toHaveBeenCalled();
+    mocks.request.mockImplementation(original);
+    await act(async () => { await result.current.refreshNow(); });
+    expect(result.current.configError).toBe('');
+    expect(result.current.config).toBeDefined();
+  });
+  it('cancels a private preview when the connected account changes', async () => {
+    const hook = await startLike();
+    let finish!: (response: Response) => void;
+    const fetchPreview = vi.fn(() => new Promise<Response>((resolve) => { finish = resolve; }));
+    vi.stubGlobal('fetch', fetchPreview);
+    let pending!: Promise<boolean>;
+    act(() => { pending = hook.result.current.reviewClip('private-draft'); });
+    expect(fetchPreview).toHaveBeenCalledOnce();
+    const [, options] = fetchPreview.mock.calls[0] as unknown as [string, RequestInit];
+    const { signal } = options;
+    mocks.actor = 'ak_another'; hook.rerender();
+    expect(signal?.aborted).toBe(true);
+    await act(async () => { finish(new Response('old private video', { headers: { 'Content-Type': 'video/mp4' } })); await pending; });
+    expect(hook.result.current.preview).toBeUndefined();
+  });
+  it('rejects a successful non-video preview response instead of opening a broken player', async () => {
+    const hook = await startLike();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{}', { headers: { 'Content-Type': 'application/json' } })));
+    await act(async () => { await hook.result.current.reviewClip('private-draft'); });
+    expect(hook.result.current.message).toMatch(/didn’t return a video/);
+    expect(hook.result.current.preview).toBeUndefined();
+  });
   it('exposes an initial dashboard failure and clears it after a successful retry', async () => {
     const original = mocks.request.getMockImplementation()!;
     let unavailable = true;

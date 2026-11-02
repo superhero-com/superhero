@@ -91,28 +91,15 @@ const state = (section: string, extra: Partial<State> = {}): State => ({
 const studio = (s: State, query = '') => render(<MemoryRouter initialEntries={[`/shorts/studio/${s.section === 'overview' ? '' : s.section}${query}`]}><ShortsStudio s={s} /></MemoryRouter>);
 
 describe('Creator Studio workflows', () => {
-  it.each(['ae_uat', 'ae_mainnet'] as const)('explains free Likes and keeps receipt links on %s', (network) => {
-    const unit = network === 'ae_uat' ? 'test AE' : 'AE';
-    const paymentRelease = {
-      network, likeFeeAetto: '0', treasuryBps: 2500,
-    } as State['paymentRelease'];
-    studio(state('revenue', { paymentRelease }));
-    expect(screen.getByText('Likes are free')).toBeVisible();
-    expect(screen.getByText(/Superhero covers the network fee/)).toBeVisible();
-    expect(screen.queryByText(/75%|remaining 25%|How you earn/)).not.toBeInTheDocument();
-    expect(within(screen.getByRole('region', { name: 'Available rewards' }))
-      .getByRole('heading')).toHaveTextContent(`0.04 ${unit}`);
-    const explorer = network === 'ae_uat' ? 'https://testnet.aescan.io' : 'https://aescan.io';
-    expect(screen.getAllByRole('link', { name: 'View receipt' }).map((link) => link.getAttribute('href')))
-      .toEqual([`${explorer}/transactions/th_claim`, `${explorer}/transactions/th_reward`]);
-  });
-
-  it('does not advertise a reward split or explorer when release verification is unavailable', () => {
-    studio(state('revenue'));
-    expect(screen.getByText('Likes are free')).toBeVisible();
-    expect(screen.queryByText(/remaining.*%|How you earn/)).not.toBeInTheDocument();
-    expect(screen.queryByText('80%')).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'View receipt' })).not.toBeInTheDocument();
+  it('focuses on audience metrics without exposing legacy reward balances', () => {
+    studio(state('overview', {
+      dashboard: { ...state('overview').dashboard!, account: { ...state('overview').dashboard!.account, rewardAccounts: [{ contract: 'ct_earlier', available: '0.16' }] } },
+    }));
+    expect(screen.getByText('Browser reach')).toBeVisible();
+    expect(screen.getByText('Completion rate')).toBeVisible();
+    expect(screen.queryByText(/Paid Likes|Creator earnings|AVAILABLE TO CLAIM|Earlier rewards/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Revenue|claim rewards/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Available rewards' })).not.toBeInTheDocument();
   });
 
   it('keeps overview concise with real next actions and a separate analytics destination', () => {
@@ -176,46 +163,15 @@ describe('Creator Studio workflows', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Retry views' }));
     expect(s.refreshPerformance).toHaveBeenCalledOnce();
   });
-  it('keeps period filters separate from available rewards and claims', () => {
-    const s = state('revenue');
-    studio(s);
-    fireEvent.click(screen.getByRole('button', { name: 'Review claim' }));
-    expect(s.setClaimReview).toHaveBeenCalledExactlyOnceWith(true);
-    fireEvent.click(screen.getByRole('button', { name: 'Claims' }));
-    expect(screen.queryByText('Creator reward')).not.toBeInTheDocument();
-    expect(screen.getByText('Rewards claimed')).toBeVisible();
-    fireEvent.change(screen.getByRole('combobox', { name: 'Activity period' }), { target: { value: '7' } });
-    expect(s.setDays).toHaveBeenCalledExactlyOnceWith(7);
-    expect(within(screen.getByRole('region', { name: 'Available rewards' })).getByRole('heading')).toHaveTextContent('0.04 AE');
-  });
-  it('explains empty current rewards while keeping earlier rewards claimable', () => {
-    const s = state('revenue');
-    s.dashboard!.account.available = '0'; s.dashboard!.account.previousAvailable = '0.12';
-    s.config = { ...s.config, previousContract: 'ct_earlier', likeMode: 'free' } as typeof s.config;
-    studio(s);
-    expect(screen.queryByRole('button', { name: /^(Review claim|No rewards to claim)$/ })).not.toBeInTheDocument();
-    expect(screen.getByText(/0.12 AE in earlier rewards/)).toBeVisible();
-    fireEvent.click(screen.getByRole('button', { name: 'Claim earlier rewards' }));
-    expect(s.claimPrevious).toHaveBeenCalledOnce();
-  });
-  it('hides stale period totals, labels pending entries, and retries without hiding live balances', () => {
-    const s = state('revenue', { performance: { ...performance, finance: { ...performance.finance, stale: true, entries: [{ ...performance.finance.entries[0], confirmed: false }] } } });
-    studio(s);
-    expect(screen.getByText('Updating…')).toBeVisible();
-    expect(screen.getByText('Pending confirmation')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Review claim' })).toBeEnabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Retry activity' }));
-    expect(s.refreshPerformance).toHaveBeenCalledOnce();
-  });
-  it('replaces failed dashboard loading with recovery and prevents claims using stale account data', () => {
-    const s = state('revenue', { dashboardError: 'Unable to load account', dashboard: undefined });
+  it('replaces failed dashboard loading with recovery and labels stale account data', () => {
+    const s = state('overview', { dashboardError: 'Unable to load account', dashboard: undefined });
     const { unmount } = studio(s);
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(s.refreshNow).toHaveBeenCalledOnce();
     unmount();
-    studio(state('revenue', { dashboardError: 'Account is stale' }));
-    expect(screen.getByRole('button', { name: 'Review claim' })).toBeDisabled();
+    studio(state('overview', { dashboardError: 'Account is stale' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Account is stale');
   });
   it('uses the one shared wallet control for guests', () => {
     studio(state('overview', { authenticated: false, actor: '' }));
@@ -237,7 +193,7 @@ describe('Creator Studio workflows', () => {
     expect(screen.getByRole('img', { name: /Daily average view duration/ })).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Audience retention' })).toBeVisible();
   });
-  it('keeps missing measurement and syncing earnings out of the chart', () => {
+  it('keeps missing measurements and legacy earnings out of the chart', () => {
     studio(state('analytics', {
       performance: {
         ...performance,
@@ -250,8 +206,7 @@ describe('Creator Studio workflows', () => {
     expect(screen.queryByRole('img', { name: /Daily views/ })).not.toBeInTheDocument();
     expect(screen.getByText('Not enough data')).toBeVisible();
     expect(screen.queryByText('99')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Creator earnings/ }));
-    expect(screen.getByText('Reward history is updating.')).toBeVisible();
+    expect(screen.queryByRole('button', { name: /Creator earnings/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('img', { name: /Daily creator earnings/ })).not.toBeInTheDocument();
   });
   it('displays watch hours consistently in the metric and daily chart without changing average duration units', () => {
@@ -276,8 +231,7 @@ describe('Creator Studio workflows', () => {
     fireEvent.click(within(navigation).getByRole('link', { name: 'Details' }));
     expect(screen.getByRole('button', { name: 'Load private preview' })).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Withdraw' })).not.toBeInTheDocument();
-    fireEvent.click(within(navigation).getByRole('link', { name: 'Revenue' }));
-    expect(screen.getByRole('heading', { name: 'Reward activity' })).toBeVisible();
+    expect(within(navigation).queryByRole('link', { name: 'Revenue' })).not.toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: 'Analytics sections' })).not.toBeInTheDocument();
   });
   it('sorts from table headings in both directions and links directly to analytics', () => {

@@ -10,7 +10,6 @@ export const ShortsLikeButton = ({
 }) => {
   const payment = shortsPricing(pricing);
   const availableLabel = payment ? 'Like' : 'Likes temporarily unavailable';
-  const label = liked ? 'Liked' : 'Like';
   const previous = useRef({ count, liked });
   const [motion, setMotion] = useState({ from: count, to: count, celebrate: false });
   useEffect(() => {
@@ -26,6 +25,7 @@ export const ShortsLikeButton = ({
           type="button"
           className={`sv-action-button ${liked ? 'is-liked' : ''} ${motion.celebrate ? 'sv-like-pop' : ''}`}
           aria-label={liked ? 'Liked' : availableLabel}
+          title={liked ? 'Liked' : availableLabel}
           aria-pressed={liked}
           disabled={disabled || liked || !payment}
           onClick={onLike}
@@ -49,7 +49,6 @@ export const ShortsLikeButton = ({
           <span className="sv-like-new">{count}</span>
         </span>
       </strong>
-      <span>{payment || liked ? label : 'Unavailable'}</span>
     </div>
   );
 };

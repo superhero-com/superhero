@@ -13,6 +13,7 @@ import { AeCard } from '@/components/ui/ae-card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { isStandalone } from '@/utils/displayMode';
+import { track } from '@/lib/journey';
 import { generateMnemonic, isValidMnemonic, normalizeMnemonic } from '../mnemonic';
 import {
   assessPassphrase, generatePassphrase, isEstimatorReady, loadPassphraseEstimator,
@@ -746,6 +747,8 @@ const WalletOnboarding = ({
     setMnemonicRevealed(false);
     setMnemonicCopied(false);
     setStep('done');
+    // A new wallet vault now exists on this device (passkey, new phrase or import).
+    track('wallet_created');
   }, []);
 
   /** Plaintext phrase export, built only for an explicit download/share action. */

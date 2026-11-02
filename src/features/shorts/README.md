@@ -315,3 +315,11 @@ and its actual RPC account over a simulated extension port, including sign-only
 requests and user rejection. The port is simulated; no real extension is opened.
 
 Historical withdrawal and comment-deletion journals remain readable so transactions signed against older deployments can be reconciled. The app never prepares new calls to those methods. Current free contracts have no claim endpoint; only verified earlier reward contracts can receive claims.
+
+## Comments
+
+Comments open beside the viewer on wide screens and in a bottom sheet on phones. The header and composer stay visible while the list scrolls. Author identities reuse profile names, avatars and full wrapping address badges; Creator and You labels identify participants. Long comments expand in place.
+
+Newest/Oldest sorts loaded comments by block height, with the comment ID breaking ties. While more pages remain, the controls explicitly say “Newest loaded” / “Oldest loaded” and show the loaded count: imported contract order is not necessarily chronological, and the API has no global date-sort endpoint. Pagination errors keep the current list and draft; a stale contract version restarts the list.
+
+The composer expands on focus, enforces both character and UTF-8 limits, and retains unsuccessful or pending drafts until publication is confirmed. Comments remain permanent wallet-signed records. The current contract has no replies, comment reactions, editing or deletion; those controls are not offered.

@@ -1,9 +1,13 @@
-import { useLayoutEffect, useRef, type ReactNode } from 'react';
+import {
+  useLayoutEffect, useRef, type CSSProperties, type ReactNode,
+} from 'react';
 
 export const ShortsDialog = ({
-  label, busy, suspended = false, onClose, children,
+  label, busy, suspended = false, onClose, children, className = '', style,
 }: {
   label: string;
+  className?: string;
+  style?: CSSProperties;
   busy: boolean;
   suspended?: boolean;
   onClose: () => void;
@@ -20,7 +24,8 @@ export const ShortsDialog = ({
   return (
     <dialog
       ref={ref}
-      className="sh-native-dialog"
+      className={`sh-native-dialog ${className}`}
+      style={style}
       aria-label={label}
       onCancel={(event) => {
         event.preventDefault();

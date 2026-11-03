@@ -352,7 +352,6 @@ export const ShortsStudio = ({ s }: { s: State }) => {
         </nav>
         <section className="ss-sidebar-account" aria-label="Your Superhero wallet">
           <HeaderWalletButton />
-          {s.actor && <span className="ss-wallet-address">{s.actor}</span>}
         </section>
       </aside>
       <main className="ss-main">

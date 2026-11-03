@@ -46,7 +46,7 @@ describe('Studio main-wallet identity', () => {
       </MemoryRouter>,
     );
     expect(screen.getByText(/Your wallet is connected/)).toHaveTextContent('does not send a transaction or charge a fee');
-    expect(screen.getByText('ak_connected')).toBeVisible();
+    expect(screen.queryByText('ak_connected')).not.toBeInTheDocument();
   });
   it('shows the connected account without redundant sign-in or switch-wallet buttons', () => {
     const signIn = vi.fn();

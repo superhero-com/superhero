@@ -15,7 +15,7 @@ function makePoll(id: number, status: 'open' | 'closed') {
     title: `Poll ${id}`,
     status,
     voteCount: 1,
-    endDate: new Date(0),
+    endDate: new Date(0) as Date | undefined,
   };
 }
 
@@ -114,5 +114,12 @@ describe('GovernancePolls', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(mockRefetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('labels a poll without a close height as having no end date', () => {
+    mockPolls = [{ ...makePoll(1, 'open'), endDate: undefined }];
+    renderPolls();
+
+    expect(screen.getByText('No end date')).toBeInTheDocument();
   });
 });

@@ -2311,6 +2311,7 @@
       "noPollsHint": "请尝试调整你的搜索词或筛选条件，发现符合你兴趣的治理投票。",
       "loadFailed": "无法加载投票。",
       "retry": "重试",
+      "noEndDate": "无截止日期",
       "unknown": "未知",
       "votes": "票"
     },

@@ -2388,6 +2388,7 @@
       "noPollsHint": "Try adjusting your search terms or filters to discover governance polls that match your interests.",
       "loadFailed": "Couldn't load polls.",
       "retry": "Try again",
+      "noEndDate": "No end date",
       "unknown": "Unknown",
       "votes": "votes"
     },

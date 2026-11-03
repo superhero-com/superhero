@@ -117,21 +117,6 @@ export default function GovernancePolls() {
                     }}
                     variant="filled"
                     size="large"
-                    rightIcon={(
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                    )}
                     className="transition-all duration-300 focus-within:scale-[1.02] focus-within:shadow-[0_0_0_3px_rgba(59,130,246,0.1)]"
                   >
                     <option value="all">{t('polls.allPolls')}</option>
@@ -267,7 +252,7 @@ export default function GovernancePolls() {
                               </svg>
                             </div>
                             <span className="text-sm font-semibold">
-                              {new Date(p.endDate).toLocaleDateString()}
+                              {p.endDate ? p.endDate.toLocaleDateString() : t('polls.noEndDate')}
                             </span>
                           </div>
                         </div>

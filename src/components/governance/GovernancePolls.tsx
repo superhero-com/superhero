@@ -22,47 +22,29 @@ export default function GovernancePolls() {
 
   return (
     <div className="min-h-screen">
-      <div className="flex flex-col gap-6 px-4 md:px-6 py-6 max-w-6xl mx-auto">
-        {/* Enhanced Header Section */}
-        <div className="relative">
-          <div className="governance-decoration absolute inset-0 bg-gradient-to-r from-blue-500/10 via-blue-500/10 to-blue-500/10 rounded-3xl blur-3xl -z-10" />
-          <div className="ui-panel flex items-center justify-between mb-2 py-5 px-5 bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl">
-            <div className="flex flex-col md:flex-row items-center gap-6">
-              <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-blue-500/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/10">
-                  <span className="text-2xl">🗳️</span>
-                </div>
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full" />
+      <div className="flex flex-col gap-6 pb-6">
+        <h1 className="sr-only">{t('pollsTab', { ns: 'dao' })}</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="ui-page-description m-0 max-w-2xl">{t('polls.intro')}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            {data && status !== 'closed' && (
+              <div className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30">
+                <span className="text-green-400 text-sm font-semibold whitespace-nowrap">
+                  {openCount}
+                  {' '}
+                  {t('polls.active')}
+                </span>
               </div>
-              <div className="header-text">
-                <h1 className="ui-page-title text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 via-blue-400 to-blue-400 bg-clip-text text-transparent m-0 leading-tight">
-                  {t('polls.title')}
-                </h1>
-                <p className="text-base text-slate-300 font-medium mt-2 mb-0 leading-relaxed">
-                  {t('polls.subtitle')}
-                </p>
+            )}
+            {data && status !== 'open' && (
+              <div className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-red-500/20 to-red-500/20 border border-red-500/30">
+                <span className="text-red-400 text-sm font-semibold whitespace-nowrap">
+                  {closedCount}
+                  {' '}
+                  {t('polls.closed')}
+                </span>
               </div>
-            </div>
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              {data && status !== 'closed' && (
-                <div className="px-4 py-2 rounded-2xl bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30">
-                  <span className="text-green-400 text-sm font-semibold whitespace-nowrap">
-                    {openCount}
-                    {' '}
-                    {t('polls.active')}
-                  </span>
-                </div>
-              )}
-              {data && status !== 'open' && (
-                <div className="px-4 py-2 rounded-2xl bg-gradient-to-r from-red-500/20 to-red-500/20 border border-red-500/30">
-                  <span className="text-red-400 text-sm font-semibold whitespace-nowrap">
-                    {closedCount}
-                    {' '}
-                    {t('polls.closed')}
-                  </span>
-                </div>
-              )}
-            </div>
+            )}
           </div>
         </div>
 

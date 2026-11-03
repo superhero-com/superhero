@@ -173,3 +173,36 @@
   border-radius: 10px;
   box-shadow: none;
 }
+
+// Page-level section switch, styled as a heading so it reads above any pill tabs below it.
+.ui-page .ui-section-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 24px;
+  row-gap: 8px;
+
+  a {
+    padding-bottom: 6px;
+    border-bottom: 2px solid transparent;
+    color: var(--ui-muted);
+    font-size: clamp(20px, 2vw, 26px);
+    font-weight: 650;
+    line-height: 1.2;
+    letter-spacing: -.5px;
+    text-decoration: none;
+    transition: color .15s ease;
+  }
+
+  a:hover { color: var(--ui-text); }
+
+  a[aria-current="page"] {
+    color: var(--ui-text);
+    border-bottom-color: var(--ui-blue);
+  }
+
+  a:focus-visible {
+    outline: 2px solid #8db8ff;
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+}

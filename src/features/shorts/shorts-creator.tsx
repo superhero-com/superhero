@@ -1,10 +1,11 @@
-import type { CSSProperties } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import AddressAvatar from '@/components/AddressAvatar';
 import ProfileIdentity from '@/features/social/components/ProfileIdentity';
 import { useChainName } from '@/hooks/useChainName';
 import { AccountsService } from '@/api/generated';
+import { formatAddress } from '@/utils/address';
 import {
   getLinkedPreferredAensName, getLinkedXUsername, isXLinked, type AccountAggregate,
 } from '@/api/backend';
@@ -16,7 +17,9 @@ export const ShortsCreatorAvatar = ({ address, size = 44 }: { address: string; s
 );
 
 /** The same identity hierarchy and address chip as the main profile. */
-export const ShortsCreator = ({ address, enabled = true }: { address: string; enabled?: boolean }) => {
+export const ShortsCreator = ({
+  address, enabled = true, compact = false, children,
+}: { address: string; enabled?: boolean; compact?: boolean; children?: ReactNode }) => {
   const { chainName } = useChainName(address, { lookup: enabled });
   const { data } = useQuery<AccountAggregate>({
     queryKey: ['AccountsService.getAccount', address],
@@ -27,19 +30,29 @@ export const ShortsCreator = ({ address, enabled = true }: { address: string; en
     retry: 1,
   });
   const displayName = (getLinkedPreferredAensName(data) || data?.public_name || chainName || '').trim() || address;
+  const commentName = (getLinkedPreferredAensName(data) || chainName || '').trim();
   return (
     <div className="sv-creator">
       <ShortsCreatorAvatar address={address} />
       <div className="sv-creator-identity" style={{ '--sv-address-length': address.length } as CSSProperties}>
-        <ProfileIdentity
-          headingAs="h3"
-          address={address}
-          displayName={displayName}
-          handle={chainName}
-          isVerified={isXLinked(data)}
-          verifiedUsername={getLinkedXUsername(data)}
-          ownProfile={false}
-        />
+        {compact ? (
+          <>
+            <Link className="sh-comment-author" to={`/users/${address}`} title={address}>
+              {commentName || formatAddress(address, 6)}
+            </Link>
+            {children}
+          </>
+        ) : (
+          <ProfileIdentity
+            headingAs="h3"
+            address={address}
+            displayName={displayName}
+            handle={chainName}
+            isVerified={isXLinked(data)}
+            verifiedUsername={getLinkedXUsername(data)}
+            ownProfile={false}
+          />
+        )}
       </div>
     </div>
   );

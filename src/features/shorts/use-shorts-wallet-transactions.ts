@@ -8,6 +8,8 @@ import {
   assertUnsignedWalletRequest,
   walletCallArguments,
   validateObservation,
+  walletActionComplete,
+  walletExecution,
   type WalletAction,
   type WalletMethod,
   type WalletObservation,
@@ -104,8 +106,7 @@ export function useShortsWalletTransactions(options: Options) {
         if (!action.tx || action.submission === 'prepared' || document.visibilityState === 'hidden') return;
         const observation = await observeWalletAction(action, controller.signal);
         if (!live || currentScope.current !== scopeKey) return;
-        const terminal = ['confirmed', 'failed'].includes(observation.status)
-          || observation.neverSubmitted === true || observation.sponsorshipExpired === true;
+        const terminal = walletActionComplete(observation);
         setState((old) => ({
           scope: scopeKey,
           action,
@@ -115,10 +116,10 @@ export function useShortsWalletTransactions(options: Options) {
           notificationActive: (old.action?.id === action.id && old.notificationActive)
             || action.id === initiated.current || !terminal,
         }));
-        if (observation.status !== 'confirmed' && confirmed.current.delete(action.tx)) {
+        if (walletExecution(observation) !== 'success' && confirmed.current.delete(action.tx)) {
           onUnconfirmed.current?.(action);
         }
-        if (observation.status === 'confirmed' && !confirmed.current.has(action.tx)) {
+        if (walletExecution(observation) === 'success' && !confirmed.current.has(action.tx)) {
           confirmed.current.add(action.tx);
           if (confirmed.current.size > 32) {
             confirmed.current.delete(confirmed.current.values().next().value!);
@@ -195,7 +196,7 @@ export function useShortsWalletTransactions(options: Options) {
         }
         const observation = await observeWalletAction(pending);
         assertCurrent();
-        if (!['confirmed', 'failed'].includes(observation.status) && observation.neverSubmitted !== true && observation.sponsorshipExpired !== true) {
+        if (!walletActionComplete(observation)) {
           throw new WalletActionPending(
             'Your earlier transaction is still pending. Check its status instead of sending it again.',
           );
@@ -365,7 +366,7 @@ export function useShortsWalletTransactions(options: Options) {
     try {
       const observed = await observeWalletAction(action);
       assertCurrent();
-      if (['confirmed', 'failed'].includes(observed.status) || observed.neverSubmitted === true || observed.sponsorshipExpired === true) { check(); return; }
+      if (walletActionComplete(observed)) { check(); return; }
       const token = await options.sponsorToken?.();
       assertCurrent();
       if (!token) throw new Error('Connect your wallet to retry sponsorship.');

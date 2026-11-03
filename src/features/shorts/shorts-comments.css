@@ -39,6 +39,12 @@
 .sh-comment-items { list-style: none; padding: 0; margin: 0; }
 .sh-comment { padding: 20px 0 12px; }
 .sh-comment-items li + li { border-top: 1px solid #ffffff08; }
+.sh-comment-items li { scroll-margin-block: 12px; border-radius: 10px; }
+.sh-comment-items li.is-new-comment { background: #6095ff0c; outline: 1px solid #80aaff30; outline-offset: 5px; }
+.sh-comment-items li:focus-visible { outline: 2px solid #80aaff; outline-offset: 5px; }
+.sh-comment-author { display: block; width: fit-content; max-width: 100%; overflow-wrap: anywhere; color: #edf0f7; font-size: 13px; font-weight: 650; line-height: 1.5; }
+.sh-comment-author:hover { text-decoration: underline; }
+.sh-comment-time { display: block; margin-top: 2px; color: #9ba9bf; font-size: 11px; line-height: 1.5; }
 .sh-comment .sv-creator { align-items: flex-start; gap: 12px; margin: 0; }
 .sh-comment .sv-creator-avatar { margin-top: 2px; box-shadow: none; }
 .sh-comment .sv-creator-avatar > div { width: 34px !important; height: 34px !important; border-radius: 50% !important; }

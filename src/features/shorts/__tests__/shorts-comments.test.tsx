@@ -15,13 +15,15 @@ const policy = {
   maxCommentChars: 5, maxCommentBytes: 8, commentsEnabled: true,
 } as ShortsContractPolicy;
 const props = () => ({
-  id: 'video', title: 'Test video', actor: 'ak_owner', policy, busy: false, walletPending: false, revision: 0, publishedRevision: 0, message: '', onClose: vi.fn(), onConnect: vi.fn(), onAdd: vi.fn().mockResolvedValue(false),
+  id: 'video', title: 'Test video', actor: 'ak_owner', policy, busy: false, walletPending: false, revision: 0, message: '', onClose: vi.fn(), onConnect: vi.fn(), onAdd: vi.fn().mockResolvedValue(false),
 });
 const empty = {
   items: [], next: null, total: '0', version: '0',
 };
 beforeEach(() => {
   vi.resetAllMocks();
+  Element.prototype.scrollTo = vi.fn();
+  vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: false })));
   vi.stubGlobal('ResizeObserver', class {
     observe = vi.fn();
 
@@ -53,7 +55,12 @@ describe('V2 comments', () => {
     fireEvent.change(input, { target: { value: '🙂🙂🙂' } }); expect(submit).toBeDisabled();
     fireEvent.change(input, { target: { value: '🙂🙂' } }); expect(submit).toBeEnabled();
     fireEvent.click(submit); await waitFor(() => expect(p.onAdd).toHaveBeenCalledWith('🙂🙂')); expect(input).toHaveValue('🙂🙂');
-    rerender(<ShortsComments {...p} publishedRevision={1} />); expect(input).toHaveValue('');
+    rerender(<ShortsComments
+      {...p}
+      publishedComment={{
+        videoId: 'video', author: 'ak_owner', sequence: '1', tx: 'th_new',
+      }}
+    />); expect(input).toHaveValue('');
     rerender(<ShortsComments {...p} policy={{ ...policy, commentsEnabled: false }} />); expect(input).toBeDisabled(); expect(screen.getByText('Comments are currently paused.')).toBeInTheDocument();
   });
   it('restarts pagination after a new comment changes the version', async () => {
@@ -149,4 +156,65 @@ describe('V2 comments', () => {
     expect(screen.getAllByRole('article')).toHaveLength(2);
     expect(screen.getByLabelText('Add a comment')).toHaveValue('Hello');
   });
+});
+
+it.each(['newest', 'oldest'])('scrolls to the exact newly published comment with %s sorting, beyond the first page', async (sort) => {
+  const first = {
+    ...empty,
+    items: [{
+      id: '0', author: 'ak_owner', sequence: '1', text: 'Same text', height: '1',
+    }],
+    total: '60',
+    next: '25',
+    version: '60',
+  };
+  const newest = {
+    id: '59', author: 'ak_owner', sequence: '2', text: 'Same text', height: '60',
+  };
+  vi.mocked(request).mockImplementation(async (path) => (path.includes('cursor=35') ? {
+    ...empty, items: [newest], total: '60', version: '60',
+  } : first));
+  const p = props(); const view = render(<ShortsComments {...p} />);
+  await screen.findByText('Same text');
+  fireEvent.change(screen.getByRole('combobox'), { target: { value: sort } });
+  fireEvent.change(screen.getByLabelText('Add a comment'), { target: { value: 'Hello' } });
+  view.rerender(<ShortsComments
+    {...p}
+    publishedComment={{
+      videoId: 'video', author: 'ak_owner', sequence: '2', tx: 'th_new',
+    }}
+  />);
+  await waitFor(() => expect(screen.getAllByText('Same text')).toHaveLength(2));
+  const added = screen.getAllByText('Same text').find((element) => element.closest('.is-new-comment'))!;
+  expect(added.closest('li')).toHaveFocus();
+  expect(screen.getByRole('region', { name: 'Comments' }).scrollTo).toHaveBeenCalledOnce();
+  expect(screen.getByRole('combobox')).toHaveValue(sort);
+  expect(screen.getByLabelText('Add a comment')).toHaveValue('');
+  view.rerender(<ShortsComments
+    {...p}
+    publishedComment={{
+      videoId: 'different-video', author: 'ak_owner', sequence: '3', tx: 'th_other',
+    }}
+  />);
+  expect(screen.getByRole('region', { name: 'Comments' }).scrollTo).toHaveBeenCalledOnce();
+});
+
+it('does not clear a draft or scroll for a different video or wallet', async () => {
+  const p = props(); const view = render(<ShortsComments {...p} />);
+  await screen.findByText('No comments yet.');
+  fireEvent.change(screen.getByLabelText('Add a comment'), { target: { value: 'Hello' } });
+  view.rerender(<ShortsComments
+    {...p}
+    publishedComment={{
+      videoId: 'other', author: 'ak_owner', sequence: '2', tx: 'th_new',
+    }}
+  />);
+  view.rerender(<ShortsComments
+    {...p}
+    publishedComment={{
+      videoId: 'video', author: 'ak_other', sequence: '2', tx: 'th_new',
+    }}
+  />);
+  expect(screen.getByLabelText('Add a comment')).toHaveValue('Hello');
+  expect(Element.prototype.scrollTo).not.toHaveBeenCalled();
 });

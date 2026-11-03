@@ -53,7 +53,7 @@ export const ShortsPage = () => {
         busy={s.busy}
         walletPending={s.walletPending}
         revision={s.commentRevision}
-        publishedRevision={s.commentPublishedRevision}
+        publishedComment={s.publishedComment}
         message=""
         onClose={() => s.setCommentShort(undefined)}
         onConnect={s.connectForComments}

@@ -87,8 +87,8 @@ const observation = (action: WalletAction, status: string) => ({
   ...action,
   status,
   confirmationsRequired: 3,
-  confirmations: status === 'confirmed' ? 3 : 0,
-  ...(status === 'confirmed'
+  confirmations: ({ confirmed: 3, mined: 1 } as Record<string, number>)[status] || 0,
+  ...(['confirmed', 'mined'].includes(status)
     ? {
       blockHash: encode(new Uint8Array(32).fill(3), Encoding.MicroBlockHash),
       blockHeight: 98,
@@ -328,7 +328,7 @@ it('rechecks retained confirmations and reports a reorganization without resubmi
   const onUnconfirmed = vi.fn();
   const hook = renderHook(() => useShortsWalletTransactions({ ...options(onConfirmed), onUnconfirmed }));
   await act(async () => { await expect(execute(hook)).rejects.toBeInstanceOf(WalletActionPending); });
-  mocks.status = 'confirmed';
+  mocks.status = 'mined';
   act(() => hook.result.current.check());
   await waitFor(() => expect(onConfirmed).toHaveBeenCalledOnce());
   mocks.status = 'reorged';
@@ -432,4 +432,28 @@ it('announces a reorg and reconfirmation after silently restoring an old confirm
   await waitFor(() => expect(restored.result.current.observation?.status).toBe('confirmed'));
   expect(restored.result.current.notificationActive).toBe(true);
   expect(mocks.sign).toHaveBeenCalledOnce();
+});
+
+it('completes on mining, stays quiet at depth three and allows the next explicit action', async () => {
+  const onConfirmed = vi.fn();
+  const hook = renderHook(() => useShortsWalletTransactions(options(onConfirmed)));
+  await act(async () => { await expect(execute(hook)).rejects.toBeInstanceOf(WalletActionPending); });
+  mocks.status = 'mined';
+  act(() => hook.result.current.check());
+  await waitFor(() => expect(onConfirmed).toHaveBeenCalledOnce());
+  expect(hook.result.current.notificationActive).toBe(true);
+  const tx = saved()?.tx;
+  hook.unmount();
+  const restored = renderHook(() => useShortsWalletTransactions(options(onConfirmed)));
+  await waitFor(() => expect(restored.result.current.observation?.status).toBe('mined'));
+  expect(restored.result.current.notificationActive).toBe(false);
+  expect(saved()?.tx).toBe(tx);
+  onConfirmed.mockClear();
+  mocks.status = 'confirmed';
+  act(() => restored.result.current.check());
+  await waitFor(() => expect(restored.result.current.observation?.status).toBe('confirmed'));
+  expect(onConfirmed).not.toHaveBeenCalled();
+  mocks.status = 'mined';
+  await act(async () => { await expect(execute(restored)).rejects.toBeInstanceOf(WalletActionPending); });
+  expect(mocks.sign).toHaveBeenCalledTimes(2);
 });

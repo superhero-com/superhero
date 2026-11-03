@@ -239,7 +239,6 @@ describe('persistent wallet action protocol', () => {
     await Promise.all(
       [
         { status: 'unknown', confirmations: 0 },
-        { status: 'mined', confirmations: 1 },
         { status: 'reorged', confirmations: 0 },
       ].map(async (change) => {
         await expect(f.journal.finish(saved, { ...observation(saved), ...change })).rejects.toThrow(
@@ -356,4 +355,18 @@ it('requires a matching expiry proof with three blocks beyond TTL before releasi
   expect(() => validateObservation(f.action, { ...expired, sponsorshipStatus: 'signed' })).toThrow();
   await f.journal.finish(f.action, expired);
   expect(await f.journal.read(f.action)).toBeUndefined();
+});
+
+it.each(['ok', 'revert', 'error'])('releases a verified mined result (%s) without extra block depth', async (result) => {
+  const f = fixture();
+  const action = await f.journal.begin(f.intent);
+  const saved = await f.journal.signed(action, f.unsigned, await f.account.signTransaction(f.unsigned, { networkId: 'ae_uat' }), 'ae_uat');
+  const mined = {
+    ...observation(saved), status: 'mined', confirmations: 1, result,
+  };
+  expect(() => validateObservation(saved, { ...mined, confirmations: 0 })).toThrow(/could not be verified/);
+  expect(() => validateObservation(saved, { ...mined, blockHash: undefined })).toThrow(/could not be verified/);
+  expect(() => validateObservation(saved, { ...mined, result: undefined })).toThrow(/could not be verified/);
+  await f.journal.finish(saved, mined);
+  expect(await f.journal.read(f.intent)).toBeUndefined();
 });

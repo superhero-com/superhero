@@ -34,7 +34,12 @@ const recovery = (overrides: Partial<Recovery> = {}): Recovery => ({
   action, notificationActive: true, observation: undefined, error: undefined, check: vi.fn(), release: vi.fn(), retrySponsorship: vi.fn(), run: vi.fn(), ...overrides,
 });
 const observation = (status: WalletObservation['status'], confirmations = 0): WalletObservation => ({
-  ...action, tx: action.tx!, status, confirmations, confirmationsRequired: 3,
+  ...action,
+  tx: action.tx!,
+  status,
+  confirmations,
+  confirmationsRequired: 3,
+  result: ({ failed: 'revert', mined: 'ok', confirmed: 'ok' } as Record<string, string>)[status],
 });
 const OtherTransaction = () => {
   const { notifySubmitted, dismissNotification } = useTransactionNotification();
@@ -69,15 +74,15 @@ it('uses the standard wallet prompt with no extra transaction details or control
   expect(value.run).not.toHaveBeenCalled();
 });
 
-it('waits for the Shorts observer, then uses standard success and automatic dismissal', () => {
+it('completes at mining and dismisses without replay at depth three', () => {
   vi.useFakeTimers();
-  const value = recovery({ observation: observation('mined', 1) });
+  const value = recovery({ observation: observation('submitted') });
   const view = render(<App value={value} />);
   expect(screen.getByText('Your Like is being confirmed.')).toBeInTheDocument();
   expect(screen.queryByText('Like confirmed')).toBeNull();
   expect(screen.queryByText('th_like')).toBeNull();
   expect(mined).not.toHaveBeenCalled();
-  view.rerender(<App value={{ ...value, observation: observation('confirmed', 3) }} />);
+  view.rerender(<App value={{ ...value, observation: observation('mined', 1) }} />);
   expect(screen.getByText('Like confirmed')).toBeInTheDocument();
   expect(screen.getByText('Done')).toBeInTheDocument();
   expect(screen.queryByText('View portfolio')).toBeNull();
@@ -92,7 +97,7 @@ it('dismisses the banner without discarding, signing or resubmitting a pending L
   const value = recovery();
   const view = render(<App value={value} />);
   fireEvent.click(screen.getByRole('button', { name: 'Dismiss notification' }));
-  view.rerender(<App value={{ ...value, observation: observation('mined', 1) }} />);
+  view.rerender(<App value={{ ...value, observation: observation('submitted') }} />);
   expect(screen.queryByText('Your Like is being confirmed.')).toBeNull();
   expect(value.retrySponsorship).not.toHaveBeenCalled();
   expect(value.check).not.toHaveBeenCalled();
@@ -146,14 +151,14 @@ it.each([
   ['delete_comment', 'Your comment deletion', 'Comment deleted'],
   ['claim', 'Your reward claim', 'Rewards claimed to your wallet'],
   ['withdraw', 'Your withdrawal', 'Short withdrawn from official playback'],
-] as const)('uses the shared banner throughout %s without confirming early', (method, label, success) => {
+] as const)('uses the shared banner throughout %s and completes on successful mining', (method, label, success) => {
   const value = recovery({ action: { ...action, method, tx: undefined } });
   const view = render(<App value={value} />);
   expect(screen.getByText('Confirm in your wallet')).toBeInTheDocument();
-  view.rerender(<App value={{ ...value, action: { ...action, method }, observation: observation('mined', 2) }} />);
+  view.rerender(<App value={{ ...value, action: { ...action, method }, observation: observation('submitted') }} />);
   expect(screen.getByText(`${label} is being confirmed.`)).toBeInTheDocument();
   expect(screen.queryByText(success)).toBeNull();
-  view.rerender(<App value={{ ...value, action: { ...action, method }, observation: observation('confirmed', 3) }} />);
+  view.rerender(<App value={{ ...value, action: { ...action, method }, observation: observation('mined', 1) }} />);
   expect(screen.getByText(success)).toBeInTheDocument();
   expect(screen.queryByText('Transaction details')).toBeNull();
   expect(screen.queryByRole('button', { name: /retry fee|check status|cancel wallet/i })).toBeNull();
@@ -201,11 +206,11 @@ it('shows a journal recovery error even when no action could be loaded', () => {
 });
 
 it('announces a new wallet outcome after a Studio notification without replaying the old message', () => {
-  const value = recovery({ observation: observation('mined', 1) });
+  const value = recovery({ observation: observation('submitted') });
   const view = render(<App value={value} />);
   view.rerender(<App value={value} message="Account updated." messageTone="success" />);
   expect(screen.getByText('Account updated.')).toBeInTheDocument();
-  view.rerender(<App value={{ ...value, observation: observation('confirmed', 3) }} message="Account updated." messageTone="success" />);
+  view.rerender(<App value={{ ...value, observation: observation('mined', 1) }} message="Account updated." messageTone="success" />);
   expect(screen.getByText('Like confirmed')).toBeInTheDocument();
   expect(screen.queryByText('Account updated.')).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'Dismiss notification' }));
@@ -228,5 +233,11 @@ it('keeps restored terminal wallet activity silent across page reloads', () => {
 it('still announces Studio actions while an old wallet outcome stays silent', () => {
   render(<App value={recovery({ notificationActive: false, observation: observation('confirmed', 3) })} message="Account updated." messageTone="success" />);
   expect(screen.getByText('Account updated.')).toBeInTheDocument();
+  expect(screen.queryByText('Like confirmed')).toBeNull();
+});
+
+it.each(['revert', 'error'])('shows failure immediately for a mined %s', (result) => {
+  render(<App value={recovery({ observation: { ...observation('mined', 1), result } })} />);
+  expect(screen.getByText('Your Like could not be completed. Please try again.')).toBeInTheDocument();
   expect(screen.queryByText('Like confirmed')).toBeNull();
 });

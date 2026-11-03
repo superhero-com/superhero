@@ -3,6 +3,7 @@ import {
   useTransactionNotification, TxPayloadType, type NotificationState,
 } from '@/features/transaction-notification';
 import type { useShortsWalletTransactions } from './use-shorts-wallet-transactions';
+import { walletExecution } from './shorts-wallet-journal';
 
 const ownsNotification = (state: NotificationState, id: string) => (
   state.status !== 'idle' && state.payload?.type === TxPayloadType.ShortsAction && state.payload.id === id
@@ -40,11 +41,11 @@ export const ShortsWalletRecovery = ({
   let failure = error;
   if (!failure && observation?.neverSubmitted) failure = `${label} was not sent. Please try again.`;
   else if (!failure && observation?.sponsorshipExpired) failure = `${label} expired without confirmation. Please try again.`;
-  else if (!failure && observation?.status === 'failed') failure = `${label} could not be completed. Please try again.`;
+  else if (!failure && walletExecution(observation) === 'failure') failure = `${label} could not be completed. Please try again.`;
   let status: 'submitted' | 'pending' | 'confirmed' | 'error' = 'pending';
   if (failure) status = 'error';
   else if (!action?.tx) status = 'submitted';
-  else if (observation?.status === 'confirmed') status = 'confirmed';
+  else if (walletExecution(observation) === 'success') status = 'confirmed';
   const walletKey = id ? JSON.stringify([id, status, failure]) : '';
   const messageKey = message ? JSON.stringify(['shorts-action', walletScope, message, messageTone]) : '';
 

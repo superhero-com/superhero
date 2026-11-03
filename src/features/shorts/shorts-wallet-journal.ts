@@ -49,6 +49,17 @@ export type WalletObservation = Omit<WalletScope, 'api'> & {
   sponsorshipExpired?: boolean;
   expiryProof?: { ttl: number; height: number; blockHash: string; payerNonce: number };
 };
+
+/** UI completion follows verified execution, without waiting for accounting depth. */
+export const walletExecution = (observation?: WalletObservation) => {
+  if (!observation || !['mined', 'confirmed', 'failed'].includes(observation.status)) return undefined;
+  if (observation.result === 'ok') return 'success';
+  if (observation.result === 'revert' || observation.result === 'error') return 'failure';
+  return undefined;
+};
+export const walletActionComplete = (observation: WalletObservation) => (
+  !!walletExecution(observation) || observation.neverSubmitted === true || observation.sponsorshipExpired === true
+);
 export interface WalletActionStorage {
   // The callback and write must run in one serializable transaction across tabs.
   change(
@@ -409,7 +420,7 @@ export class WalletJournal {
   // Only a fresh matching terminal observation may release a signed action.
   async finish(record: WalletAction, observation: unknown) {
     const result = validateObservation(record, observation);
-    if (!['confirmed', 'failed'].includes(result.status) && result.neverSubmitted !== true && result.sponsorshipExpired !== true) throw new Error('The wallet outcome is still unknown. Do not send it again.');
+    if (!walletActionComplete(result)) throw new Error('The wallet outcome is still unknown. Do not send it again.');
     return this.storage.change(record, (value) => {
       const saved = validate(value, record);
       if (saved?.id !== record.id || saved.tx !== record.tx) throw new Error('Wallet activity changed. Check its status again.');

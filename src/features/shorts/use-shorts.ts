@@ -20,6 +20,7 @@ import { studioContentQuery, useShortsStudioRead } from './use-shorts-studio-rea
 import { useShortsSocial } from './use-shorts-social';
 import { useShortsWalletTransactions, WalletActionPending } from './use-shorts-wallet-transactions';
 import type { WalletMethod } from './shorts-wallet-journal';
+import type { PublishedComment } from './shorts-comment-page';
 import { request, SHORTS_API, ShortsApiError } from './api';
 import { hashUploadFile, uploadDirectPart } from './shorts-direct-upload';
 import {
@@ -66,7 +67,7 @@ export function useShorts() {
   const [claimReview, setClaimReview] = useState(false);
   const [commentShort, setCommentShort] = useState<Short>();
   const [commentRevision, setCommentRevision] = useState(0);
-  const [commentPublishedRevision, setCommentPublishedRevision] = useState(0);
+  const [publishedComment, setPublishedComment] = useState<PublishedComment>();
   const videoId = section === 'video' ? location.pathname.split('/')[4] : undefined;
   const [topic, setTopic] = useState('All');
   const [config, setConfig] = useState<Config>();
@@ -332,7 +333,11 @@ export function useShorts() {
       if (action.address !== currentAddress.current) return;
       // Older deployments can still confirm previously signed deletion transactions.
       if (action.method === 'add_comment' || action.method === 'delete_comment') setCommentRevision((value) => value + 1);
-      if (action.method === 'add_comment') setCommentPublishedRevision((value) => value + 1);
+      if (action.method === 'add_comment' && action.videoId && action.tx && action.args?.[3]) {
+        setPublishedComment({
+          videoId: action.videoId, author: action.address, sequence: action.args[3], tx: action.tx,
+        });
+      }
       if (action.method === 'like' && action.videoId && action.contract === config?.contract) {
         const id = action.videoId;
         const latest = currentFeed.current.find((item) => item.id === id) || sharedVideo;
@@ -716,7 +721,7 @@ sponsorshipToken,
     commentShort,
     setCommentShort,
     commentRevision,
-    commentPublishedRevision,
+    publishedComment,
     connectForComments: () => perform(async () => {
       setWalletPending(true);
       try { await connectWallet(); } finally { setWalletPending(false); }

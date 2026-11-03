@@ -294,8 +294,10 @@ asks the wallet to sign a replacement transaction.
 
 After reload, the client observes status by the inner hash and verifies the
 reported outer sponsored hash. Mounting, polling and recovery never sign or
-submit automatically. Unknown, pending, mined and reorganized outcomes remain
-unresolved. The client releases a request only after matching confirmed execution,
+submit automatically. Notifications and affected UI complete on the first
+verified successful mined execution; mined reverts and errors show failure.
+Unknown, pending and reorganized outcomes remain unresolved. The client releases
+a request only after matching mined execution,
 a durable pre-sign sponsorship rejection, or a canonical expiry proof after the
 signed TTL plus three key blocks. A timeout or a missing node transaction alone
 is insufficient. Expired signed envelopes and reserved sponsor costs remain in
@@ -320,7 +322,7 @@ Historical withdrawal and comment-deletion journals remain readable so transacti
 
 ## Comments
 
-Comments open beside the viewer on wide screens and in a bottom sheet on phones. The header and composer stay visible while the list scrolls. Author identities reuse profile names, avatars and full wrapping address badges; Creator and You labels identify participants. Long comments expand in place.
+Comments open beside the viewer on wide screens and in a bottom sheet on phones. The header and composer stay visible while the list scrolls. Authors show their chain name or a shortened address, with their avatar and Creator/You labels. Relative posting times use the recorded generation's real block time. Long comments expand in place. A successfully mined comment is located by its author sequence and scrolled into view, including when it is beyond the first page.
 
 Newest/Oldest sorts loaded comments by block height, with the comment ID breaking ties. While more pages remain, the controls explicitly say “Newest loaded” / “Oldest loaded” and show the loaded count: imported contract order is not necessarily chronological, and the API has no global date-sort endpoint. Pagination errors keep the current list and draft; a stale contract version restarts the list.
 

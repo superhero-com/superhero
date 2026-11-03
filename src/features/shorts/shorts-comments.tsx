@@ -7,11 +7,12 @@ import {
 import { request, ShortsApiError } from './api';
 import { ShortsDialog } from './shorts-dialog';
 import { ShortsCreator } from './shorts-creator';
+import { ShortsCommentTime } from './shorts-comment-time';
+import {
+  loadCommentPage, matchesPublishedComment, mergeComments, type CommentPage, type PublishedComment,
+} from './shorts-comment-page';
 import type { ShortsContractPolicy } from './shorts-contract-policy';
 import './shorts-comments.css';
-
-type Comment = { id: string; author: string; text: string; height: string };
-type Page = { items: Comment[]; version: string; next: string | null; total: string };
 
 const CommentBody = ({ text }: { text: string }) => {
   const [expanded, setExpanded] = useState(false);
@@ -40,15 +41,15 @@ const CommentBody = ({ text }: { text: string }) => {
 
 export const ShortsComments = ({
   id, title, creator, actor, policy, busy, walletPending,
-  revision, publishedRevision, message, onClose, onConnect, onAdd,
+  revision, publishedComment, message, onClose, onConnect, onAdd,
 }: {
   id: string; title: string; creator?: string; actor: string; policy: ShortsContractPolicy;
   busy: boolean; walletPending: boolean; revision: number;
-  publishedRevision: number; message: string;
+  publishedComment?: PublishedComment; message: string;
   onClose: () => void; onConnect: () => unknown;
   onAdd: (text: string) => Promise<boolean>;
 }) => {
-  const [page, setPage] = useState<Page>();
+  const [page, setPage] = useState<CommentPage>();
   const [text, setText] = useState('');
   const [expanded, setExpanded] = useState(false);
   const [sort, setSort] = useState('newest');
@@ -64,6 +65,11 @@ export const ShortsComments = ({
   const draftScope = useRef('');
   draftScope.current = `${id}:${actor}`;
   const list = useRef<HTMLDivElement>(null);
+  const posted = useRef<HTMLLIElement>(null);
+  const [highlighted, setHighlighted] = useState<string>();
+  const target = useRef<PublishedComment | undefined>(undefined);
+  const lastPublished = useRef(publishedComment);
+  const lookupAttempts = useRef(0);
   const input = useRef<HTMLTextAreaElement>(null);
   const working = busy || submitting;
   useEffect(() => {
@@ -80,22 +86,54 @@ export const ShortsComments = ({
   }, []);
   useEffect(() => {
     setText(''); setExpanded(false); setSubmitError('');
-  }, [id, actor, publishedRevision]);
+    target.current = undefined; setHighlighted(undefined);
+  }, [id, actor]);
+  useEffect(() => {
+    if (publishedComment === lastPublished.current) return;
+    lastPublished.current = publishedComment;
+    if (!publishedComment || publishedComment.videoId !== id || publishedComment.author !== actor) return;
+    target.current = publishedComment; lookupAttempts.current = 0;
+    setText(''); setExpanded(false); setSubmitError('');
+    setReload((value) => value + 1);
+  }, [publishedComment, id, actor]);
   useEffect(() => {
     const controller = new AbortController();
+    let retry: ReturnType<typeof setTimeout>;
     generation.current += 1;
     const { current } = generation;
     pending.current?.abort(); pending.current = controller;
     setLoading(true); setError(''); setPage(undefined);
-    request<Page>(`/${encodeURIComponent(id)}/comments`, undefined, undefined, { signal: controller.signal, timeout: 20000 })
+    loadCommentPage(id, AbortSignal.any([controller.signal, AbortSignal.timeout(20000)]), target.current)
       .then((result) => {
-        if (generation.current === current && !controller.signal.aborted) setPage(result);
+        if (generation.current !== current || controller.signal.aborted) return;
+        setPage(result);
+        if (!target.current) return;
+        const match = result.items.find((item) => matchesPublishedComment(item, target.current!));
+        if (match) { setHighlighted(match.id); target.current = undefined; } else if (lookupAttempts.current < 5) {
+          lookupAttempts.current += 1;
+          retry = setTimeout(() => setReload((value) => value + 1), 2000);
+        } else setError('Your comment is published. Reload comments to find it.');
       })
-      .catch((reason) => { if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : 'Comments are unavailable.'); })
+      .catch((reason) => {
+        if (controller.signal.aborted) return;
+        if (reason instanceof ShortsApiError && reason.status === 409 && lookupAttempts.current < 5) {
+          lookupAttempts.current += 1;
+          retry = setTimeout(() => setReload((value) => value + 1), 1000);
+        } else setError(reason instanceof Error ? reason.message : 'Comments are unavailable.');
+      })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
-    return () => { controller.abort(); pending.current?.abort(); };
-  }, [id, revision, reload]);
+    return () => { clearTimeout(retry); controller.abort(); pending.current?.abort(); };
+  }, [id, actor, revision, reload]);
   useEffect(() => { if (list.current) list.current.scrollTop = 0; }, [id, sort, revision, reload]);
+  useEffect(() => {
+    if (!highlighted || !posted.current || !list.current) return;
+    const container = list.current;
+    container.scrollTo({
+      top: container.scrollTop + posted.current.getBoundingClientRect().top - container.getBoundingClientRect().top - 12,
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+    });
+    posted.current.focus({ preventScroll: true });
+  }, [highlighted]);
   useEffect(() => {
     if (!input.current) return;
     input.current.style.height = 'auto';
@@ -109,9 +147,9 @@ export const ShortsComments = ({
     const { current } = generation;
     setLoading(true); setError('');
     try {
-      const next = await request<Page>(`/${encodeURIComponent(id)}/comments?cursor=${encodeURIComponent(page.next)}&version=${encodeURIComponent(page.version)}`, undefined, undefined, { signal: controller.signal, timeout: 20000 });
+      const next = await request<CommentPage>(`/${encodeURIComponent(id)}/comments?cursor=${encodeURIComponent(page.next)}&version=${encodeURIComponent(page.version)}`, undefined, undefined, { signal: controller.signal, timeout: 20000 });
       if (generation.current === current && !controller.signal.aborted) {
-        setPage({ ...next, items: [...page.items, ...next.items] });
+        setPage({ ...next, items: mergeComments(page.items, next.items) });
       }
     } catch (reason) {
       if (controller.signal.aborted) return;
@@ -181,9 +219,9 @@ export const ShortsComments = ({
           {comments.length > 0 && (
             <ol className="sh-comment-items">
               {comments.map((comment) => (
-                <li key={comment.id}>
+                <li key={comment.id} ref={comment.id === highlighted ? posted : undefined} tabIndex={-1} className={comment.id === highlighted ? 'is-new-comment' : undefined}>
                   <article className="sh-comment">
-                    <ShortsCreator address={comment.author} />
+                    <ShortsCreator address={comment.author} compact><ShortsCommentTime height={comment.height} /></ShortsCreator>
                     {(comment.author === creator || comment.author === actor) && (
                       <div className="sh-comment-badges">
                         {comment.author === creator && <span>Creator</span>}
@@ -221,7 +259,7 @@ export const ShortsComments = ({
                 {`Couldn’t load ${page ? 'more comments' : 'comments'}`}
               </strong>
               <p>{error}</p>
-              <button type="button" disabled={loading} onClick={() => (page?.next ? more() : setReload((value) => value + 1))}>Retry</button>
+              <button type="button" disabled={loading} onClick={() => (page?.next && !target.current ? more() : setReload((value) => value + 1))}>Retry</button>
             </div>
           )}
           {page?.next && !error && (

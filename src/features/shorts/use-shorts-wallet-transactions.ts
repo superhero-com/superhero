@@ -41,7 +41,6 @@ type Options = {
   rewardContracts?: string[];
   onConfirmed: (action: WalletAction) => void;
   onUnconfirmed?: (action: WalletAction) => void;
-  sponsorToken?: () => Promise<string>;
 };
 
 /** Resume observations only. Neither mounting, polling nor recovery can sign. */
@@ -168,7 +167,6 @@ export function useShortsWalletTransactions(options: Options) {
     target: string,
     onSigned: () => void,
     comment?: { text?: string; sequence?: string },
-    sponsorToken?: string,
   ) => {
     // Retain historical journals, but never prepare or sign a new content-removal action.
     if (method === 'withdraw') throw new Error('Published Shorts cannot be withdrawn.');
@@ -209,7 +207,7 @@ export function useShortsWalletTransactions(options: Options) {
     let sponsorship;
     if (method === 'like') {
       const policy = config.likeSponsorship;
-      if (!sponsorToken || policy?.enabled !== true || !Number.isSafeInteger(policy.ttlBlocks)
+      if (policy?.authorization !== 'signed-like' || policy.enabled !== true || !Number.isSafeInteger(policy.ttlBlocks)
         || policy.ttlBlocks < 1 || policy.ttlBlocks > 60 || !context.onNode) {
         throw new Error('Network fee sponsorship is unavailable. No transaction was sent.');
       }
@@ -312,7 +310,7 @@ export function useShortsWalletTransactions(options: Options) {
         assertCurrent();
         await request('/like-sponsorships', {
           id: action.id, videoId, signedInnerTx: result.rawTx,
-        }, sponsorToken, { timeout: 20000 });
+        }, undefined, { timeout: 20000 });
       }
       if (!signed) {
         throw new Error(
@@ -367,15 +365,12 @@ export function useShortsWalletTransactions(options: Options) {
       const observed = await observeWalletAction(action);
       assertCurrent();
       if (walletActionComplete(observed)) { check(); return; }
-      const token = await options.sponsorToken?.();
-      assertCurrent();
-      if (!token) throw new Error('Connect your wallet to retry sponsorship.');
       const saved = await journal.read(action);
       if (saved?.id !== action.id || saved.tx !== action.tx || saved.rawInner !== action.rawInner) throw new Error('Wallet activity changed. Check status again.');
       assertCurrent();
       await request('/like-sponsorships', {
         id: action.id, videoId: action.videoId, signedInnerTx: action.rawInner,
-      }, token, { timeout: 20000 });
+      }, undefined, { timeout: 20000 });
     } catch (error) {
       if (currentScope.current === expectedScope) {
         setState((old) => ({

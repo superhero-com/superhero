@@ -21,7 +21,7 @@ export const ShortsPage = () => {
           topics={s.config?.topics || []}
           topic={s.topic}
           onTopic={s.setTopic}
-          onLike={s.setLike}
+          onLike={s.startLike}
           onComments={s.config?.release?.schemaVersion === 2 ? s.setCommentShort : undefined}
           onReport={s.report}
           personal={s.personal}
@@ -80,13 +80,8 @@ export const ShortsPage = () => {
         <ShortsLikeDialog
           key={s.like.id}
           title={s.like.title}
-          pricing={s.paymentRelease}
-          connected={!!s.actor}
-          busy={s.busy}
-          walletPending={s.walletPending}
+          phase={s.likePhase}
           onClose={() => s.setLike(undefined)}
-          onLike={s.confirmLike}
-          onConnect={s.connectForLike}
         />
       )}
     </div>

@@ -17,7 +17,6 @@ const mocks = vi.hoisted(() => ({
   connect: vi.fn(),
   openModal: vi.fn(),
   sign: vi.fn(),
-  sponsor: vi.fn(),
   network: 'ae_uat',
   signer: '',
   pathname: '/shorts/studio',
@@ -67,13 +66,7 @@ vi.mock('../use-shorts-wallet-transactions', () => ({
       _aci: unknown,
       _target: string,
       onSigned: () => void,
-      _comment?: unknown,
-      sponsorToken?: string,
     ) => {
-      if (method === 'like') {
-        if (!sponsorToken) throw new Error('A session is required for sponsorship.');
-        mocks.sponsor(sponsorToken);
-      }
       await mocks.call(method, method === 'claim' ? [] : [videoId], amount !== '0' ? { amount } : {});
       onSigned();
       options.onConfirmed({
@@ -141,7 +134,7 @@ beforeEach(() => {
         contract: 'ct_test',
         likeMode: 'free',
         likeFee: '0',
-        likeSponsorship: { enabled: true },
+        likeSponsorship: { enabled: true, authorization: 'signed-like' },
       };
     }
     if (path.startsWith('?')) return [];
@@ -199,8 +192,7 @@ describe('paginated feed integration', () => {
     await act(async () => { await hook.result.current.refreshNow(); });
     expect(hook.result.current.feed.find((item) => item.id === liked.id)?.liked).toBe(true);
     expect(mocks.call).toHaveBeenCalledExactlyOnceWith('like', ['paged-0'], {});
-    expect(mocks.sign).toHaveBeenCalledOnce();
-    expect(mocks.sponsor).toHaveBeenCalledExactlyOnceWith('session');
+    expect(mocks.sign).not.toHaveBeenCalled();
   });
 
   it('preserves the current feed and exposes page errors for retry', async () => {
@@ -502,37 +494,31 @@ describe('Shorts wallet session and recovery', () => {
     expect(hook.result.current.performance).toEqual({ ...report, marker: 'updated' });
   });
 
-  it('opens a session for sponsored Likes and sends a zero-payment wallet transaction', async () => {
+  it('starts a Like directly without a Studio session or sign-in signature', async () => {
     const { result } = await startLike(false);
-    expect(result.current.authenticated).toBe(false);
-    await act(async () => { await result.current.confirmLike(); });
-    expect(mocks.sign).toHaveBeenCalledExactlyOnceWith('Local sign-in');
-    expect(mocks.sponsor).toHaveBeenCalledExactlyOnceWith('session');
+    await act(async () => { await result.current.startLike(clip); });
+    expect(mocks.sign).not.toHaveBeenCalled();
     expect(mocks.call).toHaveBeenCalledExactlyOnceWith('like', [clip.id], {});
-    expect(mocks.request.mock.calls.filter(([path]) => path.startsWith('/auth/')).map(([path]) => path)).toEqual(['/auth/challenge', '/auth/verify']);
+    expect(mocks.request.mock.calls.some(([path]) => path.startsWith('/auth/'))).toBe(false);
     expect(result.current.feed[0]).toMatchObject({ likes: 10, liked: true });
-    expect(result.current.authenticated).toBe(true);
-    await act(async () => { await result.current.claim(); });
-    expect(mocks.call).toHaveBeenLastCalledWith('claim', [], {});
-    expect(mocks.call).toHaveBeenCalledTimes(2);
-    expect(mocks.sign).toHaveBeenCalledOnce();
-    expect(mocks.request.mock.calls.some(([path]) => path === '/uploads')).toBe(false);
+    expect(result.current.authenticated).toBe(false);
   });
 
-  it('keeps the Like dialog suspended after sign-in while transaction approval is pending', async () => {
+  it('shows signing feedback until the wallet signs, then hides it', async () => {
     const { result } = await startLike(false);
     let finishTransaction!: () => void;
     mocks.call.mockImplementationOnce(() => new Promise<void>((resolve) => { finishTransaction = resolve; }));
-    let completion!: ReturnType<typeof result.current.confirmLike>;
-    act(() => { completion = result.current.confirmLike(); });
+    let completion!: ReturnType<typeof result.current.startLike>;
+    act(() => { completion = result.current.startLike(clip); });
     await waitFor(() => expect(mocks.call).toHaveBeenCalledOnce());
-    expect(result.current.authenticated).toBe(true);
+    expect(result.current.authenticated).toBe(false);
     expect(result.current.walletPending).toBe(true);
+    expect(result.current.likePhase).toBe('signing');
     expect(result.current.like?.id).toBe(clip.id);
     await act(async () => { finishTransaction(); await completion; });
     expect(result.current.walletPending).toBe(false);
     expect(result.current.like).toBeUndefined();
-    expect(mocks.sign).toHaveBeenCalledOnce();
+    expect(mocks.sign).not.toHaveBeenCalled();
     expect(mocks.call).toHaveBeenCalledOnce();
   });
 
@@ -541,26 +527,24 @@ describe('Shorts wallet session and recovery', () => {
     await act(async () => { await result.current.claim(); });
     expect(mocks.call).toHaveBeenCalledExactlyOnceWith('claim', [], {});
     expect(mocks.sign).not.toHaveBeenCalled();
-    expect(mocks.sponsor).not.toHaveBeenCalled();
     expect(mocks.request.mock.calls.some(([path]) => path.startsWith('/auth/'))).toBe(false);
     expect(result.current.authenticated).toBe(false);
   });
 
-  it('does not request a Like signature when sponsorship authentication fails', async () => {
+  it('does not depend on Studio authentication being available', async () => {
     const { result } = await startLike(false);
     const original = mocks.request.getMockImplementation()!;
     mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
-      if (path === '/auth/challenge') throw new Error('Sign-in unavailable');
+      if (path.startsWith('/auth/')) throw new Error('Sign-in unavailable');
       return original(path, ...args);
     });
-    await act(async () => { await result.current.confirmLike(); });
-    expect(mocks.call).not.toHaveBeenCalled();
-    expect(mocks.sponsor).not.toHaveBeenCalled();
-    expect(result.current.feed[0]).toMatchObject({ likes: 9, liked: false });
-    expect(result.current.message).toBe('Sign-in unavailable');
+    await act(async () => { await result.current.startLike(clip); });
+    expect(mocks.call).toHaveBeenCalledOnce();
+    expect(mocks.sign).not.toHaveBeenCalled();
+    expect(result.current.feed[0]).toMatchObject({ likes: 10, liked: true });
   });
 
-  it('renews an expired session before requesting sponsorship for a Like', async () => {
+  it('does not renew an expired Studio session to Like', async () => {
     const { result, rerender } = await startLike();
     const signed = mocks.sign.mock.calls.length;
     const authRequests = mocks.request.mock.calls.filter(([path]) => path.startsWith('/auth/')).length;
@@ -568,29 +552,37 @@ describe('Shorts wallet session and recovery', () => {
     vi.spyOn(Date, 'now').mockReturnValue(now + 1800001);
     rerender();
     expect(result.current.authenticated).toBe(false);
-    await act(async () => { await result.current.confirmLike(); });
-    expect(mocks.sign).toHaveBeenCalledTimes(signed + 1);
-    expect(mocks.request.mock.calls.filter(([path]) => path.startsWith('/auth/'))).toHaveLength(authRequests + 2);
+    await act(async () => { await result.current.startLike(clip); });
+    expect(mocks.sign).toHaveBeenCalledTimes(signed);
+    expect(mocks.request.mock.calls.filter(([path]) => path.startsWith('/auth/'))).toHaveLength(authRequests);
     expect(mocks.call).toHaveBeenCalledExactlyOnceWith('like', [clip.id], {});
-    expect(result.current.feed[0].liked).toBe(true);
   });
 
-  it('connects a guest wallet and returns to review without signing or paying automatically', async () => {
+  it('resumes only the explicit Like after a guest connects, without a second click', async () => {
     mocks.actor = '';
     const { result, rerender } = await startLike(false);
-    let finish: (value: string) => void = () => undefined;
+    let finish!: (value: string) => void;
     mocks.connect.mockImplementationOnce(() => new Promise((resolve) => { finish = resolve; }));
     let connecting: Promise<unknown>;
-    act(() => { connecting = result.current.connectForLike(); });
+    act(() => { connecting = result.current.startLike(clip); });
     await waitFor(() => expect(mocks.connect).toHaveBeenCalledOnce());
+    expect(result.current.likePhase).toBe('connecting');
+    expect(mocks.call).not.toHaveBeenCalled();
     mocks.actor = 'ak_connected'; rerender();
     await act(async () => { finish('ak_connected'); await connecting; });
-    expect(result.current.like?.id).toBe(clip.id);
+    await waitFor(() => expect(mocks.call).toHaveBeenCalledOnce());
     expect(result.current.authenticated).toBe(false);
-    expect(mocks.call).not.toHaveBeenCalled();
     expect(mocks.sign).not.toHaveBeenCalled();
-    await act(async () => { await result.current.confirmLike(); });
-    expect(mocks.call).toHaveBeenCalledOnce();
+  });
+
+  it('does not sign after a cancelled connection or a later unrelated connection', async () => {
+    mocks.actor = '';
+    const { result, rerender } = await startLike(false);
+    await act(async () => { await result.current.startLike(clip); });
+    expect(result.current.likePhase).toBe('cancelled');
+    mocks.actor = 'ak_connected'; rerender();
+    await waitFor(() => expect(result.current.actor).toBe('ak_connected'));
+    expect(mocks.call).not.toHaveBeenCalled();
   });
 
   it('rejects a wrong network or signer before requesting Like sponsorship', async () => {
@@ -643,7 +635,8 @@ describe('Shorts wallet session and recovery', () => {
     await act(async () => { rejectPayment(new Error('Rejected by user')); await payment; });
     expect(result.current.feed[0]).toMatchObject({ likes: 9, liked: false });
     expect(result.current.like?.id).toBe(clip.id);
-    await act(async () => { await result.current.confirmLike(); });
+    expect(result.current.likePhase).toBe('cancelled');
+    await act(async () => { await result.current.startLike(clip); });
     expect(result.current.feed[0]).toMatchObject({ likes: 10, liked: true });
   });
 

@@ -134,7 +134,7 @@ function fixture(previous = false, v2 = true) {
     aci: abi,
     likeMode: 'free',
     likeSponsorship: {
-      enabled: true, gasLimit: 100000, gasPrice: '1000000000', maxFee: '1000000000000000', ttlBlocks: 10,
+      enabled: true, authorization: 'signed-like', gasLimit: 100000, gasPrice: '1000000000', maxFee: '1000000000000000', ttlBlocks: 10,
     },
     ...(previous ? { previousContract, previousAci: aci } : {}),
   } as Config;
@@ -295,7 +295,7 @@ function fixture(previous = false, v2 = true) {
     getContext: () => ({ onNode: node, onAccount: account }),
   };
   const options = {
-    sponsorToken: async () => 'session', actor: account.address, network: 'ae_uat', contract, previousContract: previousContract || undefined, onConfirmed: vi.fn(),
+    actor: account.address, network: 'ae_uat', contract, previousContract: previousContract || undefined, onConfirmed: vi.fn(),
   };
   return {
     account, contract, state, sign, sdk, options, node, config, calls,
@@ -312,8 +312,6 @@ const execute = (
   f.config,
   f.contract,
   vi.fn(),
-  undefined,
-  'session',
 );
 beforeEach(() => {
   vi.clearAllMocks();
@@ -498,7 +496,7 @@ it.each(['hash', 'raw', 'refreshed nonce'])('signs a sponsored Like through real
   const hook = renderHook(() => useShortsWalletTransactions(f.options));
   try {
     await act(async () => {
-      await expect(hook.result.current.run(wallet.sdk, 'like', 'owned-sdk-fixture', '0', f.config, f.contract, vi.fn(), undefined, 'session')).rejects.toBeInstanceOf(WalletActionPending);
+      await expect(hook.result.current.run(wallet.sdk, 'like', 'owned-sdk-fixture', '0', f.config, f.contract, vi.fn())).rejects.toBeInstanceOf(WalletActionPending);
     });
     const signatures = wallet.requests.filter((request) => request.method === 'transaction.sign');
     expect(signatures).toHaveLength(1);
@@ -506,7 +504,7 @@ it.each(['hash', 'raw', 'refreshed nonce'])('signs a sponsored Like through real
       onAccount: f.account.address, returnSigned: true, networkId: 'ae_uat', innerTx: true,
     });
     const post = mocks.request.mock.calls.find(([url]) => url === '/like-sponsorships');
-    expect(post).toBeDefined(); expect(post![2]).toBe('session');
+    expect(post).toBeDefined(); expect(post![2]).toBeUndefined();
     const raw = post![1].signedInnerTx;
     expect(saved()?.tx).toBe(buildTxHash(raw)); expect(saved()?.rawInner).toBe(raw);
     expect(saved()?.submission).toBe('attempted');
@@ -523,7 +521,7 @@ it('rejects wallets that sign a user-paid transaction instead of the sponsored i
   wallet.controls.sign = (tx, networkId) => f.account.signTransaction(tx, { networkId });
   const hook = renderHook(() => useShortsWalletTransactions(f.options));
   try {
-    await act(async () => { await expect(hook.result.current.run(wallet.sdk, 'like', 'owned-sdk-fixture', '0', f.config, f.contract, vi.fn(), undefined, 'session')).rejects.toThrow(/does not match/); });
+    await act(async () => { await expect(hook.result.current.run(wallet.sdk, 'like', 'owned-sdk-fixture', '0', f.config, f.contract, vi.fn())).rejects.toThrow(/does not match/); });
     expect(mocks.request.mock.calls.filter(([url]) => url === '/like-sponsorships')).toHaveLength(0);
     expect(saved()).toBeUndefined(); expect(f.state.submitted).toHaveLength(0);
   } finally { wallet.sdk.disconnectWallet(); }
@@ -532,7 +530,7 @@ it('preserves wallet rejection without sponsorship or a pending record', async (
   const f = fixture(); const wallet = await extensionFixture(f); wallet.controls.reject = true;
   const hook = renderHook(() => useShortsWalletTransactions(f.options));
   try {
-    await act(async () => { await expect(hook.result.current.run(wallet.sdk, 'like', 'owned-sdk-fixture', '0', f.config, f.contract, vi.fn(), undefined, 'session')).rejects.toBeInstanceOf(RpcRejectedByUserError); });
+    await act(async () => { await expect(hook.result.current.run(wallet.sdk, 'like', 'owned-sdk-fixture', '0', f.config, f.contract, vi.fn())).rejects.toBeInstanceOf(RpcRejectedByUserError); });
     expect(saved()).toBeUndefined(); expect(f.state.submitted).toHaveLength(0);
   } finally { wallet.sdk.disconnectWallet(); }
 });
@@ -552,6 +550,7 @@ it('keeps the exact signed Like after a lost sponsor response and retries withou
   await act(async () => { await hook.result.current.retrySponsorship(); });
   const posts = mocks.request.mock.calls.filter(([url]) => url === '/like-sponsorships');
   expect(posts).toHaveLength(2); expect(posts[1][1]).toEqual(posts[0][1]);
+  expect(posts.every((post) => post[2] === undefined)).toBe(true);
   expect(f.sign).toHaveBeenCalledOnce(); expect(f.state.submitted).toHaveLength(0);
 });
 it('does not send signed bytes if the durable submission checkpoint fails', async () => {
@@ -561,8 +560,9 @@ it('does not send signed bytes if the durable submission checkpoint fails', asyn
   expect(saved()).toBeUndefined(); expect(mocks.request.mock.calls.filter(([url]) => url === '/like-sponsorships')).toHaveLength(0);
   expect(f.state.submitted).toHaveLength(0);
 });
-it.each(['disabled', 'gas', 'fee', 'price', 'ttl', 'policy', 'frozen', 'nonzero value'])('does not open the wallet when %s is invalid', async (change) => {
+it.each(['disabled', 'legacy auth', 'gas', 'fee', 'price', 'ttl', 'policy', 'frozen', 'nonzero value'])('does not open the wallet when %s is invalid', async (change) => {
   const f = fixture();
+  if (change === 'legacy auth') delete f.config.likeSponsorship!.authorization;
   if (change === 'disabled') f.config.likeSponsorship!.enabled = false;
   if (change === 'gas') f.config.likeSponsorship!.gasLimit = 200001;
   if (change === 'fee') f.config.likeSponsorship!.maxFee = '10000000000000001';
@@ -571,7 +571,7 @@ it.each(['disabled', 'gas', 'fee', 'price', 'ttl', 'policy', 'frozen', 'nonzero 
   if (change === 'policy') f.state.cfg[1] = 4n;
   if (change === 'frozen') f.state.lifecycle.frozen = true;
   const hook = renderHook(() => useShortsWalletTransactions(f.options));
-  await act(async () => { await expect(change === 'nonzero value' ? hook.result.current.run(f.sdk, 'like', 'owned-sdk-fixture', '1', f.config, f.contract, vi.fn(), undefined, 'session') : execute(hook, f)).rejects.toThrow(); });
+  await act(async () => { await expect(change === 'nonzero value' ? hook.result.current.run(f.sdk, 'like', 'owned-sdk-fixture', '1', f.config, f.contract, vi.fn()) : execute(hook, f)).rejects.toThrow(); });
   expect(f.sign).not.toHaveBeenCalled(); expect(saved()).toBeUndefined();
 });
 it.each(['unreachable', 'oversized header', 'oversized stream', 'malformed JSON'])('fails closed on a %s verification response', async (failure) => {

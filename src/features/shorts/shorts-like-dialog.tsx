@@ -1,53 +1,64 @@
-import { Heart, X } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { Heart, HeartCrack, LoaderCircle } from 'lucide-react';
 import { ShortsDialog } from './shorts-dialog';
+import type { LikePhase } from './shorts-like-feedback';
 import supportHeart from './assets/support-heart.png';
 import './shorts-like-dialog.css';
-import { shortsPricing, type ShortsPricing } from './shorts-pricing';
 
 interface Props {
   title: string;
-  pricing?: ShortsPricing;
-  connected: boolean;
-  busy: boolean;
-  walletPending: boolean;
-  error?: string;
+  phase: LikePhase;
   onClose: () => void;
-  onLike: () => void;
-  onConnect: () => void;
 }
 
-export const ShortsLikeDialog = ({
-  title, pricing, connected, busy, walletPending, error, onClose, onLike, onConnect,
-}: Props) => {
-  const available = !!shortsPricing(pricing);
-  let action = available ? 'Like' : 'Likes temporarily unavailable';
-  if (!connected) action = 'Connect wallet to Like';
-  if (busy) action = 'Waiting for wallet & network…';
+/** Visual feedback only. The originating heart click owns the wallet request. */
+export const ShortsLikeDialog = ({ title, phase, onClose }: Props) => {
+  const close = useRef(onClose);
+  close.current = onClose;
+  const failed = phase === 'cancelled' || phase === 'error';
+  useEffect(() => {
+    if (!failed) return undefined;
+    const timer = setTimeout(() => close.current(), 1800);
+    return () => clearTimeout(timer);
+  }, [phase, failed]);
+  const heading = {
+    connecting: 'Connect your wallet',
+    signing: 'A little love goes a long way',
+    cancelled: 'Like cancelled',
+    error: 'Like couldn’t be sent',
+  }[phase];
+  const detail = {
+    connecting: 'Your wallet will open automatically.',
+    signing: 'Confirm the Like in your wallet.',
+    cancelled: 'No Like was added.',
+    error: 'No Like was added.',
+  }[phase];
   return (
-    <ShortsDialog label="Like this Short" busy={busy} suspended={walletPending} onClose={onClose}>
-      <section className="sh-modal sh-support">
-        <button type="button" className="sh-support-close" aria-label="Close Like dialog" disabled={busy} onClick={onClose}>
-          <X size={19} aria-hidden="true" />
-        </button>
+    <ShortsDialog label="Like this Short" busy={!failed} suspended keepVisibleWhenSuspended onClose={onClose} className="sh-like-feedback">
+      <section className={`sh-modal sh-support is-${phase}`}>
         <div className="sh-support-art" aria-hidden="true">
           <div className="sh-support-halo" />
+          <div className="sh-support-orbit" />
           <img src={supportHeart} width="1280" height="1280" alt="" draggable="false" />
+          {failed && <span className="sh-support-cancel-mark"><HeartCrack size={30} /></span>}
         </div>
-        <span className="sh-eyebrow">MAKE THEIR DAY</span>
-        <h2>Like this Short</h2>
-        <p className="sh-support-copy">Show the creator you enjoyed it. Likes are free.</p>
+        <span className="sh-eyebrow">{failed ? 'MAYBE NEXT TIME' : 'MAKE THEIR DAY'}</span>
+        <div role="status" aria-live="polite" aria-atomic="true">
+          <h2>{heading}</h2>
+          <p className="sh-support-copy">
+            {detail}
+          </p>
+        </div>
         <div className="sh-support-video">
           <Heart size={16} aria-hidden="true" />
           <span>{title}</span>
         </div>
-        {error && <p className="sh-support-error" role="alert">{error}</p>}
-        <button type="button" className="primary sh-support-action" disabled={busy || (connected && !available)} onClick={connected ? onLike : onConnect}>
-          <Heart size={18} aria-hidden="true" />
-          {action}
-        </button>
-        <p className="sh-support-note">
-          {available ? 'Superhero covers the network fee. Confirm the Like in your wallet.' : 'Network fee sponsorship is temporarily unavailable.'}
-        </p>
+        {!failed && (
+          <p className="sh-support-note">
+            <LoaderCircle size={15} aria-hidden="true" />
+            Superhero covers the network fee.
+          </p>
+        )}
       </section>
     </ShortsDialog>
   );

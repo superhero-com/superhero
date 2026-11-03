@@ -33,6 +33,11 @@ export const ShortsLikeButton = ({
           <Heart size={25} fill={liked ? 'currentColor' : 'none'} aria-hidden="true" />
         </button>
         {motion.celebrate && liked && <span className="sv-like-ring" aria-hidden="true" />}
+        {motion.celebrate && liked && (
+          <span className="sv-like-burst" aria-hidden="true">
+            {[0, 1, 2, 3, 4, 5].map((particle) => <Heart key={particle} size={12} fill="currentColor" />)}
+          </span>
+        )}
       </div>
       <strong className="sv-like-count" role="status" aria-live="polite" aria-atomic="true">
         <span className="sv-sr-only">

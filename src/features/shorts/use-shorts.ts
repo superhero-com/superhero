@@ -20,6 +20,7 @@ import { studioContentQuery, useShortsStudioRead } from './use-shorts-studio-rea
 import { useShortsSocial } from './use-shorts-social';
 import { useShortsWalletTransactions, WalletActionPending } from './use-shorts-wallet-transactions';
 import type { WalletMethod } from './shorts-wallet-journal';
+import { likeFailurePhase, type LikePhase } from './shorts-like-feedback';
 import type { PublishedComment } from './shorts-comment-page';
 import { request, SHORTS_API, ShortsApiError } from './api';
 import { hashUploadFile, uploadDirectPart } from './shorts-direct-upload';
@@ -159,7 +160,9 @@ export function useShorts() {
     navigate({ feed: '/shorts', publish: '/shorts/studio/upload', review: '/shorts/studio/review' }[value] || '/shorts/studio');
   };
   const [like, setLike] = useState<Short>();
-  const likeAfterConnect = useRef<Short | undefined>(undefined);
+  const [likePhase, setLikePhase] = useState<LikePhase>('signing');
+  const likeAfterConnect = useRef<{ short: Short; address?: string } | undefined>(undefined);
+  useEffect(() => () => { likeAfterConnect.current = undefined; }, []);
   const generation = useRef(0);
   const actionLock = useRef(false);
   const previousActor = useRef(actor);
@@ -177,9 +180,10 @@ export function useShorts() {
     setClaimReview(false);
     setReview([]);
     setPreview(undefined);
-    // A first connection returns to review; connecting never submits a payment.
-    setLike(actor ? likeAfterConnect.current : undefined);
-    if (actor) likeAfterConnect.current = undefined;
+    // Preserve only an explicit Like intent during its first wallet connection.
+    // Account changes invalidate it; mounting/reconnecting alone never signs.
+    if (changedAccount) likeAfterConnect.current = undefined;
+    if (!likeAfterConnect.current) setLike(undefined);
     setUploadProgress(undefined);
     if (changedAccount) {
       setUploadDraft(undefined);
@@ -317,9 +321,7 @@ export function useShorts() {
     load();
     return () => { cancelled = true; };
   }, [days, token, tab, videoId, performanceRevision]);
-  const sponsorSession = useRef<() => Promise<string>>(async () => { throw new Error('Wallet connection is not ready.'); });
   const walletRecovery = useShortsWalletTransactions({
-    sponsorToken: () => sponsorSession.current(),
     actor,
     network: config?.network,
     contract: config?.contract,
@@ -452,11 +454,6 @@ export function useShorts() {
     try {
       await checkNetwork();
       if (sdk.address !== actor || currentAddress.current !== actor) throw new Error('Wallet signer does not match the connected account.');
-      const sponsorshipToken = method === 'like' ? await sponsorSession.current() : undefined;
-      // Session authentication releases its own wallet handoff when it finishes.
-      // Keep the native dialog suspended for the separate transaction approval,
-      // or showModal() makes the wallet's confirmation portal inert.
-      setWalletPending(true);
       setMessage('');
       return await walletRecovery.run(
         sdk,
@@ -467,7 +464,6 @@ export function useShorts() {
 (typeof previous === 'string' ? previous : [config!.contract, config!.previousContract][Number(previous)])!,
 () => { setLike(undefined); setClaimReview(false); setWalletPending(false); },
 comment,
-sponsorshipToken,
       );
     } finally { setWalletPending(false); }
   };
@@ -512,26 +508,31 @@ sponsorshipToken,
       return session.token;
     } finally { setWalletPending(false); }
   };
-  sponsorSession.current = ensureCreatorSession;
   const signIn = () => perform(async () => {
     if (!actor) { openModal({ name: 'connect-wallet' }); return; }
     await ensureCreatorSession();
   }, actor ? 'Creator access ready. Your connected wallet is unchanged.' : 'Choose a wallet using Superhero’s connect dialog.');
-  const connectForLike = () => perform(async () => {
-    if (actor) return;
-    likeAfterConnect.current = like;
+  const connectForLike = (selected = like) => perform(async () => {
+    if (actor || !selected) return;
+    const intent = { short: selected, address: undefined as string | undefined };
+    likeAfterConnect.current = intent;
+    setLike(selected); setLikePhase('connecting');
     setWalletPending(true);
     try {
       const connected = await connectWallet();
+      if (likeAfterConnect.current !== intent) return;
       if (!connected) {
-        likeAfterConnect.current = undefined;
-        throw new Error('Wallet connection was not completed. Connect your wallet to continue.');
+        throw new Error('Wallet connection cancelled.');
       }
+      intent.address = connected;
     } catch (error) {
-      likeAfterConnect.current = undefined;
+      if (likeAfterConnect.current === intent) {
+        likeAfterConnect.current = undefined;
+        setLikePhase(likeFailurePhase(error));
+      }
       throw error;
     } finally { setWalletPending(false); }
-  }, 'Wallet connected. You can now send your Like.', { backgroundRefresh: true });
+  }, '', { backgroundRefresh: true, transactionNotification: true });
   const currentUploadCapability = uploadCapability(config);
   const resumeStorageKey = config && actor ? uploadResumeKey(SHORTS_API, config.network, config.contract, actor) : '';
   const savedUpload = resumeStorageKey ? readSavedUpload(resumeStorageKey) : undefined;
@@ -704,16 +705,34 @@ sponsorshipToken,
     } finally { setUploadStage(undefined); setUploadProgress(undefined); }
   }, 'Your Short is published.', { backgroundRefresh: true, pending: 'Uploading your Short' });
   const publish = (id: string) => perform(() => completePublication(id), 'Your Short is published.', { pending: 'Publishing your Short' });
-  const confirmLike = () => perform(async () => {
-    if (!like) throw new Error('Choose a Short to Like.');
-    if (like.creator === actor) throw new Error('You cannot Like your own Short.');
-    if (like.liked || currentFeed.current.find((item) => item.id === like.id)?.liked) {
-      throw new Error('You already liked this Short.');
+  const confirmLike = (selected = like) => perform(async () => {
+    if (!selected) throw new Error('Choose a Short to Like.');
+    setLike(selected); setLikePhase('signing');
+    try {
+      if (selected.creator === actor) throw new Error('You cannot Like your own Short.');
+      if (selected.liked || currentFeed.current.find((item) => item.id === selected.id)?.liked) {
+        throw new Error('You already liked this Short.');
+      }
+      if (!paymentRelease || config?.likeSponsorship?.authorization !== 'signed-like'
+        || !config.likeSponsorship.enabled) throw new Error('Likes are temporarily unavailable. Please try again shortly.');
+      await transact('like', [selected.id], '0');
+    } catch (error) {
+      if (currentAddress.current === actor) {
+        if (error instanceof WalletActionPending) setLike(undefined);
+        else { setLike(selected); setLikePhase(likeFailurePhase(error)); }
+      }
+      throw error;
     }
-    const selected = like;
-    if (!paymentRelease) throw new Error('Likes are temporarily unavailable for this Shorts release.');
-    await transact('like', [selected.id], '0');
   }, 'Like sent.', { backgroundRefresh: true, transactionNotification: true });
+  const continueLike = useRef(confirmLike);
+  continueLike.current = confirmLike;
+  useEffect(() => {
+    const intent = likeAfterConnect.current;
+    if (!actor || busy || !intent?.address) return;
+    likeAfterConnect.current = undefined;
+    if (intent.address === actor) continueLike.current(intent.short);
+    else setLike(undefined);
+  }, [actor, busy]);
   const visibleFeed = sharedId ? [sharedVideo].filter((item): item is Short => !!item)
     : rankShorts(feed, personal.preferences, topic, social.followed);
   return {
@@ -810,6 +829,8 @@ sponsorshipToken,
     },
     clearMessage: () => setMessage(''),
     like,
+    likePhase,
+    startLike: (selected: Short) => (actor ? confirmLike(selected) : connectForLike(selected)),
     setLike: (value?: Short) => { setLike(value); if (value) setMessage(''); },
     confirmLike,
     claim: () => perform(async () => { await transact('claim', []); setClaimReview(false); }, 'Rewards claimed to your wallet.', { transactionNotification: true }),

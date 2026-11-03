@@ -1,8 +1,16 @@
-.sh-modal.sh-support { padding: 22px 32px 24px; text-align: center; background: radial-gradient(ellipse at 50% 10%, #152c58 0, #111927 55%); }
+.sh-like-feedback[open] { position: fixed; inset: 0; z-index: 40; height: fit-content; pointer-events: none; }
+.sh-modal.sh-support { padding: 22px 32px 24px; text-align: center; background: radial-gradient(ellipse at 50% 10%, #152c58 0, #111927 55%); box-shadow: 0 24px 100px #0009; animation: sh-support-arrive .3s ease-out both; }
 .shorts-app .sh-support-close { position: absolute; z-index: 1; right: 14px; top: 14px; width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border-color: transparent; background: #ffffff06; border-radius: 50%; }
 .sh-support-art { position: relative; height: 180px; display: grid; place-items: center; margin-bottom: 10px; pointer-events: none; }
-.sh-support-art img { position: relative; width: 220px; height: 220px; object-fit: contain; margin-top: -18px; animation: sh-support-float 4.6s ease-in-out 2; }
-.sh-support-halo { position: absolute; width: 150px; height: 150px; border-radius: 50%; background: #1161fe30; filter: blur(30px); animation: sh-support-glow 4.6s ease-in-out 2; }
+.sh-support-art img { position: relative; width: 220px; height: 220px; object-fit: contain; margin-top: -18px; animation: sh-support-float 2.8s ease-in-out infinite; }
+.sh-support-halo { position: absolute; width: 150px; height: 150px; border-radius: 50%; background: #1161fe40; filter: blur(30px); animation: sh-support-glow 2.8s ease-in-out infinite; }
+.sh-support-orbit { position: absolute; width: 164px; height: 164px; border: 1px solid #6c9dff24; border-top-color: #9dccff; border-radius: 50%; animation: sh-support-orbit 2.2s linear infinite; }
+.sh-support.is-cancelled, .sh-support.is-error { background: radial-gradient(ellipse at 50% 10%, #4b1f35 0, #19151f 60%); border-color: #e96c8360; animation: sh-support-dismiss 1.8s ease both; }
+.sh-support.is-cancelled .sh-support-art img, .sh-support.is-error .sh-support-art img { filter: hue-rotate(125deg) saturate(.8); animation: sh-support-shake .6s ease both; }
+.sh-support.is-cancelled .sh-support-halo, .sh-support.is-error .sh-support-halo { background: #f34d6d50; animation: none; }
+.sh-support.is-cancelled .sh-support-orbit, .sh-support.is-error .sh-support-orbit { display: none; }
+.sh-support.is-cancelled .sh-eyebrow, .sh-support.is-error .sh-eyebrow { color: #ffa1ae; }
+.sh-support-cancel-mark { position: absolute; bottom: 0; right: calc(50% - 78px); display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: #4f2131; color: #ff9caf; border: 1px solid #f68a9b70; animation: sh-support-arrive .3s ease-out both; }
 .sh-support .sh-eyebrow, .sh-support-fees .sh-eyebrow { display: block; font-size: 10px; letter-spacing: 2.5px; color: #8db7ff; }
 .sh-support h2 { margin: 12px 0 14px; font-size: 34px; line-height: 1.12; letter-spacing: -1.1px; }
 .sh-support p.sh-support-copy { max-width: 330px; margin: 0 auto; font-size: 14px; line-height: 1.65; }
@@ -17,6 +25,8 @@
 .sh-support-action svg { flex-shrink: 0; }
 .sh-support-action:not(:disabled):hover svg { fill: currentColor; }
 .sh-support p.sh-support-note { font-size: 11px; margin: 12px 0 0; color: var(--muted); }
+.sh-support-note { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.sh-support-note svg { animation: sh-support-orbit 1.6s linear infinite; }
 .sh-support p.sh-support-error { padding: 10px 12px; border: 1px solid #ef8b8b50; border-radius: 10px; color: #ffc6c6; text-align: left; overflow-wrap: anywhere; }
 .sh-support-fees { padding-top: 30px; }
 .sh-support-fee-icon { display: grid; place-items: center; width: 52px; height: 52px; background: #1161fe20; color: #89b4ff; border-radius: 16px; margin-bottom: 24px; }
@@ -37,6 +47,10 @@
 .shorts-app .sh-support-back { width: 100%; margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; }
 @keyframes sh-support-float { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-9px) rotate(3deg); } }
 @keyframes sh-support-glow { 0%, 100% { opacity: .5; transform: scale(.9); } 50% { opacity: 1; transform: scale(1.12); } }
+@keyframes sh-support-orbit { to { transform: rotate(360deg); } }
+@keyframes sh-support-arrive { from { opacity: 0; transform: translateY(12px) scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes sh-support-shake { 20%, 60% { transform: translateX(-7px) rotate(-5deg); } 40%, 80% { transform: translateX(7px) rotate(5deg); } 100% { transform: scale(.94); } }
+@keyframes sh-support-dismiss { 0%, 75% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(12px) scale(.96); } }
 @media (max-width: 400px) {
   .sh-modal.sh-support { padding: 18px 20px 22px; }
   .sh-support-art { height: 150px; }
@@ -46,5 +60,5 @@
   .sh-support-video { margin: 16px 0 12px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .sh-support-art img, .sh-support-halo { animation: none; }
+  .sh-modal.sh-support, .sh-support-art img, .sh-support-halo, .sh-support-orbit, .sh-support-cancel-mark, .sh-support-note svg { animation: none !important; }
 }

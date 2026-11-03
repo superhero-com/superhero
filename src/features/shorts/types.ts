@@ -46,6 +46,7 @@ export interface Config {
   uploads?: UploadCapability;
   likeMode?: 'free' | 'paid';
   likeSponsorship?: {
+    authorization?: 'signed-like';
     enabled: boolean; gasLimit: number; gasPrice: string; maxFee: string; ttlBlocks: number;
   };
   policy?: ShortsContractPolicy;

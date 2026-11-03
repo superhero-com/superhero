@@ -4,7 +4,7 @@ Run `npm run start:shorts:testnet` and open `http://127.0.0.1:5180/shorts`. The 
 
 Start the separate Shorts API on loopback port 3334 using its `src/shorts/README.md`. Its testnet deployment supplies the ACI and contract identity. The API verifies the deployed bytecode before serving.
 
-Watch freely and connect your testnet wallet to Like. Likes transfer zero tokens and create no creator or treasury reward. The user signs the Like contract call; Superhero pays the network fee through a separate PayingForTx envelope. Sponsorship requires an authenticated wallet session and is unavailable when the sponsor is disabled or its budget is exhausted. Connecting a wallet never automatically submits a Like.
+Watch freely and connect your testnet wallet to Like. Likes transfer zero tokens and create no creator or treasury reward. The user signs the Like contract call; Superhero pays the network fee through a separate PayingForTx envelope. The signed Like authorizes its sponsorship without a Studio session. Sponsorship is unavailable when the sponsor is disabled or its budget is exhausted. A heart tap starts the wallet request directly; connecting alone never submits a Like.
 
 Creator Studio shares the main wallet connection. In the explicit local connected-wallet demo mode, it opens an API session without an extra signature. Outside that mode, private creator access requires a signed challenge. Likes and comments use the wallet. Published Shorts and comments cannot be withdrawn or deleted. Publishing is paid for by Superhero and does not request a creator transaction.
 
@@ -81,7 +81,7 @@ Run the playback regression tests with `npm test -- --run src/features/shorts/__
 
 ## Creator Studio
 
-Creator API access is shared through an app-level Jotai session and cached in sessionStorage for the server-issued lifetime (currently 30 minutes). It is bound to the address, API origin, network and contract, survives route changes/reloads, and is cleared on expiry, server rejection, main-wallet disconnect or account changes even outside Shorts. Public viewing requires no private API session. Sponsored Likes use the same authenticated session and renew it when needed; sponsorship rejects the local connected-wallet authentication shortcut.
+Creator API access is shared through an app-level Jotai session and cached in sessionStorage for the server-issued lifetime (currently 30 minutes). It is bound to the address, API origin, network and contract, survives route changes/reloads, and is cleared on expiry, server rejection, main-wallet disconnect or account changes even outside Shorts. Public viewing requires no private API session. Sponsored Likes are independent of creator sessions and use only their verified transaction signature as action-specific authority. The local connected-wallet authentication shortcut grants no sponsorship authority.
 
 The composer has three numbered steps: **Video → Details → Review** above a shared editing workspace. Previous/Next controls stay in the fixed bottom bar. The video preview keeps the source unobstructed, with its title and labels below; on narrow screens it expands above the editor. Guests can choose a local video and enter details before connecting through Superhero's shared wallet dialog. Studio reuses the main sidebar's wallet component. The first connection preserves the guest draft; switching an existing account clears private composer state.
 
@@ -289,8 +289,19 @@ For sponsored Likes, the journal also stores the signed zero-value inner
 transaction so a lost API response can be retried with exactly the same bytes and
 request ID. No private key, seed or session token is stored. The submission
 checkpoint is saved before entering the API boundary. Browser storage failure
-prevents submission. A deliberate sponsorship retry authenticates again but never
-asks the wallet to sign a replacement transaction.
+prevents submission. The signed Like authorizes only that sponsorship request;
+neither submission nor a deliberate retry needs a Studio session or a second
+message signature. Retries never ask the wallet to sign a replacement transaction.
+New Likes require the API's `likeSponsorship.authorization: "signed-like"`
+capability before opening the wallet, so an older API fails closed.
+
+Tapping the heart starts signing directly. The Like dialog provides non-modal
+animation without another confirmation button, stays behind the wallet prompt,
+and closes after the signature is saved. Cancellation shows red feedback and
+closes automatically; it does not change the Like count. A successful mined Like
+updates the count and celebrates on the heart button. Motion respects the user's
+reduced-motion preference. Only an explicit in-memory Like intent can continue
+after a wallet connection; mounting or reconnecting alone never starts signing.
 
 After reload, the client observes status by the inner hash and verifies the
 reported outer sponsored hash. Mounting, polling and recovery never sign or

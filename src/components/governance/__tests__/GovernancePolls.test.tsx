@@ -122,4 +122,10 @@ describe('GovernancePolls', () => {
 
     expect(screen.getByText('No end date')).toBeInTheDocument();
   });
+
+  it('gives the list a page heading for screen readers', () => {
+    renderPolls();
+
+    expect(screen.getByRole('heading', { level: 1, name: 'æternity polls' })).toBeInTheDocument();
+  });
 });

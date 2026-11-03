@@ -6,7 +6,7 @@ import GovernanceAccount from '@/components/governance/GovernanceAccount';
 import GovernancePolls from '@/components/governance/GovernancePolls';
 import GovernanceVote from '@/components/governance/GovernanceVote';
 import GovernanceCreate from '@/components/governance/GovernanceCreate';
-import Shell from '../components/layout/Shell';
+import DaoSectionTabs from '@/features/dao/components/DaoSectionTabs';
 import AeButton from '../components/AeButton';
 
 type TabType = 'polls' | 'vote' | 'account' | 'create';
@@ -17,7 +17,8 @@ const Governance = () => {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState<TabType>('polls');
 
-  // Determine active tab based on URL
+  // Determine active tab based on URL. A click on a link to the current path
+  // (the section tab while another tab is open) changes only location.key.
   useEffect(() => {
     if (pollId) {
       setActiveTab('vote');
@@ -28,12 +29,16 @@ const Governance = () => {
     } else {
       setActiveTab('polls');
     }
-  }, [pollId, location.pathname]);
+  }, [pollId, location.pathname, location.key]);
 
   return (
-    <Shell containerClassName="ui-page governance-page">
+    // Same container as the DAO list, so the shared section tabs stay put when switching.
+    <main className="ui-page governance-page max-w-6xl mx-auto p-4">
+      <div className="mb-2">
+        <DaoSectionTabs />
+      </div>
       {/* Enhanced Tab Navigation */}
-      <div className="governance-tabs flex flex-wrap gap-2 mb-5 p-2">
+      <div className="governance-tabs flex flex-wrap gap-2 mb-5 py-2">
         <AeButton
           onClick={() => setActiveTab('polls')}
           className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-semibold bg-black/20 backdrop-blur-lg border transition-all duration-300 touch-manipulation ${
@@ -83,7 +88,7 @@ const Governance = () => {
       {activeTab === 'vote' && <GovernanceVote pollId={pollId} setActiveTab={(tab: string) => setActiveTab(tab as TabType)} />}
       {activeTab === 'account' && <GovernanceAccount />}
       {activeTab === 'create' && <GovernanceCreate />}
-    </Shell>
+    </main>
   );
 };
 

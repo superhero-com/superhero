@@ -53,7 +53,9 @@ export const useGovernance = () => {
         id,
         ...others,
         title: contractPolls.get(BigInt(id))?.title ?? '',
-        endDate: new Date(Date.now() + (others.closeHeight - height) * 3 * 60 * 1000),
+        endDate: others.closeHeight == null
+          ? undefined
+          : new Date(Date.now() + (others.closeHeight - height) * 3 * 60 * 1000),
         status: (others.closeHeight == null || others.closeHeight > height
           ? 'open' : 'closed') as 'open' | 'closed',
       }));

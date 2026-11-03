@@ -34,7 +34,8 @@ export const ShortsWalletRecovery = ({
   const { action, observation, error } = recovery;
   const [label, confirmedTitle] = action ? walletCopy[action.method] : ['Your action', 'Action complete'];
   const walletId = action && JSON.stringify(['shorts-wallet', action.api, action.network, action.address, action.contract, action.id]);
-  const id = walletId || (error ? JSON.stringify(['shorts-wallet-error', scope, error]) : undefined);
+  const id = recovery.notificationActive === false ? undefined
+    : walletId || (error ? JSON.stringify(['shorts-wallet-error', scope, error]) : undefined);
   const walletScope = scope || JSON.stringify([action?.api, action?.network, action?.address, action?.contract]);
   let failure = error;
   if (!failure && observation?.neverSubmitted) failure = `${label} was not sent. Please try again.`;

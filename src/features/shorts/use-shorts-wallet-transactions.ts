@@ -51,6 +51,8 @@ export function useShortsWalletTransactions(options: Options) {
   const currentScope = useRef(scopeKey);
   currentScope.current = scopeKey;
   const confirmed = useRef(new Set<string>());
+  const initiated = useRef<string | undefined>(undefined);
+  useEffect(() => () => { initiated.current = undefined; }, [scopeKey]);
   const onConfirmed = useRef(options.onConfirmed);
   onConfirmed.current = options.onConfirmed;
   const onUnconfirmed = useRef(options.onUnconfirmed);
@@ -60,6 +62,7 @@ export function useShortsWalletTransactions(options: Options) {
     action?: WalletAction;
     observation?: WalletObservation;
     error?: string;
+    notificationActive?: boolean;
   }>({ scope: '' });
   const [revision, setRevision] = useState(0);
   const check = useCallback(() => setRevision((value) => value + 1), []);
@@ -95,11 +98,23 @@ export function useShortsWalletTransactions(options: Options) {
           scope: scopeKey,
           action,
           observation: old.action?.id === action.id ? old.observation : undefined,
+          notificationActive: action.id === initiated.current || (old.action?.id === action.id
+            ? old.notificationActive : !action.tx || action.submission === 'prepared'),
         }));
         if (!action.tx || action.submission === 'prepared' || document.visibilityState === 'hidden') return;
         const observation = await observeWalletAction(action, controller.signal);
         if (!live || currentScope.current !== scopeKey) return;
-        setState({ scope: scopeKey, action, observation });
+        const terminal = ['confirmed', 'failed'].includes(observation.status)
+          || observation.neverSubmitted === true || observation.sponsorshipExpired === true;
+        setState((old) => ({
+          scope: scopeKey,
+          action,
+          observation,
+          // Reconcile saved outcomes silently on reload. A newly started action,
+          // a still-pending recovery, or a reorg can announce subsequent changes.
+          notificationActive: (old.action?.id === action.id && old.notificationActive)
+            || action.id === initiated.current || !terminal,
+        }));
         if (observation.status !== 'confirmed' && confirmed.current.delete(action.tx)) {
           onUnconfirmed.current?.(action);
         }
@@ -219,6 +234,7 @@ export function useShortsWalletTransactions(options: Options) {
         }[method],
       } : {}),
     });
+    initiated.current = action.id;
     check();
     let signed = false;
     preparation = new ShortsDeadline('Wallet transaction preparation timed out. No transaction was sent.');
@@ -369,6 +385,7 @@ export function useShortsWalletTransactions(options: Options) {
   };
   return {
     action,
+    notificationActive: !action || state.notificationActive === true,
     observation: state.scope === scopeKey ? state.observation : undefined,
     error: state.scope === scopeKey ? state.error : undefined,
     check,

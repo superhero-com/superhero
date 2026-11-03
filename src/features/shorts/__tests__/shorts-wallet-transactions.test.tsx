@@ -350,6 +350,7 @@ it('shows pending outcomes without offering another payment or cancellation afte
       <ShortsWalletRecovery
         recovery={{
           action,
+          notificationActive: true,
           observation: undefined,
           error: undefined,
           check,
@@ -375,4 +376,60 @@ it('rejects changed unsigned payment details before invoking the external signer
   expect(mocks.sign).not.toHaveBeenCalled();
   expect(mocks.sent).not.toHaveBeenCalled();
   expect(saved()).toBeUndefined();
+});
+
+it('reconciles a confirmed journal quietly after reload without removing its recovery record', async () => {
+  const hook = renderHook(() => useShortsWalletTransactions(options()));
+  await act(async () => { await expect(execute(hook)).rejects.toBeInstanceOf(WalletActionPending); });
+  mocks.status = 'confirmed';
+  act(() => hook.result.current.check());
+  await waitFor(() => expect(hook.result.current.observation?.status).toBe('confirmed'));
+  expect(hook.result.current.notificationActive).toBe(true);
+  const retained = saved();
+  hook.unmount();
+  const restored = renderHook(() => useShortsWalletTransactions(options()));
+  await waitFor(() => expect(restored.result.current.observation?.status).toBe('confirmed'));
+  expect(restored.result.current.notificationActive).toBe(false);
+  expect(saved()).toEqual(retained);
+  act(() => restored.result.current.check());
+  await waitFor(() => expect(restored.result.current.observation?.status).toBe('confirmed'));
+  expect(restored.result.current.notificationActive).toBe(false);
+  restored.unmount();
+  const refreshed = renderHook(() => useShortsWalletTransactions(options()));
+  await waitFor(() => expect(refreshed.result.current.observation?.status).toBe('confirmed'));
+  expect(refreshed.result.current.notificationActive).toBe(false);
+  expect(mocks.sign).toHaveBeenCalledOnce();
+  expect(mocks.sent).toHaveBeenCalledOnce();
+});
+
+it('announces a restored pending action when it later confirms', async () => {
+  const hook = renderHook(() => useShortsWalletTransactions(options()));
+  await act(async () => { await expect(execute(hook)).rejects.toBeInstanceOf(WalletActionPending); });
+  hook.unmount();
+  const restored = renderHook(() => useShortsWalletTransactions(options()));
+  await waitFor(() => expect(restored.result.current.observation?.status).toBe('unknown'));
+  expect(restored.result.current.notificationActive).toBe(true);
+  mocks.status = 'confirmed';
+  act(() => restored.result.current.check());
+  await waitFor(() => expect(restored.result.current.observation?.status).toBe('confirmed'));
+  expect(restored.result.current.notificationActive).toBe(true);
+});
+
+it('announces a reorg and reconfirmation after silently restoring an old confirmation', async () => {
+  const hook = renderHook(() => useShortsWalletTransactions(options()));
+  await act(async () => { await expect(execute(hook)).rejects.toBeInstanceOf(WalletActionPending); });
+  hook.unmount();
+  mocks.status = 'confirmed';
+  const restored = renderHook(() => useShortsWalletTransactions(options()));
+  await waitFor(() => expect(restored.result.current.observation?.status).toBe('confirmed'));
+  expect(restored.result.current.notificationActive).toBe(false);
+  mocks.status = 'reorged';
+  act(() => restored.result.current.check());
+  await waitFor(() => expect(restored.result.current.observation?.status).toBe('reorged'));
+  expect(restored.result.current.notificationActive).toBe(true);
+  mocks.status = 'confirmed';
+  act(() => restored.result.current.check());
+  await waitFor(() => expect(restored.result.current.observation?.status).toBe('confirmed'));
+  expect(restored.result.current.notificationActive).toBe(true);
+  expect(mocks.sign).toHaveBeenCalledOnce();
 });

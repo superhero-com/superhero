@@ -31,7 +31,7 @@ const action: WalletAction = {
 };
 type Recovery = ReturnType<typeof useShortsWalletTransactions>;
 const recovery = (overrides: Partial<Recovery> = {}): Recovery => ({
-  action, observation: undefined, error: undefined, check: vi.fn(), release: vi.fn(), retrySponsorship: vi.fn(), run: vi.fn(), ...overrides,
+  action, notificationActive: true, observation: undefined, error: undefined, check: vi.fn(), release: vi.fn(), retrySponsorship: vi.fn(), run: vi.fn(), ...overrides,
 });
 const observation = (status: WalletObservation['status'], confirmations = 0): WalletObservation => ({
   ...action, tx: action.tx!, status, confirmations, confirmationsRequired: 3,
@@ -211,4 +211,22 @@ it('announces a new wallet outcome after a Studio notification without replaying
   fireEvent.click(screen.getByRole('button', { name: 'Dismiss notification' }));
   expect(screen.queryByText('Like confirmed')).toBeNull();
   expect(screen.queryByText('Account updated.')).toBeNull();
+});
+
+it('keeps restored terminal wallet activity silent across page reloads', () => {
+  const value = recovery({ notificationActive: false });
+  const first = render(<App value={value} />);
+  expect(screen.queryByRole('button', { name: 'Dismiss notification' })).toBeNull();
+  first.rerender(<App value={{ ...value, observation: observation('confirmed', 3) }} />);
+  expect(screen.queryByText('Like confirmed')).toBeNull();
+  first.unmount();
+  render(<App value={{ ...value, observation: observation('confirmed', 3) }} />);
+  expect(screen.queryByRole('button', { name: 'Dismiss notification' })).toBeNull();
+  expect(value.release).not.toHaveBeenCalled();
+});
+
+it('still announces Studio actions while an old wallet outcome stays silent', () => {
+  render(<App value={recovery({ notificationActive: false, observation: observation('confirmed', 3) })} message="Account updated." messageTone="success" />);
+  expect(screen.getByText('Account updated.')).toBeInTheDocument();
+  expect(screen.queryByText('Like confirmed')).toBeNull();
 });

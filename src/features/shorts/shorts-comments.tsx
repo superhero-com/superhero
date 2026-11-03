@@ -2,7 +2,7 @@ import {
   useEffect, useMemo, useRef, useState, type CSSProperties,
 } from 'react';
 import {
-  ArrowDownWideNarrow, ChevronDown, LockKeyhole, MessageCircle, Send, X,
+  ChevronDown, ListFilter, LockKeyhole, MessageCircle, Send, X,
 } from 'lucide-react';
 import { request, ShortsApiError } from './api';
 import { ShortsDialog } from './shorts-dialog';
@@ -199,19 +199,18 @@ export const ShortsComments = ({
               {' '}
               {page && <span className="sh-comments-count">{BigInt(page.total).toLocaleString()}</span>}
             </h2>
-            <button type="button" className="sh-comments-close" aria-label="Close comments" disabled={working} onClick={onClose}><X size={20} aria-hidden="true" /></button>
+            <div className="sh-comments-controls">
+              <label className="sh-comments-sort" htmlFor="short-comment-sort" title={`Sort comments: ${sort === 'newest' ? 'Newest first' : 'Oldest first'}`}>
+                <ListFilter size={20} aria-hidden="true" />
+                <select id="short-comment-sort" aria-label={page?.next ? 'Sort loaded comments' : 'Sort comments'} value={sort} onChange={(event) => setSort(event.target.value)}>
+                  <option value="newest">{page?.next ? 'Newest loaded' : 'Newest first'}</option>
+                  <option value="oldest">{page?.next ? 'Oldest loaded' : 'Oldest first'}</option>
+                </select>
+              </label>
+              <button type="button" className="sh-comments-close" aria-label="Close comments" disabled={working} onClick={onClose}><X size={20} aria-hidden="true" /></button>
+            </div>
           </div>
-          <div className="sh-comments-toolbar">
-            <span>{page?.next ? `${page.items.length.toLocaleString()} of ${BigInt(page.total).toLocaleString()} loaded` : 'Join the conversation'}</span>
-            <label className="sh-comments-sort" htmlFor="short-comment-sort">
-              <ArrowDownWideNarrow size={16} aria-hidden="true" />
-              <select id="short-comment-sort" aria-label={page?.next ? 'Sort loaded comments' : 'Sort comments'} value={sort} onChange={(event) => setSort(event.target.value)}>
-                <option value="newest">{page?.next ? 'Newest loaded' : 'Newest first'}</option>
-                <option value="oldest">{page?.next ? 'Oldest loaded' : 'Oldest first'}</option>
-              </select>
-              <ChevronDown size={14} aria-hidden="true" />
-            </label>
-          </div>
+          {page?.next && <p className="sh-comments-loaded">{`${page.items.length.toLocaleString()} of ${BigInt(page.total).toLocaleString()} loaded`}</p>}
         </header>
         {/* The named region lets keyboard users scroll without tabbing through every author. */}
         {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}

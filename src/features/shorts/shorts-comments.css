@@ -24,16 +24,18 @@
   border-radius: inherit;
   overflow: hidden;
 }
-.sh-comments-header { flex-shrink: 0; padding: 12px 22px 0; border-bottom: 1px solid #ffffff12; }
-.sh-comments-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.sh-comments-header { flex-shrink: 0; padding: 12px 22px 8px; border-bottom: 1px solid #ffffff12; }
+.sh-comments-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .shorts-app .sh-comments-heading h2 { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 0; font-size: 21px; font-weight: 750; letter-spacing: -.5px; }
 .sh-comments-count { padding: 3px 8px; border-radius: 7px; background: #ffffff09; color: #b9c3d7; font-size: 13px; font-weight: 500; letter-spacing: 0; font-variant-numeric: tabular-nums; }
 .shorts-app .sh-comments-close { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; border: 0; border-radius: 50%; padding: 0; background: transparent; color: #c7cedb; }
-.sh-comments-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; padding-bottom: 4px; font-size: 12px; color: #a8b2c6; }
-.sh-comments-sort { display: flex; align-items: center; gap: 6px; position: relative; color: #e3e8f2; }
-.shorts-app .sh-comments-sort select { cursor: pointer; appearance: none; min-height: 44px; border: 0; padding: 6px 22px 6px 0; background: transparent; box-shadow: none; transform: none; color: inherit; font-size: 12px; font-weight: 600; }
+.sh-comments-controls { display: flex; flex-shrink: 0; gap: 2px; }
+.shorts-app .sh-comments-loaded { margin: 0 0 4px; font-size: 12px; color: #a8b2c6; }
+.sh-comments-sort { display: grid; place-items: center; position: relative; width: 44px; height: 44px; flex-shrink: 0; border-radius: 50%; color: #c7cedb; }
+.sh-comments-sort:hover { background: #ffffff09; }
+.sh-comments-sort:focus-within { outline: 2px solid #80aaff; outline-offset: -2px; }
+.shorts-app .sh-comments-sort select { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 44px; cursor: pointer; appearance: none; opacity: 0; border: 0; padding: 0; margin: 0; background: transparent; box-shadow: none; transform: none; }
 .sh-comments-sort select option { background: #111722; color: #f4f6fc; }
-.sh-comments-sort > svg:last-child { position: absolute; right: 0; pointer-events: none; }
 .sh-comments-list { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #44516a transparent; padding: 4px 22px 16px; }
 .sh-comments-list:focus-visible { outline: 2px solid #80aaff; outline-offset: -3px; }
 .sh-comment-items { list-style: none; padding: 0; margin: 0; }
@@ -44,11 +46,11 @@
 .sh-comment-items li:focus-visible { outline: 2px solid #80aaff; outline-offset: 5px; }
 .sh-comment-author { display: block; width: fit-content; max-width: 100%; overflow-wrap: anywhere; color: #edf0f7; font-size: 13px; font-weight: 650; line-height: 1.5; }
 .sh-comment-author:hover { text-decoration: underline; }
-.sh-comment-time { display: block; margin-top: 2px; color: #9ba9bf; font-size: 11px; line-height: 1.5; }
+.sh-comment-time { display: block; margin: 0; color: #9ba9bf; font-size: 11px; line-height: 1.5; white-space: nowrap; }
 .sh-comment .sv-creator { align-items: flex-start; gap: 12px; margin: 0; }
 .sh-comment .sv-creator-avatar { margin-top: 2px; box-shadow: none; }
 .sh-comment .sv-creator-avatar > div { width: 34px !important; height: 34px !important; border-radius: 50% !important; }
-.sh-comment .sv-creator-identity { min-width: 0; flex: 1; }
+.sh-comment .sv-creator-identity { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 6px; min-width: 0; flex: 1; }
 .shorts-app .sh-comment .sv-creator-identity h3,
 .shorts-app .sh-comment .sv-creator-identity h3[aria-label^="ak_"] { margin: 0; font: 650 13px/1.5 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; letter-spacing: 0; }
 .shorts-app .sh-comment .sv-creator-identity h3[aria-label^="ak_"] > span:first-child,
@@ -106,7 +108,7 @@
 @media (max-width: 640px) {
   .sh-native-dialog.sh-comments-dialog { inset-inline: 0; bottom: auto; top: calc(var(--sh-comments-viewport-top, 0px) + var(--sh-comments-viewport-height, 100dvh) - min(84dvh, 800px, var(--sh-comments-viewport-height, 100dvh))); width: 100%; max-width: 100%; height: min(84dvh, 800px, var(--sh-comments-viewport-height, 100dvh)); max-height: var(--sh-comments-viewport-height, 100dvh); border-radius: 22px 22px 0 0; }
   .sh-native-dialog.sh-comments-dialog::backdrop { background: #0008; }
-  .sh-comments-header { padding: 12px 16px 0; }
+  .sh-comments-header { padding: 12px 16px 8px; }
   .sh-comments-header::before { content: ''; display: block; width: 32px; height: 4px; margin: 0 auto 8px; border-radius: 100px; background: #ffffff30; }
   .sh-comments-list { padding-inline: 16px; }
   .sh-comments-footer { padding: 14px 16px max(16px, env(safe-area-inset-bottom)); }

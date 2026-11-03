@@ -46,7 +46,6 @@ export const ShortsPage = () => {
       <ShortsComments
         key={s.commentShort.id}
         id={s.commentShort.id}
-        title={s.commentShort.title}
         creator={s.commentShort.creator}
         actor={s.actor}
         policy={s.config.policy}

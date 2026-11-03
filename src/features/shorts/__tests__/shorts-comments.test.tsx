@@ -15,7 +15,7 @@ const policy = {
   maxCommentChars: 5, maxCommentBytes: 8, commentsEnabled: true,
 } as ShortsContractPolicy;
 const props = () => ({
-  id: 'video', title: 'Test video', actor: 'ak_owner', policy, busy: false, walletPending: false, revision: 0, message: '', onClose: vi.fn(), onConnect: vi.fn(), onAdd: vi.fn().mockResolvedValue(false),
+  id: 'video', actor: 'ak_owner', policy, busy: false, walletPending: false, revision: 0, message: '', onClose: vi.fn(), onConnect: vi.fn(), onAdd: vi.fn().mockResolvedValue(false),
 });
 const empty = {
   items: [], next: null, total: '0', version: '0',
@@ -48,10 +48,12 @@ describe('V2 comments', () => {
     expect(container.querySelector('img')).toBeNull(); expect(screen.getByText('ak_other_full_address')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /delete/i })).toBeNull();
     expect(screen.getByText(/Comments are public and permanent/)).toBeInTheDocument();
+    expect(container.querySelector('.sh-comments-title')).toBeNull();
   });
   it('enforces UTF-8 byte limits and keeps rejected or pending drafts until confirmation', async () => {
     const p = props(); const { rerender } = render(<ShortsComments {...p} />); await screen.findByText('No comments yet.');
-    const input = screen.getByLabelText('Add a comment'); fireEvent.focus(input); const submit = screen.getByRole('button', { name: 'Publish with wallet' });
+    const input = screen.getByLabelText('Add a comment'); fireEvent.focus(input); const submit = screen.getByRole('button', { name: 'Comment' });
+    expect(screen.getByText('Comments are public and permanent.', { exact: true })).toBeInTheDocument();
     fireEvent.change(input, { target: { value: '🙂🙂🙂' } }); expect(submit).toBeDisabled();
     fireEvent.change(input, { target: { value: '🙂🙂' } }); expect(submit).toBeEnabled();
     fireEvent.click(submit); await waitFor(() => expect(p.onAdd).toHaveBeenCalledWith('🙂🙂')); expect(input).toHaveValue('🙂🙂');
@@ -108,10 +110,10 @@ describe('V2 comments', () => {
   it('expands on focus, rejects blank drafts, and cancels without submitting', async () => {
     const p = props(); render(<ShortsComments {...p} />);
     await screen.findByText('No comments yet.');
-    expect(screen.queryByRole('button', { name: 'Publish with wallet' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Comment' })).toBeNull();
     const input = screen.getByLabelText('Add a comment'); fireEvent.focus(input);
     fireEvent.change(input, { target: { value: '   ' } });
-    expect(screen.getByRole('button', { name: 'Publish with wallet' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Comment' })).toBeDisabled();
     fireEvent.change(input, { target: { value: 'Hello' } });
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(input).toHaveValue('');
@@ -123,8 +125,8 @@ describe('V2 comments', () => {
     p.onAdd.mockImplementation(() => new Promise((_resolve, failure) => { reject = failure; }));
     render(<ShortsComments {...p} />); await screen.findByText('No comments yet.');
     const input = screen.getByLabelText('Add a comment'); fireEvent.change(input, { target: { value: 'Hello' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Publish with wallet' }));
-    expect(screen.getByRole('button', { name: 'Publishing…' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Comment' }));
+    expect(screen.getByRole('button', { name: 'Commenting…' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Close comments' })).toBeDisabled();
     fireEvent.submit(input.closest('form')!); expect(p.onAdd).toHaveBeenCalledOnce();
     reject(new Error('offline'));

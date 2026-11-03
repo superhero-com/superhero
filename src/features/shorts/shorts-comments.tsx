@@ -40,10 +40,10 @@ const CommentBody = ({ text }: { text: string }) => {
 };
 
 export const ShortsComments = ({
-  id, title, creator, actor, policy, busy, walletPending,
+  id, creator, actor, policy, busy, walletPending,
   revision, publishedComment, message, onClose, onConnect, onAdd,
 }: {
-  id: string; title: string; creator?: string; actor: string; policy: ShortsContractPolicy;
+  id: string; creator?: string; actor: string; policy: ShortsContractPolicy;
   busy: boolean; walletPending: boolean; revision: number;
   publishedComment?: PublishedComment; message: string;
   onClose: () => void; onConnect: () => unknown;
@@ -184,6 +184,7 @@ export const ShortsComments = ({
       className="sh-comments-dialog"
       busy={working}
       suspended={walletPending}
+      keepVisibleWhenSuspended
       onClose={onClose}
       style={viewport ? {
         '--sh-comments-viewport-height': `${viewport.height}px`,
@@ -200,7 +201,6 @@ export const ShortsComments = ({
             </h2>
             <button type="button" className="sh-comments-close" aria-label="Close comments" disabled={working} onClick={onClose}><X size={20} aria-hidden="true" /></button>
           </div>
-          <p className="sh-comments-title" dir="auto">{title}</p>
           <div className="sh-comments-toolbar">
             <span>{page?.next ? `${page.items.length.toLocaleString()} of ${BigInt(page.total).toLocaleString()} loaded` : 'Join the conversation'}</span>
             <label className="sh-comments-sort" htmlFor="short-comment-sort">
@@ -304,18 +304,14 @@ export const ShortsComments = ({
                     <button type="button" className="sh-comment-cancel" disabled={working} onClick={() => { setText(''); setExpanded(false); setSubmitError(''); }}>Cancel</button>
                     <button type="submit" className="primary sh-comment-submit" disabled={working || !valid || !policy.commentsEnabled}>
                       <Send size={15} aria-hidden="true" />
-                      {working ? 'Publishing…' : 'Publish with wallet'}
+                      {working ? 'Commenting…' : 'Comment'}
                     </button>
                   </div>
                 </div>
               )}
               <p id="short-comment-notice" className="sh-comment-notice">
                 <LockKeyhole size={13} aria-hidden="true" />
-                <span>
-                  {composing
-                    ? 'Comments are public and permanent. They can’t be edited or deleted. Your wallet shows the network fee.'
-                    : 'Comments are public and permanent.'}
-                </span>
+                <span>Comments are public and permanent.</span>
               </p>
               {!policy.commentsEnabled && <p className="sh-comment-paused" role="status">Comments are currently paused.</p>}
             </form>

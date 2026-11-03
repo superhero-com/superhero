@@ -1,6 +1,7 @@
 /* Comments own their scroll area; the heading and composer stay within reach. */
 .sh-native-dialog.sh-comments-dialog {
   position: fixed;
+  z-index: 50;
   inset: 84px 24px 24px auto;
   margin: 0;
   width: 440px;
@@ -28,7 +29,6 @@
 .shorts-app .sh-comments-heading h2 { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 0; font-size: 21px; font-weight: 750; letter-spacing: -.5px; }
 .sh-comments-count { padding: 3px 8px; border-radius: 7px; background: #ffffff09; color: #b9c3d7; font-size: 13px; font-weight: 500; letter-spacing: 0; font-variant-numeric: tabular-nums; }
 .shorts-app .sh-comments-close { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; border: 0; border-radius: 50%; padding: 0; background: transparent; color: #c7cedb; }
-.shorts-app .sh-comments-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; margin: 4px 0 4px; color: #a8b2c6; font-size: 12px; line-height: 1.5; }
 .sh-comments-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; padding-bottom: 4px; font-size: 12px; color: #a8b2c6; }
 .sh-comments-sort { display: flex; align-items: center; gap: 6px; position: relative; color: #e3e8f2; }
 .shorts-app .sh-comments-sort select { cursor: pointer; appearance: none; min-height: 44px; border: 0; padding: 6px 22px 6px 0; background: transparent; box-shadow: none; transform: none; color: inherit; font-size: 12px; font-weight: 600; }
@@ -117,6 +117,6 @@
 @media (max-height: 520px) {
   .sh-native-dialog.sh-comments-dialog { top: calc(var(--sh-comments-viewport-top, 0px) + 8px); bottom: auto; height: calc(var(--sh-comments-viewport-height, 100dvh) - 16px); max-height: calc(var(--sh-comments-viewport-height, 100dvh) - 16px); }
   .sh-comments-header { padding-top: 8px; }
-  .sh-comments-header::before, .sh-comments-title { display: none !important; }
+  .sh-comments-header::before { display: none !important; }
   .sh-comments-footer { max-height: 60%; }
 }

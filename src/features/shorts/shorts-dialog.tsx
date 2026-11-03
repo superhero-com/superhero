@@ -5,13 +5,14 @@ import {
 import { useTransactionNotificationHost } from '@/features/transaction-notification';
 
 export const ShortsDialog = ({
-  label, busy, suspended = false, onClose, children, className = '', style,
+  label, busy, suspended = false, keepVisibleWhenSuspended = false, onClose, children, className = '', style,
 }: {
   label: string;
   className?: string;
   style?: CSSProperties;
   busy: boolean;
   suspended?: boolean;
+  keepVisibleWhenSuspended?: boolean;
   onClose: () => void;
   children: ReactNode;
 }) => {
@@ -21,12 +22,15 @@ export const ShortsDialog = ({
     const dialog = ref.current!;
     // Native dialogs make the rest of the document inert, including the app's
     // wallet confirmation portal. Release the top layer during wallet handoff.
-    if (!suspended) { dialog.showModal(); setNotificationHost?.(dialog); }
+    if (!suspended) {
+      dialog.showModal();
+      setNotificationHost?.(dialog);
+    } else if (keepVisibleWhenSuspended) dialog.show();
     return () => {
       setNotificationHost?.((host) => (host === dialog ? null : host));
       dialog.close();
     };
-  }, [suspended, setNotificationHost]);
+  }, [suspended, keepVisibleWhenSuspended, setNotificationHost]);
   return (
     <dialog
       ref={ref}

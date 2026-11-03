@@ -68,7 +68,7 @@
     "katex": "^0.18.4",
     "lightweight-charts": "^5.0.7",
     "lucide-react": "^1.33.0",
-    "moment": "^2.30.1",
+    "moment": "^2.31.0",
     "nostr-tools": "^2.24.1",
     "qrcode": "^1.5.3",
     "react": "^19.2.8",
@@ -117,9 +117,9 @@
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.9.3",
-    "vite": "^7.3.6",
+    "vite": "^7.3.7",
     "vite-plugin-svgr": "^5.2.0",
-    "vitest": "^4.1.11",
+    "vitest": "^4.1.12",
     "ws": "^8.21.2"
   },
   "overrides": {
@@ -128,6 +128,13 @@
     "eslint-config-airbnb": {
       "eslint": "$eslint",
       "eslint-plugin-react-hooks": "$eslint-plugin-react-hooks"
+    },
+    "katex": "$katex",
+    "@tailwindcss/typography": {
+      "postcss-selector-parser": "^6.1.5"
+    },
+    "@metamask/utils": {
+      "uuid": "^11.1.1"
     }
   },
   "standard-version": {

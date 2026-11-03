@@ -129,6 +129,7 @@
       "eslint": "$eslint",
       "eslint-plugin-react-hooks": "$eslint-plugin-react-hooks"
     },
+    "katex": "$katex",
     "@tailwindcss/typography": {
       "postcss-selector-parser": "^6.1.5"
     },

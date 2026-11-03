@@ -1,5 +1,5 @@
 import {
-  createContext, useCallback, useContext, useEffect, useMemo, useRef, useState,
+  createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction,
 } from 'react';
 import { isTransactionMined } from '@/utils/apiRead';
 
@@ -22,9 +22,11 @@ export const TxPayloadType = {
   LinkX: 'link_x',
   UnlinkX: 'unlink_x',
   SocialGraph: 'social_graph',
+  ShortsAction: 'shorts_action',
 } as const;
 
 export type TxPayload =
+  | { type: typeof TxPayloadType.ShortsAction; id: string; pendingTitle: string; pendingMessage: string; confirmedTitle: string; wallet: boolean }
   | { type: typeof TxPayloadType.BuyToken; tokenName: string; tokenSymbol: string; coinAmount: string; estimatedTokens: string; saleAddress?: string }
   | { type: typeof TxPayloadType.SellToken; tokenName: string; tokenSymbol: string; tokenAmount: string; estimatedCoin: string; saleAddress?: string }
   | { type: typeof TxPayloadType.ApproveAllowance; tokenName: string; tokenSymbol: string; amount: string; stepNumber: number; totalSteps: number }
@@ -55,7 +57,7 @@ export type NotificationState =
   | { status: 'submitted'; payload: TxPayload }
   | { status: 'pending'; payload: TxPayload; txHash: string }
   | { status: 'confirmed'; payload: TxPayload }
-  | { status: 'error'; message: string };
+  | { status: 'error'; message: string; payload?: TxPayload };
 
 export type PendingTxOptions = {
   /**
@@ -70,11 +72,13 @@ export type PendingTxOptions = {
 
 type TransactionNotificationContextValue = {
   notificationState: NotificationState;
+  notificationHost: HTMLElement | null;
+  setNotificationHost: Dispatch<SetStateAction<HTMLElement | null>>;
   notifySubmitted: (payload: TxPayload) => void;
   notifyPending: (payload: TxPayload) => void;
   notifyPendingTx: (payload: TxPayload, txHash: string, options?: PendingTxOptions) => void;
   notifyConfirmed: (payload: TxPayload) => void;
-  notifyError: (message: string) => void;
+  notifyError: (message: string, payload?: TxPayload) => void;
   dismissNotification: () => void;
 };
 
@@ -88,6 +92,7 @@ const POLL_INTERVAL_MS = 5_000;
 export const TransactionNotificationProvider: React.FC<{
   children: React.ReactNode
 }> = ({ children }) => {
+  const [notificationHost, setNotificationHost] = useState<HTMLElement | null>(null);
   const [notificationState, setNotificationState] = useState<NotificationState>({ status: 'idle' });
   const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -180,10 +185,10 @@ export const TransactionNotificationProvider: React.FC<{
     [],
   );
 
-  const notifyError = useCallback((message: string) => {
+  const notifyError = useCallback((message: string, payload?: TxPayload) => {
     clearDismissTimer();
     clearPollInterval();
-    setNotificationState({ status: 'error', message });
+    setNotificationState({ status: 'error', message, ...(payload ? { payload } : {}) });
     dismissTimer.current = setTimeout(() => {
       setNotificationState({ status: 'idle' });
     }, ERROR_DISMISS_MS);
@@ -191,6 +196,8 @@ export const TransactionNotificationProvider: React.FC<{
 
   const contextValue = useMemo(() => ({
     notificationState,
+    notificationHost,
+    setNotificationHost,
     notifySubmitted,
     notifyPending,
     notifyPendingTx,
@@ -199,6 +206,8 @@ export const TransactionNotificationProvider: React.FC<{
     dismissNotification,
   }), [
     notificationState,
+    notificationHost,
+    setNotificationHost,
     notifySubmitted,
     notifyPending,
     notifyPendingTx,
@@ -220,4 +229,10 @@ export function useTransactionNotification() {
     throw new Error('useTransactionNotification must be used within TransactionNotificationProvider');
   }
   return ctx;
+}
+
+// Dialogs can host the same banner above their native top layer. Outside the
+// app provider (e.g. isolated dialog previews) no host registration is needed.
+export function useTransactionNotificationHost() {
+  return useContext(TransactionNotificationContext)?.setNotificationHost;
 }

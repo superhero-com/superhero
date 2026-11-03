@@ -192,7 +192,10 @@ describe('Free three-step upload', () => {
       expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
       const overlay = screen.getByRole('region', { name: 'Publishing your Short' });
       expect(within(overlay).queryByText(/payment|wallet|hosting/i)).not.toBeInTheDocument();
-      if (phase === 'error') expect(within(overlay).getByRole('button', { name: 'Back to review' })).toBeEnabled();
+      if (phase === 'error') {
+        expect(within(overlay).getByRole('button', { name: 'Back to review' })).toBeEnabled();
+        expect(within(overlay).getByRole('button', { name: 'Start a new upload' })).toBeEnabled();
+      }
       if (phase === 'published') expect(within(overlay).getByRole('link', { name: 'Watch & share' })).toHaveAttribute('href', '/shorts?short=video');
     });
     expect(publish).not.toHaveBeenCalled();

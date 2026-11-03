@@ -2,6 +2,9 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import {
   beforeEach, describe, expect, it, vi,
 } from 'vitest';
+import {
+  TransactionNotificationBanner, TransactionNotificationProvider, TxPayloadType, useTransactionNotification,
+} from '@/features/transaction-notification';
 import { ShortsDialog } from '../shorts-dialog';
 
 beforeEach(() => {
@@ -30,4 +33,40 @@ describe('Shorts wallet handoff', () => {
     fireEvent(dialog, new Event('cancel', { cancelable: true }));
     expect(onClose).toHaveBeenCalledOnce();
   });
+});
+
+const Notify = () => {
+  const { notifyPending } = useTransactionNotification();
+  return (
+    <button
+      type="button"
+      onClick={() => notifyPending({
+        type: TxPayloadType.ShortsAction, id: 'comment', wallet: true, pendingTitle: 'Confirming on blockchain', pendingMessage: 'Your comment is being confirmed.', confirmedTitle: 'Comment published',
+      })}
+    >
+      Notify
+    </button>
+  );
+};
+
+it('keeps the shared banner in the active dialog top layer and restores it during wallet handoff', () => {
+  const app = (open: boolean, suspended = false) => (
+    <TransactionNotificationProvider>
+      <TransactionNotificationBanner />
+      <Notify />
+      {open && <ShortsDialog label="Comments" busy={false} suspended={suspended} onClose={vi.fn()}><textarea aria-label="Comment draft" defaultValue="Keep my draft" /></ShortsDialog>}
+    </TransactionNotificationProvider>
+  );
+  const view = render(app(true));
+  fireEvent.click(screen.getByRole('button', { name: 'Notify' }));
+  expect(screen.getByRole('dialog')).toContainElement(screen.getByRole('button', { name: 'Dismiss notification' }));
+  view.rerender(app(true, true));
+  expect(view.container.querySelector('dialog')).not.toContainElement(screen.getByRole('button', { name: 'Dismiss notification' }));
+  view.rerender(app(true));
+  expect(screen.getByRole('dialog')).toContainElement(screen.getByRole('button', { name: 'Dismiss notification' }));
+  expect(screen.getByLabelText('Comment draft')).toHaveValue('Keep my draft');
+  view.rerender(app(false));
+  expect(screen.getByText('Your comment is being confirmed.')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Dismiss notification' }));
+  expect(screen.queryByText('Your comment is being confirmed.')).toBeNull();
 });

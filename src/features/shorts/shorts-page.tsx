@@ -13,7 +13,7 @@ export const ShortsPage = () => {
   const s = useShorts();
   return (
     <div className={`shorts-app ${s.tab === 'feed' ? 'shorts-watching' : 'shorts-studio-page'}`}>
-      <ShortsWalletRecovery recovery={s.walletRecovery} />
+      <ShortsWalletRecovery recovery={s.walletRecovery} message={s.message} messageTone={s.messageTone} scope={s.notificationScope} />
       {s.tab === 'feed' ? (
         <ShortsViewer
           feed={s.feed}
@@ -31,7 +31,7 @@ export const ShortsPage = () => {
           measurementSession={s.measurementSession}
           onStudio={() => s.setTab('studio')}
           onUpload={() => s.setTab('publish')}
-          message={s.message}
+          message=""
           onDismissMessage={s.clearMessage}
           busy={s.busy}
           suspended={!!s.like || !!s.commentShort || s.busy}
@@ -54,7 +54,7 @@ export const ShortsPage = () => {
         walletPending={s.walletPending}
         revision={s.commentRevision}
         publishedRevision={s.commentPublishedRevision}
-        message={s.message}
+        message=""
         onClose={() => s.setCommentShort(undefined)}
         onConnect={s.connectForComments}
         onAdd={s.addComment}
@@ -72,7 +72,6 @@ export const ShortsPage = () => {
             <p>Destination wallet</p>
             <code className="sh-address">{s.actor}</code>
             <p>The contract transfers your available balance when confirmed. Your wallet shows the additional network fee.</p>
-            {s.message && <p role="status">{s.message}</p>}
             <button type="button" disabled={s.busy} onClick={() => s.setClaimReview(false)}>Cancel</button>
             <button type="button" className="primary" disabled={s.busy || Number(s.dashboard.account.available) <= 0} onClick={s.claim}>Confirm claim in wallet</button>
           </section>
@@ -86,7 +85,6 @@ export const ShortsPage = () => {
           connected={!!s.actor}
           busy={s.busy}
           walletPending={s.walletPending}
-          error={s.messageTone === 'error' ? s.message : undefined}
           onClose={() => s.setLike(undefined)}
           onLike={s.confirmLike}
           onConnect={s.connectForLike}

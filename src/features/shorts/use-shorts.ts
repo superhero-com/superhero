@@ -345,10 +345,6 @@ export function useShorts() {
         }
       }
       setPerformanceRevision((value) => value + 1);
-      setMessageTone('success');
-      setMessage({
-        like: 'Like confirmed.', paid_like: 'Like confirmed.', claim: 'Rewards claimed to your wallet.', withdraw: 'Short withdrawn from official playback.', add_comment: 'Comment published.', delete_comment: 'Comment deleted.',
-      }[action.method]);
       refresh().catch(() => undefined);
     },
   });
@@ -399,14 +395,14 @@ export function useShorts() {
       id: `${measurementSession.slice(0, 20)}-${id}-${new Date().toISOString().slice(0, 10)}`, seconds: Math.min(60, seconds), session: measurementSession, token: playbackToken, source: new URLSearchParams(location.search).has('short') ? 'shared' : personal.preferences.mode,
     });
   }, [personal.preferences.mode, location.search, getDelivery, measurementSession]);
-  const perform = async (fn: () => Promise<unknown>, success: string, backgroundRefresh = false) => {
+  const perform = async (fn: () => Promise<unknown>, success: string, { backgroundRefresh = false, transactionNotification = false, pending = 'Updating…' } = {}) => {
     if (actionLock.current) return false;
-    actionLock.current = true; setBusy(true); setMessage(''); setMessageTone('info');
+    actionLock.current = true; setBusy(true); setMessage(transactionNotification ? '' : pending); setMessageTone('info');
     try {
       await fn();
       if (currentAddress.current !== actor) return true;
       setMessageTone('success');
-      setMessage(success);
+      setMessage(transactionNotification ? '' : success);
       // A refresh failure must not turn a confirmed payment into a retry prompt.
       setPerformanceRevision((value) => value + 1);
       const updating = refresh().catch(() => {
@@ -419,7 +415,7 @@ export function useShorts() {
       if (e instanceof ShortsApiError && e.status === 401) { setLogin(undefined); setDashboard(undefined); setReview([]); }
       setMessageTone(e instanceof WalletActionPending || e instanceof PublicationReviewPending ? 'info' : 'error');
       const detail = e instanceof Error ? e.message : 'Please try again.';
-      setMessage(detail);
+      setMessage(transactionNotification && e instanceof WalletActionPending ? '' : detail);
       return false;
     } finally { actionLock.current = false; setBusy(false); }
   };
@@ -456,7 +452,7 @@ export function useShorts() {
       // Keep the native dialog suspended for the separate transaction approval,
       // or showModal() makes the wallet's confirmation portal inert.
       setWalletPending(true);
-      setMessage('Review the transaction in your wallet…');
+      setMessage('');
       return await walletRecovery.run(
         sdk,
         method,
@@ -530,7 +526,7 @@ sponsorshipToken,
       likeAfterConnect.current = undefined;
       throw error;
     } finally { setWalletPending(false); }
-  }, 'Wallet connected. You can now send your Like.', true);
+  }, 'Wallet connected. You can now send your Like.', { backgroundRefresh: true });
   const currentUploadCapability = uploadCapability(config);
   const resumeStorageKey = config && actor ? uploadResumeKey(SHORTS_API, config.network, config.contract, actor) : '';
   const savedUpload = resumeStorageKey ? readSavedUpload(resumeStorageKey) : undefined;
@@ -701,8 +697,8 @@ sponsorshipToken,
       if (currentAddress.current === actor) setUploadPublication({ shortId: short?.id, status: error instanceof PublicationReviewPending ? 'reviewing' : 'error' });
       throw error;
     } finally { setUploadStage(undefined); setUploadProgress(undefined); }
-  }, 'Your Short is published.', true);
-  const publish = (id: string) => perform(() => completePublication(id), 'Your Short is published.');
+  }, 'Your Short is published.', { backgroundRefresh: true, pending: 'Uploading your Short' });
+  const publish = (id: string) => perform(() => completePublication(id), 'Your Short is published.', { pending: 'Publishing your Short' });
   const confirmLike = () => perform(async () => {
     if (!like) throw new Error('Choose a Short to Like.');
     if (like.creator === actor) throw new Error('You cannot Like your own Short.');
@@ -712,7 +708,7 @@ sponsorshipToken,
     const selected = like;
     if (!paymentRelease) throw new Error('Likes are temporarily unavailable for this Shorts release.');
     await transact('like', [selected.id], '0');
-  }, 'Like sent.', true);
+  }, 'Like sent.', { backgroundRefresh: true, transactionNotification: true });
   const visibleFeed = sharedId ? [sharedVideo].filter((item): item is Short => !!item)
     : rankShorts(feed, personal.preferences, topic, social.followed);
   return {
@@ -724,12 +720,12 @@ sponsorshipToken,
     connectForComments: () => perform(async () => {
       setWalletPending(true);
       try { await connectWallet(); } finally { setWalletPending(false); }
-    }, 'Wallet connected.', true),
+    }, 'Wallet connected.', { backgroundRefresh: true }),
     addComment: (text: string) => perform(async () => {
       if (!commentShort || !actor) throw new Error('Connect your wallet to comment.');
       const author = await request<{ nextSequence: string }>(`/comments/authors/${encodeURIComponent(actor)}`);
       await transact('add_comment', [commentShort.id], '0', false, { text, sequence: author.nextSequence });
-    }, 'Comment published.', true),
+    }, 'Comment published.', { backgroundRefresh: true, transactionNotification: true }),
     paymentRelease,
     measurementSession,
     authenticated,
@@ -775,6 +771,7 @@ sponsorshipToken,
     preview,
     busy,
     walletRecovery,
+    notificationScope: creatorScope,
     uploadProgress,
     uploadMaxBytes,
     uploadLimitLabel,
@@ -804,21 +801,22 @@ sponsorshipToken,
     messageTone,
     refreshNow: () => {
       setPerformanceRevision((value) => value + 1);
-      return perform(refresh, 'Account updated. Performance refresh requested.');
+      return perform(refresh, 'Account updated. Performance refresh requested.', { pending: 'Refreshing your Studio' });
     },
     clearMessage: () => setMessage(''),
     like,
     setLike: (value?: Short) => { setLike(value); if (value) setMessage(''); },
     confirmLike,
-    claim: () => perform(async () => { await transact('claim', []); setClaimReview(false); }, 'Rewards claimed to your wallet.'),
-    claimPrevious: () => perform(() => transact('claim', [], '0', true), 'Earlier rewards claimed to your wallet.'),
-    claimReward: (contract: string) => perform(() => transact('claim', [], '0', contract), 'Earlier rewards claimed to your wallet.'),
-    rescan: (id: string) => perform(() => request(`/${id}/scan`, {}, requireLogin()), 'Community-guidelines status updated.'),
+    claim: () => perform(async () => { await transact('claim', []); setClaimReview(false); }, 'Rewards claimed to your wallet.', { transactionNotification: true }),
+    claimPrevious: () => perform(() => transact('claim', [], '0', true), 'Earlier rewards claimed to your wallet.', { transactionNotification: true }),
+    claimReward: (contract: string) => perform(() => transact('claim', [], '0', contract), 'Earlier rewards claimed to your wallet.', { transactionNotification: true }),
+    rescan: (id: string) => perform(() => request(`/${id}/scan`, {}, requireLogin()), 'Community-guidelines status updated.', { pending: 'Checking community guidelines' }),
     moderate: (id: string, approved: boolean, reason: string, reviewedTopic: string, visualConfirmed = false) => perform(
       () => request(`/review/${id}`, {
         approved, reason, topic: reviewedTopic, visualConfirmed,
       }, requireLogin()),
       approved ? 'Approved for the feed.' : 'Excluded from the feed.',
+      { pending: 'Saving your review' },
     ),
     reviewClip: (id: string) => perform(async () => {
       const scope = creatorScope;
@@ -840,11 +838,11 @@ sponsorshipToken,
         requireLogin();
         setPreview({ id, url: URL.createObjectURL(media) });
       } finally { if (previewRequest.current === controller) previewRequest.current = undefined; }
-    }, 'Private review preview loaded.'),
-    appeal: (id: string, explanation: string) => perform(() => request(`/${id}/appeal`, { message: explanation }, requireLogin()), 'Your request for another feed review has been submitted.'),
+    }, 'Private review preview loaded.', { pending: 'Loading private preview' }),
+    appeal: (id: string, explanation: string) => perform(() => request(`/${id}/appeal`, { message: explanation }, requireLogin()), 'Your request for another feed review has been submitted.', { pending: 'Submitting your review request' }),
     report: (id: string, reportId: string, reason: string, detail: string) => perform(async () => {
       await request(`/${id}/report`, { id: reportId, reason, detail });
       personal.update({ hidden: [...personal.preferences.hidden, id] });
-    }, 'Report submitted. This Short is now hidden from your feed.'),
+    }, 'Report submitted. This Short is now hidden from your feed.', { pending: 'Submitting your report' }),
   };
 }

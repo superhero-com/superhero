@@ -1,6 +1,7 @@
 export {
   TransactionNotificationProvider,
   useTransactionNotification,
+  useTransactionNotificationHost,
   TxPayloadType,
   type TxPayload,
   type NotificationState,

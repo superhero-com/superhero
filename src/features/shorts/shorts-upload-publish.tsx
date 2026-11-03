@@ -141,6 +141,7 @@ export const UploadPublishOverlay = ({ s }: { s: State }) => {
           <div className="su-publish-actions">
             {done && <Link className="ss-button primary" to={`/shorts?short=${publication.shortId}`}>Watch &amp; share</Link>}
             {publication.shortId && <Link className="ss-button" to={`/shorts/studio/video/${publication.shortId}`}>View in Studio</Link>}
+            {failed && <button type="button" disabled={s.busy} onClick={s.resetUpload}>Start a new upload</button>}
             {(failed || reviewing) && <button type="button" disabled={s.busy} onClick={s.dismissPublication}>Back to review</button>}
             {done && <button type="button" disabled={s.busy} onClick={s.resetUpload}>Create another Short</button>}
           </div>

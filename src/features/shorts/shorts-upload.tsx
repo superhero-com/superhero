@@ -398,6 +398,9 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                 </p>
                 )}
                 <div className="su-action-buttons">
+                  {s.message && s.messageTone === 'error' && !publishing && (
+                  <button type="button" disabled={s.busy} onClick={s.resetUpload}>Start a new upload</button>
+                  )}
                   {step > 0 && (
                   <button type="button" disabled={s.busy || publishing} onClick={() => go(step - 1)}>
                     <ArrowLeft size={16} aria-hidden="true" />

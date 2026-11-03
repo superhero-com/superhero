@@ -3,6 +3,7 @@ import Spinner from '@/components/Spinner';
 import { Decimal } from '@/libs/decimal';
 import { useAtomValue } from 'jotai';
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import SuperheroIcon from '@/svg/favicon.svg?react';
@@ -51,6 +52,7 @@ function getIconVariant(payload: TxPayload): 'superhero' | 'diamond' {
 // User must sign in their wallet — the app is waiting for that action.
 function getSubmittedMeta(payload: TxPayload, t: TFunction): { title: string; subtitle: string } {
   switch (payload.type) {
+    case TxPayloadType.ShortsAction:
     case TxPayloadType.BuyToken:
     case TxPayloadType.SellToken:
       return {
@@ -152,6 +154,11 @@ function getSubmittedMeta(payload: TxPayload, t: TFunction): { title: string; su
 // Tx is broadcast; we're waiting for the blockchain to confirm.
 function getPendingMeta(payload: TxPayload, t: TFunction): { title: string; subtitle: string } {
   switch (payload.type) {
+    case TxPayloadType.ShortsAction:
+      return {
+        title: payload.pendingTitle,
+        subtitle: payload.pendingMessage,
+      };
     case TxPayloadType.BuyToken:
     case TxPayloadType.SellToken:
       return {
@@ -324,6 +331,8 @@ function getConfirmedMeta(payload: TxPayload, t: TFunction): {
       };
     case TxPayloadType.CreatePost:
       return { title: t('common.transactionNotification.postPublished'), line: null };
+    case TxPayloadType.ShortsAction:
+      return { title: payload.confirmedTitle, line: null };
     case TxPayloadType.CreateComment:
       return { title: t('common.transactionNotification.replyPublished'), line: null };
     case TxPayloadType.ClaimChainName:
@@ -415,13 +424,13 @@ const NotificationIcon = ({
   );
 };
 
-const NotificationError = ({ message }: { message: string }) => {
+const NotificationError = ({ message, action = false }: { message: string; action?: boolean }) => {
   const { t } = useTranslation();
   return (
     <div className={`${cardBase} bg-red-950/90`}>
       <NotificationIcon variant="error" />
       <div className="flex-1 min-w-0 space-y-0.5">
-        <p className="text-red-400 font-bold text-sm leading-[18px] m-0">{t('common.messages.transactionFailed')}</p>
+        <p className="text-red-400 font-bold text-sm leading-[18px] m-0">{action ? t('common.messages.actionFailed', { defaultValue: 'Action failed' }) : t('common.messages.transactionFailed')}</p>
         <p className="text-gray-400 text-[13px] leading-[17px] m-0 truncate">{message}</p>
       </div>
       <div className="w-7 h-7 rounded-full bg-red-400/15 flex items-center justify-center flex-shrink-0">
@@ -502,7 +511,7 @@ const NotificationConfirmed = ({
 }) => {
   const { t } = useTranslation();
   const meta = getConfirmedMeta(payload, t);
-  const portfolioHref = activeAccount
+  const portfolioHref = activeAccount && payload.type !== TxPayloadType.ShortsAction
     ? `/users/${encodeURIComponent(activeAccount)}`
     : undefined;
 
@@ -547,7 +556,7 @@ const NotificationConfirmed = ({
 
 export const TransactionNotificationBanner = () => {
   const { t } = useTranslation();
-  const { notificationState, dismissNotification } = useTransactionNotification();
+  const { notificationState, notificationHost, dismissNotification } = useTransactionNotification();
   const activeAccount = useAtomValue(activeAccountAtom);
   const [visible, setVisible] = useState(false);
   const bannerRef = useRef<HTMLDivElement>(null);
@@ -567,7 +576,7 @@ export const TransactionNotificationBanner = () => {
   const content = (() => {
     switch (notificationState.status) {
       case 'error':
-        return <NotificationError message={notificationState.message} />;
+        return <NotificationError message={notificationState.message} action={notificationState.payload?.type === TxPayloadType.ShortsAction && !notificationState.payload.wallet} />;
       case 'submitted':
         return <NotificationWaiting payload={notificationState.payload} kind="submitted" />;
       case 'pending':
@@ -588,9 +597,10 @@ export const TransactionNotificationBanner = () => {
     if (e.key === 'Enter' || e.key === ' ') dismissNotification();
   };
 
-  return (
+  const banner = (
     <div
       ref={bannerRef}
+      data-transaction-notification=""
       role="button"
       tabIndex={0}
       aria-label={t('common.aria.dismissNotification')}
@@ -606,4 +616,5 @@ export const TransactionNotificationBanner = () => {
       {content}
     </div>
   );
+  return notificationHost ? createPortal(banner, notificationHost) : banner;
 };

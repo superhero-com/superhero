@@ -5,6 +5,7 @@ import {
 } from 'vitest';
 import { creatorSessionAtom, revokeCreatorSession, useSyncShortsWalletSession } from '../shorts-wallet-session';
 import { useShorts } from '../use-shorts';
+import { WalletActionPending } from '../use-shorts-wallet-transactions';
 import type { Short } from '../types';
 
 const mocks = vi.hoisted(() => ({
@@ -620,6 +621,7 @@ describe('Shorts wallet session and recovery', () => {
     expect(result.current.like).toBeUndefined();
     expect(result.current.busy).toBe(false);
     expect(result.current.walletPending).toBe(false);
+    expect(result.current.message).toBe('');
     await act(async () => { receiptDone({}); refreshDone(dashboard); });
     expect(result.current.feed[0]).toMatchObject({ likes: 10, liked: true });
     mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => (
@@ -643,6 +645,14 @@ describe('Shorts wallet session and recovery', () => {
     expect(result.current.like?.id).toBe(clip.id);
     await act(async () => { await result.current.confirmLike(); });
     expect(result.current.feed[0]).toMatchObject({ likes: 10, liked: true });
+  });
+
+  it('leaves pending Like feedback to the shared transaction notification', async () => {
+    const { result } = await startLike();
+    mocks.call.mockRejectedValueOnce(new WalletActionPending('Transaction sent. Waiting for confirmation.'));
+    await act(async () => { await result.current.confirmLike(); });
+    expect(result.current.message).toBe('');
+    expect(result.current.feed[0]).toMatchObject({ likes: 9, liked: false });
   });
 
   it('does not add another count when a feed poll observes the Like while signing', async () => {

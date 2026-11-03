@@ -9,6 +9,7 @@ import {
   AccountMemory, buildTx, buildTxHash, encode, Encoding, Tag,
 } from '@aeternity/aepp-sdk';
 import { AciContractCallEncoder } from '@aeternity/aepp-calldata';
+import { TransactionNotificationBanner, TransactionNotificationProvider } from '@/features/transaction-notification';
 import {
   useShortsWalletTransactions,
   WalletActionPending,
@@ -344,22 +345,25 @@ it('shows pending outcomes without offering another payment or cancellation afte
   const check = vi.fn();
   const release = vi.fn();
   render(
-    <ShortsWalletRecovery
-      recovery={{
-        action,
-        observation: undefined,
-        error: undefined,
-        check,
-        release,
-        retrySponsorship: vi.fn(),
-        run: vi.fn(),
-      }}
-    />,
+    <TransactionNotificationProvider>
+      <TransactionNotificationBanner />
+      <ShortsWalletRecovery
+        recovery={{
+          action,
+          observation: undefined,
+          error: undefined,
+          check,
+          release,
+          retrySponsorship: vi.fn(),
+          run: vi.fn(),
+        }}
+      />
+    </TransactionNotificationProvider>,
   );
-  expect(screen.getByRole('status')).toHaveTextContent('checking its outcome');
+  expect(screen.getByText('Your Like is being confirmed.')).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: /cancel|retry|pay|done/i })).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: 'Check status' }));
-  expect(check).toHaveBeenCalledOnce();
+  fireEvent.click(screen.getByRole('button', { name: 'Dismiss notification' }));
+  expect(check).not.toHaveBeenCalled();
   expect(release).not.toHaveBeenCalled();
 });
 

@@ -376,13 +376,6 @@ export const ShortsStudio = ({ s }: { s: State }) => {
           </div>
         </header>
         )}
-        {s.message && !accessError && (page !== 'upload' || s.messageTone === 'error') && (
-        <div className={`sh-notice ss-message ${s.messageTone}`} role={s.messageTone === 'error' ? 'alert' : 'status'}>
-          <span>{s.message}</span>
-          {page === 'upload' && s.messageTone === 'error' && <button type="button" disabled={s.busy} onClick={s.resetUpload}>Start a new upload</button>}
-          <button type="button" onClick={s.clearMessage} aria-label="Dismiss message">×</button>
-        </div>
-        )}
         {accessError && (
         <div className="ss-panel ss-data-error" role="alert">
           <div>

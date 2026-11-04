@@ -27,6 +27,15 @@ const SLIPPAGE_CODES = new Set([
   'AedexV2Router_INSUFFICIENT_OUTPUT_AMOUNT',
 ]);
 
+/**
+ * The A and B minimums scale with the amounts, so a smaller deposit or removal
+ * fails the same way: their hint leaves out "reduce the trade size".
+ */
+const SLIPPAGE_ONLY_CODES = new Set([
+  'AedexV2Router_INSUFFICIENT_A_AMOUNT',
+  'AedexV2Router_INSUFFICIENT_B_AMOUNT',
+]);
+
 /** Codes whose message ends with a deadline hint. */
 const DEADLINE_CODES = new Set(['AedexV2Router_EXPIRED']);
 
@@ -39,7 +48,8 @@ function dexContractErrorMessage(raw: string, ctx: ErrorContext, t: Translate): 
   if (!i18n.exists(key, { ns: 'errors' })) return null;
   let hint = '';
   if (SLIPPAGE_CODES.has(id)) {
-    hint = ctx.slippagePct != null ? t('slippageHint', { slippagePct: ctx.slippagePct }) : t('slippageHintGeneric');
+    const hintKey = SLIPPAGE_ONLY_CODES.has(id) ? 'slippageOnlyHint' : 'slippageHint';
+    hint = ctx.slippagePct != null ? t(hintKey, { slippagePct: ctx.slippagePct }) : t(`${hintKey}Generic`);
   } else if (DEADLINE_CODES.has(id)) {
     hint = ctx.deadlineMins != null ? t('deadlineHint', { deadlineMins: ctx.deadlineMins }) : t('deadlineHintGeneric');
   }
@@ -105,15 +115,6 @@ export function errorToUserMessage(err: unknown, ctx: ErrorContext = {}): string
   }
 
   // Balance / funds
-  // Check for specific ETH balance errors first
-  if (lc.includes('insufficient eth balance')) {
-    const ethMatch = raw.match(/required:\s*([\d.]+)\s*eth/i);
-    if (ethMatch && ethMatch[1]) {
-      return t('insufficientEthBalance', { amount: ethMatch[1] });
-    }
-    return t('insufficientEthBalanceGeneric');
-  }
-
   if (lc.includes('insufficient balance') || lc.includes('insufficient funds') || lc.includes('balance too low')) {
     return t('insufficientBalance');
   }

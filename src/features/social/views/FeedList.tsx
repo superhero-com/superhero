@@ -20,6 +20,8 @@ import MobileNetworkStats from '../../../components/layout/MobileNetworkStats';
 import CreatePost, { CreatePostRef } from '../components/CreatePost';
 import SortControls, { type PopularWeights } from '../components/SortControls';
 import EmptyState from '../components/EmptyState';
+import NewPostsPill from '../components/NewPostsPill';
+import { useNewPostsWatcher } from '../hooks/useNewPostsWatcher';
 import PostSkeleton from '../components/PostSkeleton';
 import ReplyToFeedItem from '../components/ReplyToFeedItem';
 import TokenCreatedActivityItem from '../components/TokenCreatedActivityItem';
@@ -797,6 +799,31 @@ const FeedList = ({
     [navigate, queryClient, popularFeedEnabled, sortBy],
   );
 
+  // New posts by others: poll the newest page and offer a pill instead of
+  // inserting them, so the feed never jumps under the reader.
+  const feedPostsShown = useMemo(
+    () => (sortBy === 'hot' ? [...popularList, ...latestListForHot] : list),
+    [sortBy, popularList, latestListForHot, list],
+  );
+  const { count: newPostsCount, acknowledge: acknowledgeNewPosts } = useNewPostsWatcher({
+    enabled: sortBy === 'hot' ? !!popularData?.pages.length : !!latestData?.pages.length,
+    language: languageParam,
+    knownPosts: feedPostsShown as any[],
+  });
+  const handleShowNewPosts = useCallback(() => {
+    acknowledgeNewPosts();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (sortBy === 'hot') {
+      // New posts have no ranking yet: show them in the chronological feed.
+      handleSortChange('latest');
+      return;
+    }
+    refetchLatest();
+    if (!languageParam) refetchActivities();
+  }, [
+    acknowledgeNewPosts, sortBy, handleSortChange, refetchLatest, refetchActivities, languageParam,
+  ]);
+
   const handlePopularWeightsChange = useCallback((weights: PopularWeights) => {
     setPopularWeights(weights);
     queryClient.removeQueries({ queryKey: ['popular-posts'], exact: false });
@@ -1302,6 +1329,7 @@ const FeedList = ({
 
       </div>
 
+      <NewPostsPill count={newPostsCount} onClick={handleShowNewPosts} />
       <div className="w-full flex flex-col gap-0 md:mx-0">
         {renderEmptyState()}
         {/* Non-hot: existing renderer - show feed if we have data, even while refetching */}

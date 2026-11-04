@@ -33,6 +33,8 @@ vi.mock('@/api/generated', () => ({
 // Imported AFTER the mock so link-flow binds to the stubbed service.
 // eslint-disable-next-line import/first
 import { linkNostrIdentity, fetchNostrLink } from '../link-flow';
+// eslint-disable-next-line import/first
+import { rememberNostrSubmission } from '../storage';
 
 const MNEMONIC = 'abandon abandon abandon abandon abandon abandon abandon abandon '
   + 'abandon abandon abandon about';
@@ -145,15 +147,25 @@ describe('fetchNostrLink', () => {
     reloadedConfig.BASE = 'https://testnet.example.test';
     expect(await reloaded.fetchNostrLink(address)).toBeNull();
     reloadedConfig.BASE = OpenAPI.BASE;
-    const now = Date.now();
-    const clock = vi.spyOn(Date, 'now').mockReturnValue(now + 15 * 60_000);
-    await expect(reloaded.fetchNostrLink(address)).rejects.toThrow('awaiting confirmation');
+    // Slow indexing must not offer registration again: the receipt still counts.
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 60 * 60_000);
+    expect(await reloaded.fetchNostrLink(address)).toBe(keys.npub);
     clock.mockRestore();
     getAccount.mockResolvedValue({ links: { nostr: 'npub1server' } });
     expect(await reloaded.fetchNostrLink(address)).toBe('npub1server');
     // After server confirmation an unlink must not resurrect the old receipt.
     getAccount.mockResolvedValue({ links: {} });
     expect(await reloaded.fetchNostrLink(address)).toBeNull();
+  });
+
+  it('trusts the API again once a receipt is a day old', async () => {
+    rememberNostrSubmission(OpenAPI.BASE, 'ak_x', 'npub1receipt', 'th_receipt');
+    getAccount.mockResolvedValue({ links: {} });
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 24 * 60 * 60_000);
+    expect(await fetchNostrLink('ak_x')).toBeNull();
+    clock.mockRestore();
+    // Dropped, not just skipped.
+    expect(await fetchNostrLink('ak_x')).toBeNull();
   });
 
   it('returns the linked npub when present', async () => {

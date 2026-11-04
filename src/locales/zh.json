@@ -1499,7 +1499,10 @@
     },
     "pool": {
       "refreshing": "刷新中…",
-      "refresh": "刷新"
+      "refresh": "刷新",
+      "bannerTitle": "提供流动性，赚取交易手续费",
+      "bannerSubtitle": "向池中存入两种代币即可获得 LP 代币。每笔经过该池的兑换都会支付手续费，由流动性提供者共享。你可以随时提取你的份额。",
+      "bannerCta": "浏览资金池"
     },
     "swapConfirmation": {
       "confirmSwap": "确认兑换",
@@ -2053,6 +2056,10 @@
   },
   "social": {
     "originalPost": "原帖",
+    "newPosts": {
+      "show_one": "显示 {{count}} 条新帖子",
+      "show_other": "显示 {{count}} 条新帖子"
+    },
     "translatePost": "翻译",
     "share": "分享",
     "sharePost": "分享帖子",
@@ -2862,7 +2869,9 @@
         "currentStreak": "当前连续天数：{{days}}/{{total}} 天",
         "openingWallet": "正在打开钱包…",
         "postOnX": "在 X 上发帖",
-        "streakInfo": "每篇符合条件的帖子都将根据您的关注者等级获得相应的 AE 代币。连续 10 天每日发帖将额外获得 50 AE，请保持发帖并积极参与社区互动。",
+        "streakInfo": "每篇符合条件的帖子都将根据您的关注者等级获得相应的 AE 代币。连续 10 天每天至少发帖一次，即可额外获得 50 AE，请保持发帖并积极参与社区互动。",
+        "streakRule": "连续天数按 UTC 时间计算（当前 {{time}} UTC）。只有包含您推荐链接的帖子才计入。任何一个 UTC 日没有此类帖子，连续天数将重置为 0。",
+        "streakNone": "当前没有连续记录。发布带有推荐链接的帖子即可开始。",
         "complete": "里程碑完成——已获得 {{amount}} AE"
       }
     },
@@ -2992,6 +3001,25 @@
       "copyFailed": "无法复制。请选择地址并手动复制。",
       "unavailable": "不可用",
       "missingCreator": "创建者信息尚未加载。"
+    },
+    "priceAlerts": {
+      "title": "价格提醒",
+      "hint": "当 {{name}} 达到你设定的价格时提醒你一次。",
+      "thisToken": "该代币",
+      "direction": "方向",
+      "above": "高于",
+      "below": "低于",
+      "target": "目标价格（AE）",
+      "set": "设置提醒",
+      "signing": "请在钱包中签名…",
+      "saved": "提醒已设置，到价时通知你一次。",
+      "invalidTarget": "请输入大于 0 的价格，例如 0.01。",
+      "failed": "无法保存提醒，请重试。",
+      "active": "你的提醒",
+      "whenAbove": "高于 {{target}} AE 时",
+      "whenBelow": "低于 {{target}} AE 时",
+      "remove": "删除提醒",
+      "firedCount_other": "已发送 {{count}} 条提醒"
     }
   },
   "errors": {
@@ -3002,6 +3030,8 @@
     "insufficientOutputAmount": "由于价格变动，未达到最低输出。{{hint}}",
     "slippageHint": " 请增加滑点（当前为 {{slippagePct}}%）或减小交易规模。",
     "slippageHintGeneric": " 请增加滑点或减小交易规模。",
+    "slippageOnlyHint": " 请增加滑点（当前为 {{slippagePct}}%）后重试。",
+    "slippageOnlyHintGeneric": " 请增加滑点后重试。",
     "deadlineReached": "已到达交易截止时间。{{hint}}",
     "deadlineHint": " 请增加截止时间（当前为 {{deadlineMins}} 分钟）后重试。",
     "deadlineHintGeneric": " 请增加截止时间后重试。",
@@ -3009,8 +3039,6 @@
     "invalidRecipient": "此交易的收款人无效。",
     "pairExists": "资金池已存在。",
     "tokenNotApproved": "代币未获批准用于支出。请批准该代币后重试。",
-    "insufficientEthBalance": "ETH 余额不足。你至少需要 {{amount}} ETH 才能完成此跨链操作。",
-    "insufficientEthBalanceGeneric": "ETH 余额不足，无法完成此跨链操作。",
     "insufficientBalance": "余额不足，无法完成此操作。",
     "networkError": "网络连接出现问题。请检查你的网络连接后重试。",
     "contractError": "合约交互失败。请重试，如果问题持续存在请联系客服。",
@@ -3036,8 +3064,8 @@
       "AedexV2Library_INTERNAL_ERROR_PATH_VOID": "路由合约在计算路径金额时出现内部错误。请刷新报价后重试。",
       "AedexV2Router_AMOUNT_LIST_IS_SHORTER": "路由合约在计算路径金额时出现内部错误。请刷新报价后重试。",
       "AedexV2Router_DIFFERENT_WAE_ADDRESSES": "路由合约配置错误（WAE 地址不一致）。这不是您的交易导致的，请反馈此问题。",
-      "AedexV2Router_INSUFFICIENT_A_AMOUNT": "池价格已变动：路由合约使用的第一个代币数量将低于您设置的最小值。{{hint}}",
-      "AedexV2Router_INSUFFICIENT_B_AMOUNT": "池价格已变动：路由合约使用的第二个代币数量将低于您设置的最小值。{{hint}}",
+      "AedexV2Router_INSUFFICIENT_A_AMOUNT": "池价格已变动：第一个代币的数量将低于您设置的最小值。{{hint}}",
+      "AedexV2Router_INSUFFICIENT_B_AMOUNT": "池价格已变动：第二个代币的数量将低于您设置的最小值。{{hint}}",
       "AedexV2Router_EXCESSIVE_INPUT_AMOUNT": "价格已变动：此交易所需的输入超过了您允许的最大值。{{hint}}",
       "AedexV2Router_INVALID_PATH_LAST": "兑换为 AE 的路径必须以 WAE 结尾，而此路径并非如此。请重新选择代币后重试。",
       "AedexV2Router_INVALID_PATH_FIRST": "从 AE 兑换的路径必须以 WAE 开头，而此路径并非如此。请重新选择代币后重试。",
@@ -3512,7 +3540,7 @@
     "badgeVote": "投票",
     "badgeEarn": "赚取",
     "onThisPage": "本页内容",
-    "tip": "提示：从“入门指南”开始，然后探索 Trendminer 和 DAO 与治理。",
+    "tip": "提示：从“入门指南”开始，然后探索“交易”和 DAO 与治理。",
     "gettingStartedCardTitle": "入门指南",
     "gettingStartedIntro": "新来的？这是简短版本：",
     "gettingStartedLi1": "安装 Superhero Wallet 并充值少量 AE。",

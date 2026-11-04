@@ -80,7 +80,7 @@ describe.skipIf(!url)('real groups_relay private-room delivery', () => {
     await manage(9000, [['p', alice.keys.publicKey]]);
 
     await expect(bob.client.sendRoomMessage(room, 'not yet a member')).rejects.toThrow();
-    await expect(bob.client.fetchRoomHistory(room, { isPrivate: true })).rejects.toThrow();
+    await expect(bob.client.fetchRoomHistory(room)).rejects.toThrow();
     await manage(9000, [['p', bob.keys.publicKey]]);
 
     const receivedA: string[] = [];
@@ -88,10 +88,10 @@ describe.skipIf(!url)('real groups_relay private-room delivery', () => {
     const errors: Error[] = [];
     await Promise.all([
       alice.client.subscribeRoom(room, (event) => receivedA.push(event.id), {
-        isPrivate: true, onError: (error) => errors.push(error),
+        onError: (error) => errors.push(error),
       }),
       bob.client.subscribeRoom(room, (event) => receivedB.push(event.id), {
-        isPrivate: true, onError: (error) => errors.push(error),
+        onError: (error) => errors.push(error),
       }),
     ]);
     const first = await alice.client.sendRoomMessage(room, 'alice to bob');
@@ -104,12 +104,12 @@ describe.skipIf(!url)('real groups_relay private-room delivery', () => {
 
     const fresh = new GatedRoomClient(bob.identity, url!);
     clients.push(fresh);
-    const history = await fresh.fetchRoomHistory(room, { isPrivate: true });
+    const history = await fresh.fetchRoomHistory(room);
     expect(history.map((event) => event.content).sort()).toEqual(['alice to bob', 'bob to alice']);
 
     await manage(9001, [['p', bob.keys.publicKey]]);
     await expect(bob.client.sendRoomMessage(room, 'membership revoked')).rejects.toThrow();
-    await expect(fresh.fetchRoomHistory(room, { isPrivate: true })).rejects.toThrow();
+    await expect(fresh.fetchRoomHistory(room)).rejects.toThrow();
     const afterRemoval = await alice.client.sendRoomMessage(room, 'remaining members only');
     await expect.poll(() => receivedA.includes(afterRemoval)).toBe(true);
     await new Promise((resolve) => { setTimeout(resolve, 500); });

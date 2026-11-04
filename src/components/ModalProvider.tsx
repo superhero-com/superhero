@@ -51,6 +51,9 @@ const ModalProvider = ({ registry }: { registry: Registry }) => {
             open={isOpen}
             onOpenChange={(open) => {
               if (!open && openModal) {
+                // Escape and outside clicks skip the modal's own Cancel button, so settle whoever
+                // awaits it here; otherwise a pending signature hangs until its poll times out.
+                openModal.props?.onCancel?.();
                 closeModal(openModal.key);
               }
             }}

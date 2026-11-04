@@ -200,17 +200,6 @@ const WalletOverviewCard = ({
               </div>
             </div>
           </Link>
-
-          {/* The online/offline dot was dropped: it never helped anyone decide anything. */}
-          {currentBlockHeight != null && (
-            <div className="mt-3.5 flex flex-wrap items-center gap-x-1 border-t border-white/10 pt-2.5 text-xs tabular-nums text-[var(--light-font-color)]">
-              <span>{t('common.wallet.block')}</span>
-              <span dir="ltr">
-                #
-                {Number(currentBlockHeight).toLocaleString()}
-              </span>
-            </div>
-          )}
         </div>
 
         {/* Expanded Details */}

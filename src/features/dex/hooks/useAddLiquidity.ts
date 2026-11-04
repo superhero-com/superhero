@@ -1,6 +1,7 @@
 import { useAtom } from 'jotai';
 import { useState } from 'react';
 import { providedLiquidityAtom } from '../../../atoms/dexAtoms';
+import { track } from '../../../lib/journey';
 import { useAccount } from '../../../hooks/useAccount';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useDex } from '../../../hooks/useDex';
@@ -190,6 +191,7 @@ export function useAddLiquidity() {
       }
 
       notifyPendingTx(notifPayload, txHash);
+      track('liquidity_added');
 
       // Reset form
       setState((prev) => ({
@@ -393,7 +395,11 @@ export function useAddLiquidity() {
       }
       throw new Error('Transaction failed - no hash returned');
     } catch (error: any) {
-      const errorMsg = errorToUserMessage(error);
+      const errorMsg = errorToUserMessage(error, {
+        action: 'remove-liquidity',
+        slippagePct: params.slippagePct,
+        deadlineMins: params.deadlineMins,
+      });
       setState((prev) => ({ ...prev, error: errorMsg, loading: false }));
       notifyError(errorMsg);
 

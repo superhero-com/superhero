@@ -74,6 +74,7 @@ export const ChatSidebar = ({ isInbox, onStartChat }: {
       </div>
 
       <div className="chat-sidebar-scroll">
+        {isInbox && <WebChatSafetyNotice />}
         {!activeAccount && <p className="chat-list-notice">Connect an account to use chat.</p>}
         {activeAccount && !session.isUnlocked && isInbox && (
           <div className="chat-unlock-card">

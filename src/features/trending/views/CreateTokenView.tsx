@@ -22,6 +22,7 @@ import {
   TrendingUp, Sigma, Landmark, Coins,
 } from 'lucide-react';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { track } from '@/lib/journey';
 import BondingCurveGraph from '../components/BondingCurveGraph';
 import { createCommunity } from '../libs/createCommunity';
 import { trackTokenCreation } from '../utils/pendingTokenCreation';
@@ -459,6 +460,7 @@ const CreateTokenView = () => {
         undefined,
         factory.address,
       );
+      track('token_created');
 
       if (activeAccount) {
         // Followed until the token is live, across pages and reloads; the

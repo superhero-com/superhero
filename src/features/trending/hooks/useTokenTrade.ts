@@ -2,6 +2,7 @@ import { TokenDto } from '@/api/generated/models/TokenDto';
 import { transactionTypeAtom } from '@/atoms/transactionConfirmAtom';
 import { CONFIG } from '@/config';
 import { TxPayloadType, useTransactionNotification, type TxPayload } from '@/features/transaction-notification';
+import { track } from '@/lib/journey';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import BigNumber from 'bignumber.js';
 import { useAtom } from 'jotai';
@@ -359,6 +360,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
         userBalance: Decimal.from(balance),
       });
       notifyConfirmed(buyPayload);
+      track('token_buy_done');
     } catch (error: any) {
       errorMessage.current = error?.message;
       notifyError(error?.message || 'Buy transaction failed');
@@ -433,6 +435,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
         userBalance: Decimal.from(userBalanceValue),
       });
       notifyConfirmed(sellPayload);
+      track('token_sell_done');
 
       await onTransactionComplete();
     } catch (error: any) {

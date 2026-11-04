@@ -26,14 +26,12 @@ import { useMessages } from '../hooks/useMessages';
 import { useRoomSession } from '../hooks/useRoomSession';
 import { DmThreadHeader } from '../components/DmThreadHeader';
 import { DmMessageBubble } from '../components/DmMessageBubble';
-import { isChatRelayConfigured } from '../core/relay-config';
-import ChatUnavailableNotice from '../components/ChatUnavailableNotice';
 
 const DmThreadView = () => {
   const { address = '' } = useParams();
   const pubkey = address;
 
-  const { isConnected, profileService } = useChat();
+  const { isConnected, error: chatError, profileService } = useChat();
   const [contacts] = useAtom(contactsAtom);
   const [profiles] = useAtom(profilesAtom);
   const setProfiles = useSetAtom(profilesAtom);
@@ -119,15 +117,13 @@ const DmThreadView = () => {
     );
   };
 
-  if (!isChatRelayConfigured()) return <ChatUnavailableNotice />;
-
   return (
     <div className="chat-conversation">
       <DmThreadHeader pubkey={pubkey} contact={contact} profile={profile} />
 
       {!isConnected && session.isUnlocked && (
-        <div className="border-b border-border bg-muted/40 px-4 py-2 text-center text-xs text-muted-foreground">
-          Connecting to the chat network…
+        <div className="border-b border-border bg-muted/40 px-4 py-2 text-center text-xs text-muted-foreground" title={chatError ?? undefined}>
+          {chatError ? 'Can’t reach the chat network. Retrying…' : 'Connecting to the chat network…'}
         </div>
       )}
 

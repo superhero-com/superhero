@@ -22,10 +22,18 @@ export async function loadProfiles(): Promise<StoredProfiles> {
   }
 }
 
-export async function saveProfile(pubkey: string, profile: Profile): Promise<void> {
-  const profiles = await loadProfiles();
-  profiles[pubkey] = profile;
-  await saveProfiles(profiles);
+// Each save rewrites the whole map, so concurrent profile lookups would drop
+// each other's entries.
+let saving: Promise<void> = Promise.resolve();
+
+export function saveProfile(pubkey: string, profile: Profile): Promise<void> {
+  const save = saving.then(async () => {
+    const profiles = await loadProfiles();
+    profiles[pubkey] = profile;
+    await saveProfiles(profiles);
+  });
+  saving = save.catch(() => {});
+  return save;
 }
 
 /** Read one cached profile, or null. */

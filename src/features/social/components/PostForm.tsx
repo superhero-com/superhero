@@ -8,6 +8,7 @@ import React, {
 import { useTranslation } from 'react-i18next';
 import TIPPING_V3_ACI from 'tipping-contract/generated/Tipping_v3.aci.json';
 import { TxPayloadType, useTransactionNotification } from '@/features/transaction-notification';
+import { track } from '@/lib/journey';
 import { MAX_POST_IMAGES, POST_IMAGE_ACCEPT } from '../utils/postImages';
 import { usePostImages } from '../hooks/usePostImages';
 import '@/components/layout/RailCards.css';
@@ -449,6 +450,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
       );
 
       notifyConfirmed(txPayload);
+      track(isPost ? 'post_created' : 'reply_created');
 
       let newPostId: string;
       if (isPost) {

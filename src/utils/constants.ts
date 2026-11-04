@@ -23,6 +23,16 @@ export const CURRENT_NETWORK: INetwork = toNetwork(CURRENT_NETWORK_CONFIG);
 export const DATE_LONG = 'YYYY-MM-DD HH:mm';
 
 export const IS_FRAMED_AEPP = window.parent !== window;
+/**
+ * Opened in a Cordova in-app browser, which is how the Superhero Wallet app opens dapps. Its
+ * native bridge exists from the start, while the wallet announces itself only after the page has
+ * loaded.
+ */
+export const IS_IN_APP_BROWSER = !!(
+  (window as any).cordova_iab || (window as any).webkit?.messageHandlers?.cordova_iab
+);
+/** The wallet talks to this page over `postMessage`: it frames the page or opened it itself. */
+export const IS_IN_WALLET = IS_FRAMED_AEPP || IS_IN_APP_BROWSER;
 export const IS_MOBILE = window.navigator.userAgent.includes('Mobi');
 export const IS_SAFARI = /Mozilla\/5.0 \((Macintosh|iPad|iPhone|iPod); [\s\S]+?\) AppleWebKit\/\S+ \(KHTML, like Gecko\)( (Version|Safari|Mobile)\/\S+)+/.test(
   navigator.userAgent,

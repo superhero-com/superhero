@@ -353,20 +353,26 @@ test('fresh registration survives refresh while the account API is stale or unav
     await expect(page.getByRole('heading', { name: 'Enable Chat', exact: true })).toBeHidden();
     expect(submissions).toBe(1);
   }
-  // Prolonged indexing must also offer a check, never a duplicate registration.
+  // Prolonged indexing must never lead to a duplicate registration, nor to a
+  // check that cannot succeed until the index catches up.
   await page.evaluate(() => {
     const key = Object.keys(localStorage).find((item) => item.startsWith('nostr_link_submitted:'))!;
     const receipt = JSON.parse(localStorage.getItem(key)!);
-    receipt.submittedAt = Date.now() - 16 * 60_000;
+    receipt.submittedAt = Date.now() - 60 * 60_000;
     localStorage.setItem(key, JSON.stringify(receipt));
   });
   lookupMode = 'stale';
+  const staleChecked = page.waitForResponse(/\/api\/accounts\/ak_/);
   await page.reload();
-  await expect(page.getByRole('alert')).toContainText('Could not check your chat registration');
+  await staleChecked;
+  await expect(page.getByRole('button', { name: 'Unlock chat', exact: true })).toBeVisible();
+  await expect(page.getByRole('alert')).toBeHidden();
   await expect(page.getByRole('heading', { name: 'Enable Chat', exact: true })).toBeHidden();
   lookupMode = 'linked';
-  await page.getByRole('button', { name: 'Retry', exact: true }).click();
-  await expect(page.getByRole('alert')).toBeHidden();
+  await page.reload();
+  await expect.poll(() => page.evaluate(() => (
+    Object.keys(localStorage).some((item) => item.startsWith('nostr_link_submitted:'))
+  ))).toBe(false);
   // Once confirmed by the backend, a later network failure is unknown, not unlinked.
   lookupMode = 'offline';
   await page.reload();

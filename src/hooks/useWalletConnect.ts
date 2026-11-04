@@ -11,7 +11,8 @@ import {
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   CURRENT_NETWORK,
-  IS_FRAMED_AEPP,
+  IS_IN_APP_BROWSER,
+  IS_IN_WALLET,
   IS_MOBILE,
   IS_SAFARI,
 } from '../utils/constants';
@@ -251,7 +252,7 @@ export function useWalletConnect() {
 
     if (!wallet.current) {
       setConnectingWallet(false);
-      if (!IS_FRAMED_AEPP) await deepLinkWalletConnect();
+      if (!IS_IN_WALLET) await deepLinkWalletConnect();
       return null;
     }
 
@@ -280,13 +281,23 @@ export function useWalletConnect() {
    * account switches in the extension go unnoticed. Unlike connectWallet, this
    * never clears the restored session up front, never opens a deep link, and
    * keeps the static (read-only) account usable if the wallet does not answer.
+   * In the wallet's in-app browser deep links can't reach the wallet, so there
+   * a session the wallet doesn't take back is dropped instead.
    */
   async function reconnectWallet(): Promise<string | null> {
     setConnectingWallet(true);
+    const connectedAccount = await reestablishWalletConnection();
+    if (!connectedAccount && IS_IN_APP_BROWSER) await disconnectWallet();
+    setConnectingWallet(false);
+    return connectedAccount;
+  }
+  reconnectWalletRef.current = reconnectWallet;
+
+  async function reestablishWalletConnection(): Promise<string | null> {
     try {
-      // Extensions only exist in desktop browsers or framed contexts; elsewhere
+      // Only an extension (desktop) or the wallet hosting this page can answer; elsewhere
       // keep the default (short) detection window so we fail fast to static mode.
-      const detectionTimeout = (IS_MOBILE || IS_SAFARI) && !IS_FRAMED_AEPP
+      const detectionTimeout = (IS_MOBILE || IS_SAFARI) && !IS_IN_WALLET
         ? undefined
         : RECONNECT_WALLET_DETECTION_TIMEOUT_MS;
       wallet.current ??= await scanForWallets(detectionTimeout);
@@ -305,13 +316,9 @@ export function useWalletConnect() {
       setWalletConnected(true);
       return connectedAccount;
     } catch {
-      // Keep persisted state intact; the user can still act via deep-link signing.
       return null;
-    } finally {
-      setConnectingWallet(false);
     }
   }
-  reconnectWalletRef.current = reconnectWallet;
 
   useEffect(() => {
     activeAccountRef.current = activeAccount;
@@ -377,7 +384,7 @@ export function useWalletConnect() {
 
   /**
    * Scan for wallets
-   * @param timeoutMs - overrides the default detection window (see reconnectWallet)
+   * @param timeoutMs - overrides the default detection window (see reestablishWalletConnection)
    */
   async function scanForWallets(timeoutMs?: number): Promise<Wallet | undefined> {
     // Concurrency guard: reuse the in-flight scan rather than starting a duplicate.
@@ -404,7 +411,7 @@ export function useWalletConnect() {
           cleanup();
           resolve(undefined);
         },
-        timeoutMs ?? ((IS_MOBILE || IS_SAFARI) && !IS_FRAMED_AEPP ? 100 : 4000),
+        timeoutMs ?? ((IS_MOBILE || IS_SAFARI) && !IS_IN_WALLET ? 100 : 4000),
       );
 
       const handleWallets = async ({

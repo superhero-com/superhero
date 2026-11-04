@@ -13,6 +13,7 @@ import { AeCard } from '@/components/ui/ae-card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { isStandalone } from '@/utils/displayMode';
+import { track } from '@/lib/journey';
 import { generateMnemonic, isValidMnemonic, normalizeMnemonic } from '../mnemonic';
 import {
   assessPassphrase, generatePassphrase, isEstimatorReady, loadPassphraseEstimator,
@@ -746,6 +747,8 @@ const WalletOnboarding = ({
     setMnemonicRevealed(false);
     setMnemonicCopied(false);
     setStep('done');
+    // A new wallet vault now exists on this device (passkey, new phrase or import).
+    track('wallet_created');
   }, []);
 
   /** Plaintext phrase export, built only for an explicit download/share action. */
@@ -1379,10 +1382,11 @@ const WalletOnboarding = ({
                   <IconChip icon={Wallet} />
                   <h2 className={heading}>Wallet</h2>
                   <p className={description}>
-                    Your passkey generated this wallet. Keep it saved in the right password
-                    manager (iCloud Keychain or Google Password Manager). You can also back up
-                    your 12-word recovery phrase to restore this wallet in the Superhero Wallet
-                    app on iOS or Android, even if you lose access to your passkey.
+                    Your passkey generated this wallet. If you lose the passkey and skip this
+                    backup, you lose the wallet, so make sure the passkey is saved in the right
+                    password manager (iCloud Keychain or Google Password Manager). Your 12-word
+                    recovery phrase restores this wallet in the Superhero Wallet app on iOS or
+                    Android, even without the passkey.
                   </p>
                   <div className="mb-3 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
                     <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />

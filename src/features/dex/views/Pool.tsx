@@ -1,3 +1,6 @@
+import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import PageSpaceHero from '../../../components/hero-banner/PageSpaceHero';
 import RecentActivity from '../../../components/dex/supporting/RecentActivity';
 import { useAccount } from '../../../hooks';
 import { AddLiquidityForm, RemoveLiquidityForm } from '../components';
@@ -6,6 +9,7 @@ import { useLiquidityPositions } from '../hooks';
 import LiquidityPositionsPanel from '../components/LiquidityPositionsPanel';
 
 const PoolContent = () => {
+  const { t } = useTranslation('dex');
   const { activeAccount } = useAccount();
   const {
     positions, loading, error, refreshPositions,
@@ -24,6 +28,23 @@ const PoolContent = () => {
 
   return (
     <div className="mx-auto md:py-0 flex flex-col gap-6 md:gap-8 min-h-screen">
+      <PageSpaceHero
+        className="ui-hero px-5 py-5 md:px-8 md:py-7 text-left"
+        supernovaColor="rgba(0,229,255,.45)"
+      >
+        <h1 className="m-0 text-2xl md:text-3xl font-extrabold leading-tight text-white">
+          {t('pool.bannerTitle')}
+        </h1>
+        <p className="mt-2 mb-0 max-w-2xl text-sm md:text-base leading-relaxed text-white/75">
+          {t('pool.bannerSubtitle')}
+        </p>
+        <Link
+          to="/defi/explore/pools"
+          className="mt-4 inline-flex items-center rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white no-underline hover:bg-white/15"
+        >
+          {t('pool.bannerCta')}
+        </Link>
+      </PageSpaceHero>
       {/* Top Row - Forms and Positions */}
       <div className="grid grid-cols-1 min-[1360px]:grid-cols-[480px_minmax(560px,1fr)] gap-6 md:gap-8 items-start">
         {/* Mobile: Forms First, Desktop: Forms First (left column) */}

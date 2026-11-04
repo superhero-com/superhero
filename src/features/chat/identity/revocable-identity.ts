@@ -15,6 +15,7 @@
  * never a pre-lock snapshot.
  */
 import type { EventTemplate } from 'nostr-tools/pure';
+import { NostrKind } from '../core/constants';
 import type { NostrEvent } from '../core/types';
 import type { NostrIdentityProvider } from './nostr-identity';
 
@@ -40,11 +41,11 @@ export interface RevocableNostrIdentityOptions {
    * signs and encrypts through this one provider, so a single hook here re-arms
    * the session idle timer on real chat use across DMs and communities alike.
    *
-   * `getPublicKey` (a passive read of public material, used by NIP-42 AUTH) and
-   * `nip04Decrypt` deliberately do NOT count: inbound decryption is driven by
-   * relay delivery, not local user action, so counting it would let a remote
-   * sender keep the key resident indefinitely by trickling in DMs — turning the
-   * idle window into a remote-input-controlled one.
+   * `getPublicKey`, NIP-42 AUTH signatures and `nip04Decrypt` deliberately do
+   * NOT count. Relays ask for AUTH on every new connection, including reconnects
+   * and the periodic refresh, and inbound decryption follows relay delivery.
+   * Counting either would let a relay or a remote sender keep the key resident
+   * indefinitely, turning the idle window into a remote-input-controlled one.
    */
   onActivity?: () => void;
 }
@@ -69,7 +70,7 @@ export function createRevocableNostrIdentity(
     },
     async signEvent(template: EventTemplate): Promise<NostrEvent> {
       const event = await resolve().signEvent(template);
-      onActivity?.();
+      if (template.kind !== NostrKind.ClientAuth) onActivity?.();
       return event;
     },
     async nip04Encrypt(recipientPubkey: string, plaintext: string): Promise<string> {

@@ -21,6 +21,7 @@ import { NostrKind } from '../core/constants';
 import type { NostrEvent } from '../core/types';
 import { useRoomsConfig } from './useRoomsConfig';
 import { useRoomSession } from './useRoomSession';
+import { track } from '../../../lib/journey';
 
 export type GatedMessageStatus = 'sending' | 'sent' | 'failed';
 
@@ -190,14 +191,19 @@ export function useGatedRoom(
       if (cancelled) return;
       relayPubkeyRef.current = client.relayPubkey;
       if (!cancelled && meta) setMetadata(meta);
+      // Denied access still surfaces. A slow or failed backfill must not block the
+      // live room, whose subscription delivers the stored messages as well.
       const history = await client
         .fetchRoomHistory(saleAddress, {
           limit: HISTORY_PAGE_SIZE,
-          isPrivate,
           includeSystem,
+        })
+        .catch((cause: unknown) => {
+          if (cause instanceof GatedRoomPublishError) throw cause;
+          return null;
         });
       if (cancelled) return;
-      if (!cancelled) {
+      if (history) {
         history.forEach(upsertEvent);
         if (history.length < HISTORY_PAGE_SIZE) setHasEarlier(false);
       }
@@ -206,7 +212,7 @@ export function useGatedRoom(
         (event) => {
           if (!cancelled) upsertEvent(event);
         },
-        { isPrivate, includeSystem, onError },
+        { includeSystem, onError },
       );
       if (cancelled) {
         sub.close();
@@ -240,7 +246,6 @@ export function useGatedRoom(
       const older = await client.fetchRoomHistory(saleAddress, {
         until,
         limit: HISTORY_PAGE_SIZE,
-        isPrivate,
         includeSystem,
       });
       if (clientRef.current !== client) return;
@@ -258,7 +263,6 @@ export function useGatedRoom(
     }
   }, [
     saleAddress,
-    isPrivate,
     includeSystem,
     isLoadingEarlier,
     hasEarlier,
@@ -292,6 +296,7 @@ export function useGatedRoom(
 
       try {
         const eventId = await client.sendRoomMessage(saleAddress, trimmed);
+        track('chat_message_sent');
         // Relay echoes can arrive before OK. Replace the optimistic entry and
         // remove that echo so a successful send is rendered exactly once.
         if (clientRef.current !== client) return;

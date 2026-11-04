@@ -36,7 +36,6 @@ import { TransactionsService } from '../api/generated/services/TransactionsServi
 import { PostApiResponse } from '../features/social/types';
 import ProfileHeaderCard from '../features/social/components/ProfileHeaderCard';
 import '../features/social/views/FeedList.scss';
-import { useAccountBalances } from '../hooks/useAccountBalances';
 import { useAddressByChainName, useChainName } from '../hooks/useChainName';
 import { usePreferredChainName } from '../hooks/usePreferredChainName';
 
@@ -68,7 +67,6 @@ export default function UserProfile({
   );
   const effectiveAddress = isChainName && resolvedAddress ? resolvedAddress : (address as string);
   const { data: graphCounts, countsStatus } = useSocialGraphCounts(effectiveAddress);
-  useAccountBalances(effectiveAddress);
   const { chainName } = useChainName(effectiveAddress);
   const pendingChainName = usePreferredChainName(effectiveAddress);
   const { canEdit } = useProfile(effectiveAddress);
@@ -221,8 +219,6 @@ export default function UserProfile({
     if (!effectiveAddress) return;
     // Scroll to top whenever navigating to a user profile
     window.scrollTo(0, 0);
-    // Note: loadAccountData() is automatically called by useAccountBalances hook
-    // when effectiveAddress changes, so no manual call is needed here
   }, [effectiveAddress]);
 
   // Prefetch all tab data in the background so switching tabs is instant

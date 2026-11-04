@@ -21,12 +21,39 @@ export const TX_QUEUE_PENDING_PREFIX = 'txQueue:pending:';
 /** Query param on the wallet success URL: the signed tx can be posted to the node as-is. */
 export const TX_QUEUE_BROADCAST_PARAM = 'broadcast';
 
-export const markSignRequestPending = (id: string) => {
-  safeLocalStringStorage.setItem(`${TX_QUEUE_PENDING_PREFIX}${id}`, String(Date.now()));
+/** Markers older than this are dropped the next time a request starts. */
+export const PENDING_MARKER_TTL_MS = 15 * 60 * 1000;
+
+const pruneStaleMarkers = () => {
+  if (typeof window === 'undefined') return;
+  try {
+    const raw = window.localStorage;
+    const now = Date.now();
+    for (let i = raw.length - 1; i >= 0; i -= 1) {
+      const key = raw.key(i);
+      if (key?.startsWith(TX_QUEUE_PENDING_PREFIX)) {
+        const ts = Number(String(raw.getItem(key)).split(':').pop());
+        if (!Number.isFinite(ts) || now - ts > PENDING_MARKER_TTL_MS) raw.removeItem(key);
+      }
+    }
+  } catch {
+    // storage blocked: nothing to prune
+  }
 };
 
+export const markSignRequestPending = (id: string) => {
+  pruneStaleMarkers();
+  safeLocalStringStorage.setItem(`${TX_QUEUE_PENDING_PREFIX}${id}`, `pending:${Date.now()}`);
+};
+
+/**
+ * Called when the requesting tab stops waiting. The marker is kept (as "done")
+ * rather than removed: a callback tab that shares storage must still see it,
+ * otherwise a late or missed acknowledgement looks exactly like an isolated tab
+ * and the callback would post the transaction a second time and stay open.
+ */
 export const clearSignRequestPending = (id: string) => {
-  safeLocalStringStorage.removeItem(`${TX_QUEUE_PENDING_PREFIX}${id}`);
+  safeLocalStringStorage.setItem(`${TX_QUEUE_PENDING_PREFIX}${id}`, `done:${Date.now()}`);
 };
 
 export const isSignRequestVisible = (id: string): boolean => (

@@ -8,6 +8,7 @@ import {
   isNonceUsed,
   isSignRequestVisible,
   markSignRequestPending,
+  PENDING_MARKER_TTL_MS,
   shouldBroadcastFromCallback,
 } from '../txQueueRelay';
 
@@ -51,8 +52,22 @@ describe('txQueueRelay', () => {
       markSignRequestPending('abc');
       expect(isSignRequestVisible('abc')).toBe(true);
       expect(shouldBroadcastFromCallback(base)).toBe(false);
+    });
+
+    it('still leaves it to the requester after the requester stopped waiting', () => {
+      // A missed acknowledgement must not make a shared-storage tab look isolated.
+      markSignRequestPending('abc');
       clearSignRequestPending('abc');
-      expect(isSignRequestVisible('abc')).toBe(false);
+      expect(isSignRequestVisible('abc')).toBe(true);
+      expect(shouldBroadcastFromCallback(base)).toBe(false);
+    });
+
+    it('drops markers older than the TTL when a new request starts', () => {
+      store.set('txQueue:pending:old', `done:${Date.now() - PENDING_MARKER_TTL_MS - 1}`);
+      store.set('txQueue:pending:recent', `done:${Date.now()}`);
+      markSignRequestPending('abc');
+      expect(store.has('txQueue:pending:old')).toBe(false);
+      expect(store.has('txQueue:pending:recent')).toBe(true);
     });
 
     it('never broadcasts without a signed tx, without permission, or with an opener', () => {

@@ -320,7 +320,9 @@ const TxQueue = () => {
               signedTx as Encoded.Transaction,
             );
             safeLocalStringStorage.removeItem(`${TX_QUEUE_RESULT_PREFIX}${id}`);
-            setMessageResult({ status: 'success', message: tCommon('messages.txSentFromCallback') });
+            // Sent: leave the callback page like the normal relay does, back to
+            // the page the user signed from.
+            leaveQueue();
           } catch (error) {
             // eslint-disable-next-line no-console
             console.error('[tx-queue] failed to broadcast signed transaction', error);

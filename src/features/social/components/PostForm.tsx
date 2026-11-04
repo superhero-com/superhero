@@ -592,8 +592,8 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
         queryClient.setQueryData(['post', normalizedPostId], bumpParent);
         if (postId !== normalizedPostId) queryClient.setQueryData(['post', postId], bumpParent);
 
-        // Descendant counts refetch with the new reply.
-        queryClient.invalidateQueries({ queryKey: ['post-desc-count'], exact: false });
+        // The posts above the parent count the reply too.
+        queryClient.invalidateQueries({ queryKey: ['post-ancestors'] });
 
         onCommentAdded?.();
       }

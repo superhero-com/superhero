@@ -170,6 +170,31 @@ describe('PostForm', () => {
     await waitFor(() => expect(publish).toHaveBeenCalledWith('A reply to the original post.', ['comment:42_v3']));
   });
 
+  it('refreshes the posts above the parent, which count the reply too', async () => {
+    const ancestors = ['post-ancestors', '42_v3', '1_v3'];
+    queryClient.setQueryData(ancestors, []);
+    const onCommentAdded = vi.fn();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <TransactionNotificationProvider>
+          <PostForm
+            isPost={false}
+            postId="42_v3"
+            onCommentAdded={onCommentAdded}
+            showEmojiPicker={false}
+            showGifInput={false}
+            showMediaFeatures={false}
+          />
+        </TransactionNotificationProvider>
+      </QueryClientProvider>,
+    );
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'nice' } });
+    fireEvent.submit(screen.getByRole('textbox').closest('form')!);
+    await waitFor(() => expect(onCommentAdded).toHaveBeenCalledTimes(1));
+
+    expect(queryClient.getQueryState(ancestors)?.isInvalidated).toBe(true);
+  });
+
   it.each(['en', null])('updates only eligible feed caches when the indexed language is %s', async (language) => {
     mockGetById.mockResolvedValue({
       ...(await mockGetById()), language,

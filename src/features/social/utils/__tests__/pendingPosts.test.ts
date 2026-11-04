@@ -210,7 +210,7 @@ describe('pending posts', () => {
     unsubscribe();
   });
 
-  it('then refetches the feeds, or the thread and its parent for a reply', () => {
+  it('then refetches the feeds, or the thread and the posts above it for a reply', () => {
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
     // Its own page, open on the copy from the browser.
     queryClient.setQueryData(['post', '42'], mine);
@@ -229,6 +229,8 @@ describe('pending posts', () => {
     queryClient.setQueryData(['comment-replies', '7'], []);
     queryClient.setQueryData(['comment-replies', '8_v3'], []);
     queryClient.setQueryData(['post', '7_v3'], {});
+    queryClient.setQueryData(['post', '1_v3'], {});
+    queryClient.setQueryData(['post-ancestors', '7_v3', '1_v3'], []);
     const reply = trackPublishedReply({
       account: 'ak_author', txHash: 'th_reply', parentId: '7_v3', reply: { id: '43_v3' },
     });
@@ -236,7 +238,9 @@ describe('pending posts', () => {
       .filter((query) => query.state.isInvalidated)
       .map((query) => JSON.stringify(query.queryKey));
     refreshAfterPostSettled(queryClient, reply);
-    expect(stale()).toEqual(expect.arrayContaining(['["comment-replies","7"]', '["post","7_v3"]']));
+    expect(stale()).toEqual(expect.arrayContaining([
+      '["comment-replies","7"]', '["post","7_v3"]', '["post","1_v3"]', '["post-ancestors","7_v3","1_v3"]',
+    ]));
     expect(stale()).not.toContain('["comment-replies","8_v3"]');
   });
 });

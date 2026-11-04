@@ -173,50 +173,6 @@ const PostDetail = ({ standalone = true }: { standalone?: boolean } = {}) => {
     composerRef.current?.querySelector<HTMLElement>('textarea, button')?.focus({ preventScroll: true });
   };
 
-  // Compute total descendant comments (all levels) for current post
-  // Use postData.id in cache key for consistency (same post regardless of slug/ID navigation)
-  const { data: descendantCount } = useQuery<number>({
-    queryKey: ['post-desc-count', postData?.id],
-    enabled: !!postData?.id,
-    refetchInterval: 120 * 1000,
-    queryFn: async () => {
-      const normalize = (id: string) => (String(id).endsWith('_v3') ? String(id) : `${String(id)}_v3`);
-      const postIdForQuery = postData!.id;
-      const requestBudgetRef = { value: 200 };
-
-      const fetchAllPages = async (
-        current: string,
-        page = 1,
-        acc: PostDto[] = [],
-      ): Promise<PostDto[]> => {
-        if (requestBudgetRef.value <= 0) return acc;
-        requestBudgetRef.value -= 1;
-        const res: any = await PostsService.getComments({
-          id: current, orderDirection: 'ASC', page, limit: 50,
-        });
-        const items: PostDto[] = res?.items || [];
-        const nextAcc = acc.concat(items);
-        const meta = res?.meta;
-        if (!meta?.currentPage || !meta?.totalPages || meta.currentPage >= meta.totalPages) {
-          return nextAcc;
-        }
-        return fetchAllPages(current, meta.currentPage + 1, nextAcc);
-      };
-
-      const processQueue = async (queue: string[], total = 0): Promise<number> => {
-        if (queue.length === 0 || requestBudgetRef.value <= 0) return total;
-        const [current, ...rest] = queue;
-        const items = await fetchAllPages(current);
-        const childIds = items
-          .filter((child) => (child.total_comments ?? 0) > 0)
-          .map((child) => normalize(String(child.id)));
-        return processQueue(rest.concat(childIds), total + items.length);
-      };
-
-      return processQueue([normalize(String(postIdForQuery))]);
-    },
-  });
-
   // No need for author helpers; cards handle display
 
   // Handle reply added callback
@@ -267,7 +223,7 @@ const PostDetail = ({ standalone = true }: { standalone?: boolean } = {}) => {
       ))}
       {postData && (
         <div ref={currentPostRef} className="post-detail__current">
-          <ReplyToFeedItem hideParentContext allowInlineRepliesToggle={false} item={postData as any} commentCount={(descendantCount ?? (postData as any).total_comments ?? 0) as number} onOpenPost={(idOrSlug) => navigate(`/post/${idOrSlug}`)} onReply={focusReply} presentation="detail" isActive />
+          <ReplyToFeedItem hideParentContext allowInlineRepliesToggle={false} item={postData as any} commentCount={postData.total_comments ?? 0} onOpenPost={(idOrSlug) => navigate(`/post/${idOrSlug}`)} onReply={focusReply} presentation="detail" isActive />
         </div>
       )}
     </div>
@@ -334,7 +290,7 @@ const PostDetail = ({ standalone = true }: { standalone?: boolean } = {}) => {
           <section className="post-detail__conversation" aria-labelledby="post-conversation-heading">
             <div className="post-detail__section-heading">
               <h2 id="post-conversation-heading">{t('social:postDetail.conversation')}</h2>
-              <span>{t('social:postLayout.replies', { count: descendantCount ?? postData.total_comments ?? 0 })}</span>
+              <span>{t('social:postLayout.replies', { count: postData.total_comments ?? 0 })}</span>
             </div>
             <div ref={composerRef} id="post-reply-composer" className="post-detail__composer">
               <CommentForm postId={String(postData.id)} onCommentAdded={handleCommentAdded} placeholder={t('forms:writeReply')} appearance="integrated" />

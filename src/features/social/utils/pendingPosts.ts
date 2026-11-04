@@ -107,7 +107,7 @@ export function pendingPosts(): Post[] {
 }
 
 /** Replies to `parentId` still waiting for the backend, oldest first. */
-export function pendingReplies(parentId: string): Post[] {
+function pendingReplies(parentId: string): Post[] {
   return postsOf(listPendingTransactions({
     kind: 'create_comment',
     match: (transaction) => sameId(transaction.meta.parentId, parentId),
@@ -196,7 +196,7 @@ export function insertPostIntoFeeds(
  * Add `reply` to one thread query, unless it is already there. Replies are
  * oldest first, so it goes at the end.
  */
-export function appendToThread(queryClient: QueryClient, queryKey: QueryKey, reply: Post): void {
+function appendToThread(queryClient: QueryClient, queryKey: QueryKey, reply: Post): void {
   const infinite = (queryKey as any[])[2] === 'infinite';
   queryClient.setQueryData(queryKey, (old: any) => {
     if (infinite) {
@@ -333,12 +333,12 @@ export function refreshAfterPostSettled(
   transaction: PendingTransaction,
 ): void {
   queryClient.invalidateQueries({ queryKey: ['posts'], exact: false });
-  // Its own page, if it is open on the copy from the browser.
   const { postId } = transaction.meta;
-  queryClient.invalidateQueries({
-    predicate: (query) => isPostDetailKey(query.queryKey) && sameId(query.queryKey[1], postId),
-  });
   if (transaction.kind === 'create_post') {
+    // Its own page, if it is open on the copy from the browser.
+    queryClient.invalidateQueries({
+      predicate: (query) => isPostDetailKey(query.queryKey) && sameId(query.queryKey[1], postId),
+    });
     if (transaction.meta.topic) {
       queryClient.invalidateQueries({ queryKey: ['topic-by-name', transaction.meta.topic] });
     }
@@ -348,8 +348,7 @@ export function refreshAfterPostSettled(
   }
   const parentId = transaction.meta.parentId ?? '';
   queryClient.invalidateQueries({ predicate: (query) => isInThread(query.queryKey, parentId) });
-  queryClient.invalidateQueries({
-    predicate: (query) => query.queryKey[0] === 'post' && sameId(query.queryKey[1], parentId),
-  });
-  queryClient.invalidateQueries({ queryKey: ['post-desc-count'], exact: false });
+  // Its own page and every post above it, which all count it now.
+  queryClient.invalidateQueries({ predicate: (query) => isPostDetailKey(query.queryKey) });
+  queryClient.invalidateQueries({ queryKey: ['post-ancestors'] });
 }

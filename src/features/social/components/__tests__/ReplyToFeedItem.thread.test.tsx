@@ -38,13 +38,22 @@ const post = (
   ...extra,
 });
 
-const posts: Record<string, any> = {
-  '1_v3': post('1_v3', 'Original post text'),
+// Totals count every reply below a post, as the backend's do.
+const thread = (): Record<string, any> => ({
+  '1_v3': post('1_v3', 'Original post text', undefined, { total_comments: 5 }),
   '2_v3': post('2_v3', 'First repost text', '1_v3', { total_comments: 1 }),
   '3_v3': post('3_v3', 'Second level reply', '2_v3'),
-  '4_v3': post('4_v3', 'Top reply', '1_v3', { total_comments: 1 }),
+  '4_v3': post('4_v3', 'Top reply', '1_v3', { total_comments: 2 }),
   '5_v3': post('5_v3', 'Middle reply', '4_v3', { total_comments: 1 }),
   '6_v3': post('6_v3', 'Deepest reply', '5_v3'),
+});
+let posts = thread();
+
+const addReply = (reply: Record<string, any>, ...above: string[]) => {
+  posts = { ...posts, [reply.id]: reply };
+  above.forEach((id) => {
+    posts[id] = { ...posts[id], total_comments: posts[id].total_comments + 1 };
+  });
 };
 
 const newClient = (staleTime?: number) => new QueryClient({
@@ -59,6 +68,7 @@ const renderItem = (ui: React.ReactElement, client = newClient()) => render(
 
 beforeEach(() => {
   changeLanguage('en');
+  posts = thread();
   vi.spyOn(PostsService, 'getById').mockImplementation((async ({ id }: any) => posts[id]) as any);
   vi.spyOn(PostsService, 'getComments').mockImplementation((async ({ id }: any) => ({
     items: Object.values(posts).filter((p) => (p.tx_args as any[]).some((a) => JSON.stringify(a).includes(`comment:${id}`))),
@@ -113,20 +123,56 @@ describe('ReplyToFeedItem threads', () => {
       await screen.findByText('Deepest reply');
       await act(() => vi.advanceTimersByTimeAsync(1000));
       vi.mocked(PostsService.getComments).mockClear();
-      posts['7_v3'] = post('7_v3', 'Newest reply', '5_v3');
+      addReply(post('7_v3', 'Newest reply', '5_v3'), '5_v3', '4_v3', '1_v3');
 
       await act(() => vi.advanceTimersByTimeAsync(120_000));
 
-      expect(screen.getByText('Newest reply')).toBeInTheDocument();
+      expect(await screen.findByText('Newest reply')).toBeInTheDocument();
       const middleCount = document.querySelector('#post-5_v3 > .feed-post__content > .feed-post__actions .feed-post__reply');
       expect(middleCount?.textContent).toMatch(/^2/);
-      // The top-level reply's list, plus its walk over itself and the middle reply.
+      // The top-level reply's poll, then only the list whose total grew.
       const ids = vi.mocked(PostsService.getComments).mock.calls.map(([args]) => (args as any).id);
-      expect(ids.sort()).toEqual(['4_v3', '4_v3', '5_v3']);
+      expect(ids.sort()).toEqual(['4_v3', '5_v3']);
     } finally {
-      delete posts['7_v3'];
       vi.useRealTimers();
     }
+  });
+
+  it('leaves a nested reply\'s list alone when its total hasn\'t changed', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      renderItem(<ReplyToFeedItem item={posts['4_v3']} hideParentContext threadDepth={0} onOpenPost={() => {}} />);
+      await screen.findByText('Deepest reply');
+      await act(() => vi.advanceTimersByTimeAsync(1000));
+      vi.mocked(PostsService.getComments).mockClear();
+      addReply(post('7_v3', 'Newest reply', '4_v3'), '4_v3', '1_v3');
+
+      await act(() => vi.advanceTimersByTimeAsync(120_000));
+
+      expect((await screen.findByText('Newest reply')).closest('#replies-4_v3')).not.toBeNull();
+      const ids = vi.mocked(PostsService.getComments).mock.calls.map(([args]) => (args as any).id);
+      expect(ids).toEqual(['4_v3']);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('shows a feed post\'s reply total without loading its replies', async () => {
+    const client = newClient();
+    const item = posts['1_v3'];
+    renderItem(
+      <ReplyToFeedItem
+        item={item}
+        commentCount={item.total_comments}
+        allowInlineRepliesToggle={false}
+        onOpenPost={() => {}}
+      />,
+      client,
+    );
+
+    expect(screen.getByRole('button', { name: '5 replies' })).toBeInTheDocument();
+    await waitFor(() => expect(client.isFetching()).toBe(0));
+    expect(PostsService.getComments).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -147,7 +193,7 @@ describe('ReplyToFeedItem threads', () => {
     expect(PostsService.getComments).not.toHaveBeenCalled();
   });
 
-  it('keeps a reply the backend doesn\'t have yet in a nested reply\'s list', async () => {
+  it('keeps a reply the backend doesn\'t have yet when a nested reply\'s list refetches', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     const client = newClient();
     const stop = watchPendingPosts(client);
@@ -157,10 +203,11 @@ describe('ReplyToFeedItem threads', () => {
     try {
       renderItem(<ReplyToFeedItem item={posts['4_v3']} hideParentContext threadDepth={0} onOpenPost={() => {}} />, client);
       await screen.findByText('Deepest reply');
+      addReply(post('7_v3', 'Newest reply', '5_v3'), '5_v3', '4_v3', '1_v3');
 
-      // The top-level reply's walk rewrites the middle reply's list.
       await act(() => vi.advanceTimersByTimeAsync(120_000));
 
+      expect((await screen.findByText('Newest reply')).closest('#replies-5_v3')).not.toBeNull();
       expect(screen.getByText('Pending reply').closest('#replies-5_v3')).not.toBeNull();
     } finally {
       stop();

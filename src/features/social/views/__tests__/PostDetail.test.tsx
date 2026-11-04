@@ -61,7 +61,6 @@ function setup() {
   });
   client.setQueryData(['post', post.slug], post);
   client.setQueryData(['post-ancestors', post.id, null], []);
-  client.setQueryData(['post-desc-count', post.id], 0);
   render(
     <QueryClientProvider client={client}>
       <MemoryRouter initialEntries={[{

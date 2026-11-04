@@ -59,7 +59,7 @@ const TokenTopicFeed = ({
   const { t } = useTranslation('social');
   const [autoSwitchedFromHolders, setAutoSwitchedFromHolders] = useState(false);
   // Render the feed incrementally. Each mounted post fires its own requests
-  // (avatar + recursive comment-count walk), so mounting the full list up front
+  // (avatar, parent post, link preview), so mounting the full list up front
   // floods the network — especially on mobile. Start with ~1-2 viewports and
   // let the user load more on demand.
   const POSTS_PER_PAGE = 10;

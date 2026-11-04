@@ -15,10 +15,20 @@ const mockApi = vi.hoisted(() => ({
   create: vi.fn(),
   remove: vi.fn(),
 }));
+const mockNotifications = vi.hoisted(() => ({
+  connected: true,
+  connecting: false,
+  error: null as string | null,
+  connect: vi.fn(),
+  sessionToken: (address: string) => `tok:${address}`,
+}));
 
 vi.mock('@/features/notifications/useNotifications', () => ({
   apiBaseUrl: () => 'http://api.test',
   useNotificationSigner: () => ({ activeAccount: mockAccount, signNotificationMessage: mockSign }),
+}));
+vi.mock('@/features/notifications/NotificationsContext', () => ({
+  useNotificationsContext: () => mockNotifications,
 }));
 vi.mock('@/features/notifications/priceAlerts', async (importOriginal) => ({
   ...await importOriginal<typeof import('@/features/notifications/priceAlerts')>(),
@@ -54,6 +64,10 @@ const typeTarget = (value: string) => fireEvent.change(
 describe('TokenPriceAlerts', () => {
   beforeEach(() => {
     mockAccount = 'ak_alice';
+    mockNotifications.connected = true;
+    mockNotifications.connecting = false;
+    mockNotifications.error = null;
+    mockNotifications.connect.mockReset().mockResolvedValue(undefined);
     mockSign.mockClear();
     mockApi.list.mockReset().mockResolvedValue([]);
     mockApi.create.mockReset().mockImplementation(async (_account, sale, direction, target) => ({
@@ -67,6 +81,39 @@ describe('TokenPriceAlerts', () => {
     const { container } = mount(<TokenPriceAlerts saleAddress={SALE} />);
     expect(container.firstChild).toBeNull();
     expect(mockApi.list).not.toHaveBeenCalled();
+  });
+
+  it('asks to turn on notifications, then reads the alerts with that session', async () => {
+    mockNotifications.connected = false;
+    mockApi.list.mockResolvedValue([
+      {
+        id: 4, sale_address: SALE, direction: 'above', target_ae: '1', triggered_at: null,
+      },
+    ]);
+    const { rerender } = mount(<TokenPriceAlerts saleAddress={SALE} />);
+    expect(mockApi.list).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'priceAlerts.set' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'priceAlerts.connect' }));
+    expect(mockNotifications.connect).toHaveBeenCalledTimes(1);
+
+    mockNotifications.connected = true;
+    rerender(<TokenPriceAlerts saleAddress={SALE} />);
+    expect(await screen.findByText('priceAlerts.whenAbove:1')).toBeInTheDocument();
+    expect(mockApi.list).toHaveBeenCalledWith('ak_alice', 'tok:ak_alice');
+    expect(screen.queryByRole('button', { name: 'priceAlerts.connect' })).toBeNull();
+  });
+
+  it('shows the connect progress and why it failed', () => {
+    mockNotifications.connected = false;
+    mockNotifications.connecting = true;
+    const { rerender } = mount(<TokenPriceAlerts saleAddress={SALE} />);
+    expect(screen.getByRole('button', { name: 'priceAlerts.connecting' })).toBeDisabled();
+
+    mockNotifications.connecting = false;
+    mockNotifications.error = 'Connect your wallet first, then turn on notifications.';
+    rerender(<TokenPriceAlerts saleAddress={SALE} />);
+    expect(screen.getByRole('alert')).toHaveTextContent('Connect your wallet first');
+    expect(screen.getByRole('button', { name: 'priceAlerts.connect' })).toBeEnabled();
   });
 
   it('suggests the direction from the current price and creates the alert', async () => {
@@ -179,7 +226,7 @@ describe('TokenPriceAlerts', () => {
     const { client, rerender } = mount(<TokenPriceAlerts saleAddress={SALE} />);
     mockAccount = 'ak_bob';
     rerender(<TokenPriceAlerts saleAddress={SALE} />);
-    await waitFor(() => expect(mockApi.list).toHaveBeenCalledWith('ak_bob'));
+    await waitFor(() => expect(mockApi.list).toHaveBeenCalledWith('ak_bob', 'tok:ak_bob'));
     resolveAlice([
       {
         id: 4, sale_address: SALE, direction: 'above', target_ae: '1', triggered_at: null,

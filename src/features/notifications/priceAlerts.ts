@@ -90,8 +90,11 @@ export class PriceAlertsApi {
     this.doFetch = opts.fetch ?? ((input, init) => fetch(input, init));
   }
 
-  async list(address: string): Promise<PriceAlert[]> {
-    const res = await this.doFetch(`${this.base}/${encodeURIComponent(address)}/price-alerts`);
+  /** Needs the notification feed session: targets reveal what the account means to trade. */
+  async list(address: string, sessionToken: string): Promise<PriceAlert[]> {
+    const res = await this.doFetch(`${this.base}/${encodeURIComponent(address)}/price-alerts`, {
+      headers: { Authorization: `Bearer ${sessionToken}` },
+    });
     if (!res.ok) throw new Error(await readError(res));
     return res.json();
   }

@@ -3100,6 +3100,9 @@
       "whenAbove": "When above {{target}} AE",
       "whenBelow": "When below {{target}} AE",
       "remove": "Remove alert",
+      "connectHint": "Turn on notifications to see your alerts here.",
+      "connect": "Turn on notifications",
+      "connecting": "Connecting…",
       "firedCount_one": "{{count}} alert already sent",
       "firedCount_other": "{{count}} alerts already sent"
     }

@@ -231,6 +231,12 @@ export class NotificationFeedClient {
     return !!this.token || !!this.loadCachedToken();
   }
 
+  /** The bearer of `address`'s session, or null; never prompts. */
+  sessionToken(address: string): string | null {
+    if (address !== this.opts.address) return null;
+    return this.token ?? this.loadCachedToken();
+  }
+
   // ── auth: one signature -> bearer session (cached) ─────────────────────────
 
   private storageKey(): string {

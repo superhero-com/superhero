@@ -64,6 +64,8 @@ export interface UseNotifications {
   disablePush: () => Promise<void>;
   /** The most recent live item, for a raw alert/toast in the MVP UI. */
   lastLive: FeedItem | null;
+  /** Bearer of `address`'s session for gated reads (price alerts), or null. Never prompts. */
+  sessionToken: (address: string) => string | null;
 }
 
 /**
@@ -351,6 +353,13 @@ export function useNotifications(): UseNotifications {
     setPushState(next);
   }, []);
 
+  // clientRef keeps the previous account's client until the account-change effect
+  // runs, and that runs after the children's effects, where their queries fetch.
+  const sessionToken = useCallback(
+    (address: string) => clientRef.current?.sessionToken(address) ?? null,
+    [],
+  );
+
   return {
     connected,
     connecting,
@@ -366,5 +375,6 @@ export function useNotifications(): UseNotifications {
     enablePush,
     disablePush,
     lastLive,
+    sessionToken,
   };
 }

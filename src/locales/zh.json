@@ -3019,6 +3019,9 @@
       "whenAbove": "高于 {{target}} AE 时",
       "whenBelow": "低于 {{target}} AE 时",
       "remove": "删除提醒",
+      "connectHint": "开启通知后即可在此查看你的提醒。",
+      "connect": "开启通知",
+      "connecting": "正在连接…",
       "firedCount_other": "已发送 {{count}} 条提醒"
     }
   },

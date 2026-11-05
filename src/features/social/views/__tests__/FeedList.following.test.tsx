@@ -1,5 +1,7 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import {
+  fireEvent, render, screen, waitFor,
+} from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Provider, createStore } from 'jotai';
 import { MemoryRouter } from 'react-router-dom';
@@ -55,8 +57,13 @@ function mount(account?: string, url = '/?sortBy=following') {
   );
 }
 
+const followSomeone = () => vi.mocked(SocialGraphConnectionsService.listSocialGraphFollowing)
+  .mockResolvedValue({ items: [{ address: 'ak_a' }], next_cursor: null } as any);
+
 beforeEach(async () => {
   vi.clearAllMocks();
+  // The post-language filter persists here, and defaults to the UI language.
+  localStorage.clear();
   await changeLanguage('en');
   vi.mocked(SuperheroApi.listPosts).mockResolvedValue(page());
   vi.mocked(SuperheroApi.listPopularPosts).mockResolvedValue(page());
@@ -95,13 +102,30 @@ describe('Home Following feed', () => {
       .toHaveBeenCalledWith({ address: VIEWER, limit: 1 });
   });
 
-  it('shows the no-posts state when followed accounts have not posted', async () => {
-    vi.mocked(SocialGraphConnectionsService.listSocialGraphFollowing).mockResolvedValue({
-      items: [{ address: 'ak_a' }] as any,
-      next_cursor: null,
-    } as any);
+  it('shows the no-posts state only once no language filter can explain it', async () => {
+    followSomeone();
     mount(VIEWER);
+    fireEvent.click(await screen.findByRole('button', { name: 'Show all languages' }));
     await screen.findByText("The accounts you follow haven't posted yet.");
+    expect(SuperheroApi.listPosts).toHaveBeenCalledWith(
+      expect.objectContaining({ followedBy: VIEWER, language: undefined }),
+    );
+  });
+
+  it('reaches followed posts in other languages from an empty filtered feed', async () => {
+    followSomeone();
+    vi.mocked(SuperheroApi.listPosts).mockImplementation(async (params: any) => page(
+      params?.followedBy === VIEWER && !params.language
+        ? [{ id: 'f1', content: 'bonjour', created_at: '2026-10-01T10:00:00Z' }]
+        : [],
+    ));
+    mount(VIEWER);
+    const showAll = await screen.findByRole('button', { name: 'Show all languages' });
+    expect(SuperheroApi.listPosts).toHaveBeenCalledWith(
+      expect.objectContaining({ followedBy: VIEWER, language: 'en' }),
+    );
+    fireEvent.click(showAll);
+    await screen.findByText('bonjour');
   });
 
   it('falls back to the default feed without a connected wallet', async () => {

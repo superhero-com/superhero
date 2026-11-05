@@ -941,7 +941,9 @@ const FeedList = ({
         </div>
       );
     }
-    if (isFollowingFeed) {
+    // A language filter also hides followed accounts' posts in other languages,
+    // so "they haven't posted" is only true without one.
+    if (isFollowingFeed && (followsNobody || !languageParam)) {
       return (
         <EmptyState
           type="empty"

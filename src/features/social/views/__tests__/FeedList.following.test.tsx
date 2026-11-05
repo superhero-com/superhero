@@ -1,5 +1,7 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import {
+  act, fireEvent, render, screen, waitFor,
+} from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Provider, createStore } from 'jotai';
 import { MemoryRouter } from 'react-router-dom';
@@ -40,14 +42,14 @@ vi.mock('../../components/TrendingAssetsFeedItem', () => ({ default: () => null 
 const VIEWER = 'ak_viewer';
 const page = (items: any[] = []) => ({ items, meta: { currentPage: 1, totalPages: 1 } });
 
-function mount(account?: string) {
+function mount(account?: string, url = '/?sortBy=following') {
   const store = createStore();
   store.set(activeAccountAtom, account);
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <Provider store={store}>
       <QueryClientProvider client={client}>
-        <MemoryRouter initialEntries={['/?sortBy=following']}>
+        <MemoryRouter initialEntries={[url]}>
           <FeedList standalone={false} />
         </MemoryRouter>
       </QueryClientProvider>
@@ -55,8 +57,13 @@ function mount(account?: string) {
   );
 }
 
+const followSomeone = () => vi.mocked(SocialGraphConnectionsService.listSocialGraphFollowing)
+  .mockResolvedValue({ items: [{ address: 'ak_a' }], next_cursor: null } as any);
+
 beforeEach(async () => {
   vi.clearAllMocks();
+  // The post-language filter persists here, and defaults to the UI language.
+  localStorage.clear();
   await changeLanguage('en');
   vi.mocked(SuperheroApi.listPosts).mockResolvedValue(page());
   vi.mocked(SuperheroApi.listPopularPosts).mockResolvedValue(page());
@@ -95,13 +102,72 @@ describe('Home Following feed', () => {
       .toHaveBeenCalledWith({ address: VIEWER, limit: 1 });
   });
 
-  it('shows the no-posts state when followed accounts have not posted', async () => {
-    vi.mocked(SocialGraphConnectionsService.listSocialGraphFollowing).mockResolvedValue({
-      items: [{ address: 'ak_a' }] as any,
-      next_cursor: null,
-    } as any);
+  it('shows the no-posts state only once no language filter can explain it', async () => {
+    followSomeone();
     mount(VIEWER);
+    fireEvent.click(await screen.findByRole('button', { name: 'Show all languages' }));
     await screen.findByText("The accounts you follow haven't posted yet.");
+    expect(SuperheroApi.listPosts).toHaveBeenCalledWith(
+      expect.objectContaining({ followedBy: VIEWER, language: undefined }),
+    );
+  });
+
+  it('reaches followed posts in other languages from an empty filtered feed', async () => {
+    followSomeone();
+    vi.mocked(SuperheroApi.listPosts).mockImplementation(async (params: any) => page(
+      params?.followedBy === VIEWER && !params.language
+        ? [{ id: 'f1', content: 'bonjour', created_at: '2026-10-01T10:00:00Z' }]
+        : [],
+    ));
+    mount(VIEWER);
+    const showAll = await screen.findByRole('button', { name: 'Show all languages' });
+    expect(SuperheroApi.listPosts).toHaveBeenCalledWith(
+      expect.objectContaining({ followedBy: VIEWER, language: 'en' }),
+    );
+    fireEvent.click(showAll);
+    await screen.findByText('bonjour');
+  });
+
+  it('loads the next page of followed posts as the reader scrolls', async () => {
+    let intersect!: (entries: Array<{ isIntersecting: boolean }>) => void;
+    vi.stubGlobal('IntersectionObserver', class {
+      constructor(callback: typeof intersect) { intersect = callback; }
+
+      observe = vi.fn();
+
+      disconnect = vi.fn();
+    });
+    vi.mocked(SuperheroApi.listPosts).mockImplementation(async (params: any) => (
+      params?.followedBy === VIEWER
+        ? {
+          items: [{ id: `f${params.page}`, content: `followed page ${params.page}`, created_at: '2026-10-01T10:00:00Z' }],
+          meta: { currentPage: params.page, totalPages: 2 },
+        }
+        : page()
+    ));
+    mount(VIEWER);
+    await screen.findByText('followed page 1');
+    await waitFor(() => expect(intersect).toBeDefined());
+    await act(async () => intersect([{ isIntersecting: true }]));
+    await screen.findByText('followed page 2');
+    expect(SuperheroApi.listPosts).toHaveBeenCalledWith(
+      expect.objectContaining({ followedBy: VIEWER, page: 2 }),
+    );
+    expect(document.getElementById('feed-infinite-sentinel')).not.toBeInTheDocument();
+  });
+
+  it('retries a Following feed that failed to load', async () => {
+    let failing = true;
+    vi.mocked(SuperheroApi.listPosts).mockImplementation(async (params: any) => {
+      if (params?.followedBy !== VIEWER) return page();
+      if (failing) throw new Error('Network down');
+      return page([{ id: 'r1', content: 'after retry', created_at: '2026-10-01T10:00:00Z' }]);
+    });
+    mount(VIEWER);
+    const retry = await screen.findByRole('button', { name: 'Retry' });
+    failing = false;
+    fireEvent.click(retry);
+    await screen.findByText('after retry');
   });
 
   it('falls back to the default feed without a connected wallet', async () => {
@@ -111,5 +177,16 @@ describe('Home Following feed', () => {
     expect(SuperheroApi.listPosts).not.toHaveBeenCalledWith(
       expect.objectContaining({ followedBy: expect.anything() }),
     );
+  });
+
+  it('shows the newest posts for a sort the app no longer has', async () => {
+    vi.mocked(SuperheroApi.listPosts).mockResolvedValue(page([
+      { id: 'n1', content: 'newest post', created_at: '2026-10-01T10:00:00Z' },
+    ]));
+    // The previous app linked its "highest rated" feed this way.
+    mount(undefined, '/?sortBy=highest');
+    await screen.findByText('newest post');
+    expect(screen.getAllByTestId('sort')[0]).toHaveTextContent('latest:false');
+    expect(SuperheroApi.listPopularPosts).not.toHaveBeenCalled();
   });
 });

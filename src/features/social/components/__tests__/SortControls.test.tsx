@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  fireEvent, render, screen,
+  fireEvent, render, screen, within,
 } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { MemoryRouter } from 'react-router-dom';
@@ -109,6 +109,38 @@ describe('SortControls', () => {
       const popularButtons = screen.getAllByText('Popular');
       fireEvent.click(popularButtons[popularButtons.length - 1]);
       expect(onSortChange).toHaveBeenCalledWith('hot');
+    });
+  });
+
+  describe('Following tab', () => {
+    it('is not offered without a connected wallet', () => {
+      renderControls();
+      expect(screen.queryByRole('button', { name: 'Following' })).not.toBeInTheDocument();
+    });
+
+    it('switches to the Following feed', () => {
+      renderControls({ showFollowing: true });
+      fireEvent.click(screen.getByRole('button', { name: 'Following' }));
+      expect(onSortChange).toHaveBeenCalledWith('following');
+    });
+
+    it('names the Following feed on mobile and offers the other feeds', () => {
+      renderControls({ sortBy: 'following', showFollowing: true });
+      // The mobile title is the one Following button that opens a menu.
+      fireEvent.click(screen.getByRole('button', { name: 'Following', expanded: false }));
+      const menu = screen.getByRole('menu', { name: 'Feed sort options' });
+      const options = within(menu).getAllByRole('menuitem');
+      expect(options.map((option) => option.textContent)).toEqual(['Popular', 'Latest']);
+      fireEvent.click(options[1]);
+      expect(onSortChange).toHaveBeenCalledWith('latest');
+    });
+
+    it('keeps Latest and Following switchable when Popular is disabled', () => {
+      renderControls({ sortBy: 'latest', popularFeedEnabled: false, showFollowing: true });
+      expect(screen.queryByText('Latest Feed')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Popular' })).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Following' }));
+      expect(onSortChange).toHaveBeenCalledWith('following');
     });
   });
 

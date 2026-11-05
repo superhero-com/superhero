@@ -94,7 +94,9 @@ const FeedList = ({
   if (urlSortBy === 'following' && followingAvailable) sortBy = 'following';
   // Force "latest" if popular feed is disabled, otherwise use URL param or default to "hot"
   else if (!popularFeedEnabled) sortBy = 'latest';
-  else sortBy = urlSortBy && urlSortBy !== 'following' ? urlSortBy : 'hot';
+  else if (!urlSortBy || urlSortBy === 'hot' || urlSortBy === 'following') sortBy = 'hot';
+  // Any other value, like the old app's ?sortBy=highest, has always shown the newest-first feed.
+  else sortBy = 'latest';
   const isFollowingFeed = sortBy === 'following';
   const filterBy = urlQuery.get('filterBy') || 'all';
   const shouldAutoFocusPost = urlQuery.get('post') === 'new';
@@ -939,7 +941,9 @@ const FeedList = ({
         </div>
       );
     }
-    if (isFollowingFeed) {
+    // A language filter also hides followed accounts' posts in other languages,
+    // so "they haven't posted" is only true without one.
+    if (isFollowingFeed && (followsNobody || !languageParam)) {
       return (
         <EmptyState
           type="empty"

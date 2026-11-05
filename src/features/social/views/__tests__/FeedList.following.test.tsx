@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  fireEvent, render, screen, waitFor,
+  act, fireEvent, render, screen, waitFor,
 } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Provider, createStore } from 'jotai';
@@ -126,6 +126,48 @@ describe('Home Following feed', () => {
     );
     fireEvent.click(showAll);
     await screen.findByText('bonjour');
+  });
+
+  it('loads the next page of followed posts as the reader scrolls', async () => {
+    let intersect!: (entries: Array<{ isIntersecting: boolean }>) => void;
+    vi.stubGlobal('IntersectionObserver', class {
+      constructor(callback: typeof intersect) { intersect = callback; }
+
+      observe = vi.fn();
+
+      disconnect = vi.fn();
+    });
+    vi.mocked(SuperheroApi.listPosts).mockImplementation(async (params: any) => (
+      params?.followedBy === VIEWER
+        ? {
+          items: [{ id: `f${params.page}`, content: `followed page ${params.page}`, created_at: '2026-10-01T10:00:00Z' }],
+          meta: { currentPage: params.page, totalPages: 2 },
+        }
+        : page()
+    ));
+    mount(VIEWER);
+    await screen.findByText('followed page 1');
+    await waitFor(() => expect(intersect).toBeDefined());
+    await act(async () => intersect([{ isIntersecting: true }]));
+    await screen.findByText('followed page 2');
+    expect(SuperheroApi.listPosts).toHaveBeenCalledWith(
+      expect.objectContaining({ followedBy: VIEWER, page: 2 }),
+    );
+    expect(document.getElementById('feed-infinite-sentinel')).not.toBeInTheDocument();
+  });
+
+  it('retries a Following feed that failed to load', async () => {
+    let failing = true;
+    vi.mocked(SuperheroApi.listPosts).mockImplementation(async (params: any) => {
+      if (params?.followedBy !== VIEWER) return page();
+      if (failing) throw new Error('Network down');
+      return page([{ id: 'r1', content: 'after retry', created_at: '2026-10-01T10:00:00Z' }]);
+    });
+    mount(VIEWER);
+    const retry = await screen.findByRole('button', { name: 'Retry' });
+    failing = false;
+    fireEvent.click(retry);
+    await screen.findByText('after retry');
   });
 
   it('falls back to the default feed without a connected wallet', async () => {

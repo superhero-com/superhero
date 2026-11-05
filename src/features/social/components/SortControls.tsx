@@ -63,6 +63,8 @@ interface SortControlsProps {
   className?: string;
   filters?: React.ReactNode;
   popularFeedEnabled?: boolean;
+  /** Offer the "Following" feed (only when a wallet is connected). */
+  showFollowing?: boolean;
   popularWeights?: PopularWeights;
   onPopularWeightsChange?: (weights: PopularWeights) => void;
 }
@@ -71,7 +73,7 @@ interface SortControlsProps {
 const SortControls = memo(
   ({
     sortBy, onSortChange, className = '', filters, popularFeedEnabled = true,
-    popularWeights = {}, onPopularWeightsChange,
+    showFollowing = false, popularWeights = {}, onPopularWeightsChange,
   }: SortControlsProps) => {
     const { t } = useTranslation();
     const mobileSortRef = useRef<HTMLDivElement>(null);
@@ -149,14 +151,18 @@ const SortControls = memo(
       }
     }, [sortBy]);
 
-    const getMobileTitle = () => {
-      if (sortBy === 'latest') {
-        return t('social.sortControls.latest');
-      }
-      return t('social.sortControls.popular');
-    };
+    const sortOptions = [
+      ...(popularFeedEnabled ? [{ value: 'hot', label: t('social.sortControls.popular') }] : []),
+      { value: 'latest', label: t('social.sortControls.latest') },
+      ...(showFollowing ? [{ value: 'following', label: t('social.sortControls.following') }] : []),
+    ];
 
-    const handleMobileSortToggle = (newSort: 'hot' | 'latest') => {
+    const getMobileTitle = () => (
+      sortOptions.find((option) => option.value === sortBy)?.label
+      ?? t('social.sortControls.popular')
+    );
+
+    const handleMobileSortToggle = (newSort: string) => {
       setMobileSortOpen(false);
       onSortChange(newSort);
     };
@@ -248,8 +254,8 @@ const SortControls = memo(
       </DropdownMenuContent>
     );
 
-    // Show "Latest Feed" title if popular feed is disabled
-    if (!popularFeedEnabled) {
+    // Show "Latest Feed" title if popular feed is disabled and there is nothing to switch to
+    if (!popularFeedEnabled && !showFollowing) {
       return (
         <div className={cn('w-full mb-0 md:mb-3 mt-4 md:mt-0', className)}>
           <div className="flex items-center justify-between gap-2">
@@ -289,25 +295,17 @@ const SortControls = memo(
                     role="menu"
                     aria-label={t('social.sortControls.feedSortOptions')}
                   >
-                    {sortBy === 'hot' ? (
+                    {sortOptions.filter((option) => option.value !== sortBy).map((option) => (
                       <button
+                        key={option.value}
                         type="button"
-                        onClick={() => handleMobileSortToggle('latest')}
+                        onClick={() => handleMobileSortToggle(option.value)}
                         className="flex min-h-[44px] w-full items-center rounded-xl px-4 py-2.5 text-left text-sm text-white transition-colors hover:bg-white/10"
                         role="menuitem"
                       >
-                        {t('social.sortControls.latest')}
+                        {option.label}
                       </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleMobileSortToggle('hot')}
-                        className="flex min-h-[44px] w-full items-center rounded-xl px-4 py-2.5 text-left text-sm text-white transition-colors hover:bg-white/10"
-                        role="menuitem"
-                      >
-                        {t('social.sortControls.popular')}
-                      </button>
-                    )}
+                    ))}
                   </div>
                 )}
 
@@ -420,34 +418,23 @@ const SortControls = memo(
         {/* Desktop */}
         <div className="hidden md:flex w-full items-center gap-2 px-4 py-1.5">
           <div className="inline-flex items-center gap-1.5 bg-white/5 rounded-full p-0.5 border border-white/10 md:w-auto">
-            <AeButton
-              onClick={() => onSortChange('hot')}
-              variant={sortBy === 'hot' ? 'default' : 'ghost'}
-              size="xs"
-              noShadow
-              className={cn(
-                'rounded-full px-3 py-1 text-xs font-semibold transition-all flex-1 w-full md:w-24 md:uppercase',
-                sortBy === 'hot'
-                  ? 'bg-[#1161FE] text-white hover:bg-[#1161FE] focus:bg-[#1161FE]'
-                  : 'text-white/70 hover:text-white hover:bg-white/10 focus:text-white focus:bg-white/10',
-              )}
-            >
-              Popular
-            </AeButton>
-            <AeButton
-              onClick={() => onSortChange('latest')}
-              variant={sortBy === 'latest' ? 'default' : 'ghost'}
-              size="xs"
-              noShadow
-              className={cn(
-                'rounded-full px-3 py-1 text-xs font-semibold transition-all flex-1 w-full md:w-24 md:uppercase',
-                sortBy === 'latest'
-                  ? 'bg-[#1161FE] text-white hover:bg-[#1161FE] focus:bg-[#1161FE]'
-                  : 'text-white/70 hover:text-white hover:bg-white/10 focus:text-white focus:bg-white/10',
-              )}
-            >
-              Latest
-            </AeButton>
+            {sortOptions.map((option) => (
+              <AeButton
+                key={option.value}
+                onClick={() => onSortChange(option.value)}
+                variant={sortBy === option.value ? 'default' : 'ghost'}
+                size="xs"
+                noShadow
+                className={cn(
+                  'rounded-full px-3 py-1 text-xs font-semibold transition-all flex-1 w-full md:w-24 md:uppercase',
+                  sortBy === option.value
+                    ? 'bg-[#1161FE] text-white hover:bg-[#1161FE] focus:bg-[#1161FE]'
+                    : 'text-white/70 hover:text-white hover:bg-white/10 focus:text-white focus:bg-white/10',
+                )}
+              >
+                {option.label}
+              </AeButton>
+            ))}
           </div>
           {(sortBy === 'hot' || filters) && (
             <DropdownMenu open={customizeOpen} onOpenChange={setCustomizeOpen} modal={false}>

@@ -40,14 +40,14 @@ vi.mock('../../components/TrendingAssetsFeedItem', () => ({ default: () => null 
 const VIEWER = 'ak_viewer';
 const page = (items: any[] = []) => ({ items, meta: { currentPage: 1, totalPages: 1 } });
 
-function mount(account?: string) {
+function mount(account?: string, url = '/?sortBy=following') {
   const store = createStore();
   store.set(activeAccountAtom, account);
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <Provider store={store}>
       <QueryClientProvider client={client}>
-        <MemoryRouter initialEntries={['/?sortBy=following']}>
+        <MemoryRouter initialEntries={[url]}>
           <FeedList standalone={false} />
         </MemoryRouter>
       </QueryClientProvider>
@@ -111,5 +111,16 @@ describe('Home Following feed', () => {
     expect(SuperheroApi.listPosts).not.toHaveBeenCalledWith(
       expect.objectContaining({ followedBy: expect.anything() }),
     );
+  });
+
+  it('shows the newest posts for a sort the app no longer has', async () => {
+    vi.mocked(SuperheroApi.listPosts).mockResolvedValue(page([
+      { id: 'n1', content: 'newest post', created_at: '2026-10-01T10:00:00Z' },
+    ]));
+    // The previous app linked its "highest rated" feed this way.
+    mount(undefined, '/?sortBy=highest');
+    await screen.findByText('newest post');
+    expect(screen.getAllByTestId('sort')[0]).toHaveTextContent('latest:false');
+    expect(SuperheroApi.listPopularPosts).not.toHaveBeenCalled();
   });
 });

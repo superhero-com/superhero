@@ -253,6 +253,8 @@ describe('notifications service worker — routing parity with the in-app bell',
     { type: 'tip-received', sender: 'ak_x' },
     { type: 'post-mention', author: 'ak_x', postId: '9_v3' },
     { type: 'post-mention', author: 'ak_x' },
+    { type: 'token-price-alert', saleAddress: 'ct_sale' },
+    { type: 'token-price-alert' },
     { type: 'announcement' },
     { type: 'something-new-the-backend-added' },
   ];

@@ -56,6 +56,7 @@ function ctxValue(over: Partial<UseNotifications> = {}): UseNotifications {
     enablePush: vi.fn().mockResolvedValue(undefined),
     disablePush: vi.fn().mockResolvedValue(undefined),
     lastLive: null,
+    sessionToken: () => null,
     ...over,
   };
 }

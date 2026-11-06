@@ -58,6 +58,13 @@ describe('getNotificationLink', () => {
     expect(getNotificationLink(item('room-membership', {}))).toBeUndefined();
   });
 
+  it('routes a price alert to its token', () => {
+    expect(
+      getNotificationLink(item('token-price-alert', { saleAddress: 'ct_sale', symbol: 'X' })),
+    ).toBe('/trends/tokens/ct_sale');
+    expect(getNotificationLink(item('token-price-alert', {}))).toBeUndefined();
+  });
+
   it('routes a new follower to their profile', () => {
     expect(getNotificationLink(item('new-follow', { follower: 'ak_fan' }))).toBe('/users/ak_fan');
     expect(getNotificationLink(item('new-follow', {}))).toBeUndefined();

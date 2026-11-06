@@ -743,7 +743,7 @@ export const SuperheroApi = {
     return this.fetchJson(`/api/coins/aeternity/market-data?${qp.toString()}`);
   },
   // Posts endpoints
-  listPosts(params: { limit?: number; page?: number; orderBy?: 'total_comments'|'created_at'; orderDirection?: 'ASC'|'DESC'; search?: string; accountAddress?: string; topics?: string; language?: 'en'|'zh'|'ar'|'ru' } = {}) {
+  listPosts(params: { limit?: number; page?: number; orderBy?: 'total_comments'|'created_at'; orderDirection?: 'ASC'|'DESC'; search?: string; accountAddress?: string; followedBy?: string; topics?: string; language?: 'en'|'zh'|'ar'|'ru' } = {}) {
     const qp = new URLSearchParams();
     if (params.limit != null) qp.set('limit', String(params.limit));
     if (params.page != null) qp.set('page', String(params.page));
@@ -751,6 +751,7 @@ export const SuperheroApi = {
     if (params.orderDirection) qp.set('order_direction', params.orderDirection);
     if (params.search) qp.set('search', params.search);
     if (params.accountAddress) qp.set('account_address', params.accountAddress);
+    if (params.followedBy) qp.set('followed_by', params.followedBy);
     if (params.topics) qp.set('topics', params.topics);
     if (params.language) qp.set('language', params.language);
     const query = qp.toString();

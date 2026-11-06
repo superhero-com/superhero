@@ -84,6 +84,10 @@ awkward rather than forgotten: `netlify.app` is on the Public Suffix List, so
 each preview's only legal RP ID is its own full hostname, which means a
 per-deploy value and credentials that don't carry between previews.
 
+`VITE_JOURNEY_ANALYTICS` — set to `false` to turn off the anonymous user
+journey analytics (`src/lib/journey`): nothing is queued or sent, and no id is
+stored. For the Docker images, add it as a `VITE_JOURNEY_ANALYTICS` repo secret.
+
 ```bash
 # Example overrides at build/dev time
 VITE_SUPERHERO_API_URL=https://api.example.com \

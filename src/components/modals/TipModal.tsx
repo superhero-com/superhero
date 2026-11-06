@@ -14,6 +14,7 @@ import { IconDiamond } from '../../icons';
 import { useChainName } from '../../hooks/useChainName';
 import { tipStatusAtom, makeTipKey } from '../../atoms/tipAtoms';
 import { trackPostTip } from '../../features/social/utils/pendingTips';
+import { track } from '../../lib/journey';
 
 const TipModal = ({
   toAddress,
@@ -102,6 +103,7 @@ const TipModal = ({
       );
       const hash = res?.hash || res?.transactionHash || res?.tx?.hash || null;
       setTxHash(hash);
+      track('tip_sent');
       if (tipKey) {
         setTipStatus((s) => ({
           ...s,

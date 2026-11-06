@@ -7,6 +7,7 @@ import { MemoryRouter } from 'react-router-dom';
 import {
   beforeEach, describe, expect, it, vi, type Mock,
 } from 'vitest';
+import { changeLanguage } from '@/i18n';
 
 import SortControls, { type PopularWeights } from '../SortControls';
 
@@ -223,30 +224,45 @@ describe('SortControls', () => {
 
     it('renders low/med/high toggles for each weight', () => {
       renderControls();
-      expect(screen.getAllByText('low').length).toBeGreaterThanOrEqual(8);
-      expect(screen.getAllByText('med').length).toBeGreaterThanOrEqual(8);
-      expect(screen.getAllByText('high').length).toBeGreaterThanOrEqual(8);
+      expect(screen.getAllByText('Low').length).toBeGreaterThanOrEqual(8);
+      expect(screen.getAllByText('Med').length).toBeGreaterThanOrEqual(8);
+      expect(screen.getAllByText('High').length).toBeGreaterThanOrEqual(8);
     });
 
     it('calls onPopularWeightsChange when clicking a weight value', () => {
       renderControls();
-      const highButtons = screen.getAllByText('high');
+      const highButtons = screen.getAllByText('High');
       fireEvent.click(highButtons[0]);
       expect(onPopularWeightsChange).toHaveBeenCalledWith({ comments: 'high' });
     });
 
     it('does not fire when clicking the already-effective value (med default)', () => {
       renderControls();
-      const medButtons = screen.getAllByText('med');
+      const medButtons = screen.getAllByText('Med');
       fireEvent.click(medButtons[0]);
       expect(onPopularWeightsChange).not.toHaveBeenCalled();
     });
 
     it('removes a key when selecting med (reverts to default)', () => {
       renderControls({ popularWeights: { comments: 'high' } });
-      const medButtons = screen.getAllByText('med');
+      const medButtons = screen.getAllByText('Med');
       fireEvent.click(medButtons[0]);
       expect(onPopularWeightsChange).toHaveBeenCalledWith({});
+    });
+
+    it('labels the weight values in the interface language', async () => {
+      await changeLanguage('ru');
+      try {
+        renderControls();
+        ['Низкий', 'Средний', 'Высокий'].forEach((label) => {
+          expect(screen.getAllByText(label).length).toBeGreaterThanOrEqual(8);
+        });
+        expect(screen.queryByText('High')).not.toBeInTheDocument();
+        fireEvent.click(screen.getAllByText('Высокий')[0]);
+        expect(onPopularWeightsChange).toHaveBeenCalledWith({ comments: 'high' });
+      } finally {
+        await changeLanguage('en');
+      }
     });
   });
 
@@ -285,19 +301,30 @@ describe('SortControls', () => {
       fireEvent.click(resetButtons[0]);
       expect(onPopularWeightsChange).toHaveBeenCalledWith({});
     });
+
+    it('labels both Reset buttons in the interface language', async () => {
+      await changeLanguage('zh');
+      try {
+        renderControls({ popularWeights: { comments: 'high' } });
+        expect(screen.getAllByText('重置')).toHaveLength(2);
+        expect(screen.queryByText('Reset')).not.toBeInTheDocument();
+      } finally {
+        await changeLanguage('en');
+      }
+    });
   });
 
   describe('weight change logic edge cases', () => {
     it('sets a non-default value correctly', () => {
       renderControls({ popularWeights: {} });
-      const lowButtons = screen.getAllByText('low');
+      const lowButtons = screen.getAllByText('Low');
       fireEvent.click(lowButtons[0]);
       expect(onPopularWeightsChange).toHaveBeenCalledWith({ comments: 'low' });
     });
 
     it('switches from one non-default to another non-default', () => {
       renderControls({ popularWeights: { comments: 'low' } });
-      const highButtons = screen.getAllByText('high');
+      const highButtons = screen.getAllByText('High');
       fireEvent.click(highButtons[0]);
       expect(onPopularWeightsChange).toHaveBeenCalledWith({ comments: 'high' });
     });
@@ -305,7 +332,7 @@ describe('SortControls', () => {
     it('preserves other weights when changing one', () => {
       const weights: PopularWeights = { comments: 'high', reads: 'low' };
       renderControls({ popularWeights: weights });
-      const lowButtons = screen.getAllByText('low');
+      const lowButtons = screen.getAllByText('Low');
       fireEvent.click(lowButtons[0]);
       expect(onPopularWeightsChange).toHaveBeenCalledWith({ comments: 'low', reads: 'low' });
     });

@@ -21,6 +21,7 @@ const mockNotifications = vi.hoisted(() => ({
   error: null as string | null,
   connect: vi.fn(),
   sessionToken: (address: string) => `tok:${address}`,
+  items: [] as Array<{ id: number; type: string; data: Record<string, unknown> | null }>,
 }));
 
 vi.mock('@/features/notifications/useNotifications', () => ({
@@ -67,6 +68,7 @@ describe('TokenPriceAlerts', () => {
     mockNotifications.connected = true;
     mockNotifications.connecting = false;
     mockNotifications.error = null;
+    mockNotifications.items = [];
     mockNotifications.connect.mockReset().mockResolvedValue(undefined);
     mockSign.mockClear();
     mockApi.list.mockReset().mockResolvedValue([]);
@@ -203,6 +205,34 @@ describe('TokenPriceAlerts', () => {
     fireEvent.click(screen.getByRole('button', { name: 'priceAlerts.remove' }));
     await waitFor(() => expect(mockApi.remove).toHaveBeenCalledWith('ak_alice', 4, mockSign));
     await waitFor(() => expect(screen.queryByText('priceAlerts.whenAbove:1')).toBeNull());
+  });
+
+  it('shows an alert as fired as soon as its notification arrives', async () => {
+    mockApi.list.mockResolvedValue([
+      {
+        id: 4, sale_address: SALE, direction: 'above', target_ae: '1', triggered_at: null,
+      },
+    ]);
+    const { rerender } = mount(<TokenPriceAlerts saleAddress={SALE} />);
+    expect(await screen.findByText('priceAlerts.whenAbove:1')).toBeInTheDocument();
+
+    mockNotifications.items = [
+      { id: 90, type: 'token-price-alert', data: { alertId: 7, saleAddress: SALE } },
+      { id: 91, type: 'tip-received', data: { alertId: 4 } },
+    ];
+    rerender(<TokenPriceAlerts saleAddress={SALE} />);
+    expect(screen.getByText('priceAlerts.whenAbove:1')).toBeInTheDocument();
+    expect(screen.queryByText('priceAlerts.firedCount')).toBeNull();
+
+    mockNotifications.items = [
+      { id: 92, type: 'token-price-alert', data: { alertId: 4, saleAddress: SALE } },
+      ...mockNotifications.items,
+    ];
+    rerender(<TokenPriceAlerts saleAddress={SALE} />);
+    expect(screen.queryByText('priceAlerts.whenAbove:1')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'priceAlerts.remove' })).toBeNull();
+    expect(screen.getByText('priceAlerts.firedCount')).toBeInTheDocument();
+    expect(mockApi.list).toHaveBeenCalledTimes(1);
   });
 
   it('shares one list request across token pages', async () => {

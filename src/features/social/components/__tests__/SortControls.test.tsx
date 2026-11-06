@@ -7,6 +7,7 @@ import { MemoryRouter } from 'react-router-dom';
 import {
   beforeEach, describe, expect, it, vi, type Mock,
 } from 'vitest';
+import { changeLanguage } from '@/i18n';
 
 import SortControls, { type PopularWeights } from '../SortControls';
 
@@ -284,6 +285,17 @@ describe('SortControls', () => {
       const resetButtons = screen.getAllByText('Reset');
       fireEvent.click(resetButtons[0]);
       expect(onPopularWeightsChange).toHaveBeenCalledWith({});
+    });
+
+    it('labels both Reset buttons in the interface language', async () => {
+      await changeLanguage('zh');
+      try {
+        renderControls({ popularWeights: { comments: 'high' } });
+        expect(screen.getAllByText('重置')).toHaveLength(2);
+        expect(screen.queryByText('Reset')).not.toBeInTheDocument();
+      } finally {
+        await changeLanguage('en');
+      }
     });
   });
 

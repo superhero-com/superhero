@@ -380,7 +380,7 @@ const SortControls = memo(
                           className="flex items-center gap-1 text-[11px] text-white/50 transition-colors hover:text-white/80"
                         >
                           <RotateCcw className="h-3 w-3" />
-                          Reset
+                          {t('social.sortControls.reset')}
                         </button>
                         )}
                       </div>

@@ -88,6 +88,9 @@ jobs:
       - name: Verify two-wallet chat and token-room delivery
         run: npm run test:e2e:chat
 
+      - name: Verify the governance polls under the DAO section
+        run: npm run test:e2e:governance
+
   screenshots:
     runs-on: ubuntu-latest
 

@@ -14,6 +14,7 @@ import { LivePriceFormatter } from '@/features/shared/components';
 import { AddressChip } from '@/components/AddressChip';
 import { TokenLineChart } from '@/features/trending/components/TokenLineChart';
 import Spinner from '@/components/Spinner';
+import DaoSectionTabs from '@/features/dao/components/DaoSectionTabs';
 
 type TokensListOrderBy = NonNullable<
   Parameters<typeof TokensService.listAll>[0]['orderBy']
@@ -126,7 +127,7 @@ const Daos = () => {
   return (
     <div className="ui-page dao-page max-w-6xl mx-auto p-4 text-white">
       <div className="flex justify-between items-center gap-3 flex-wrap mb-4">
-        <div className="ui-page-title">{translate('daosTitle')}</div>
+        <DaoSectionTabs />
         <div className="flex flex-wrap items-center gap-2 min-w-0">
           <input
             placeholder={translate('search')}

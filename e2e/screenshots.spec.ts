@@ -17,6 +17,8 @@ const VIEWPORTS = [
 const PAGES = [
   { name: 'home', path: '/' },
   { name: 'trends-invite', path: '/trends/invite' },
+  { name: 'daos', path: '/trends/daos' },
+  { name: 'voting', path: '/voting' },
 ];
 
 test.describe('page screenshots', () => {

@@ -2382,10 +2382,9 @@
     },
     "polls": {
       "loading": "Loading…",
-      "title": "Governance",
-      "subtitle": "Shape the future of the ecosystem through community-driven decisions",
+      "intro": "Polls for the whole æternity network. Each vote is weighted by the voter's AE balance plus any stake delegated to them.",
       "active": "Active",
-      "closing": "Closing",
+      "closed": "Closed",
       "searchLabel": "Search polls",
       "searchPlaceholder": "Find polls by title or description...",
       "filterByStatus": "Filter by status",
@@ -2394,6 +2393,9 @@
       "closedPolls": "🔴 Closed polls",
       "noPollsFound": "No polls found",
       "noPollsHint": "Try adjusting your search terms or filters to discover governance polls that match your interests.",
+      "loadFailed": "Couldn't load polls.",
+      "retry": "Try again",
+      "noEndDate": "No end date",
       "unknown": "Unknown",
       "votes": "votes"
     },
@@ -3260,7 +3262,9 @@
   },
   "dao": {
     "search": "Search",
-    "daosTitle": "DAOs",
+    "sectionsLabel": "DAO sections",
+    "tokenDaosTab": "Token DAOs",
+    "pollsTab": "æternity polls",
     "listIntro": "DAOs hold protocol fees collected from trades. Each card shows the treasury balance for that token, along with basic stats.",
     "owned": "Owned",
     "openDao": "Open DAO",

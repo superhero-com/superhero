@@ -15,9 +15,13 @@ export const useGovernance = () => {
 
   // Polls query (combined smart contract + backend ordering/metrics)
   const usePolls = (params: { status: 'all' | 'open' | 'closed'; search?: string }) => useQuery({
-    queryKey: ['governance', 'polls', params],
+    // Search is applied client-side (select), so typing does not refetch the
+    // registry and both orderings on every keystroke.
+    queryKey: ['governance', 'polls', { status: params.status }],
     queryFn: async () => {
-      const registry = await Contract.initialize<{
+      // Independent reads: fetch them together rather than one after another.
+      const [{ decodedResult: contractPolls }, orderings, height] = await Promise.all([
+        Contract.initialize<{
           polls:() => Map<number, {
             close_height: bigint;
             is_listed: boolean;
@@ -28,28 +32,37 @@ export const useGovernance = () => {
               ...sdk.getContext(),
               aci: REGISTRY_WITH_EVENTS_ACI,
               address: CONFIG.GOVERNANCE_CONTRACT_ADDRESS,
-            });
-      const contractPolls = (await registry.polls()).decodedResult;
+            }).then((registry) => registry.polls()),
+        Promise.all(params.status === 'all'
+          ? [GovernanceApi.getPollOrdering(false), GovernanceApi.getPollOrdering(true)]
+          : [GovernanceApi.getPollOrdering(params.status === 'closed')]),
+        sdk.getHeight(),
+      ]);
 
-      const { data } = await GovernanceApi.getPollOrdering(params.status === 'closed');
-      if (params.status === 'all') data.push(...(await GovernanceApi.getPollOrdering(true)).data);
+      // The registry can list one poll contract under several ids; show it once.
+      const seen = new Set<string>();
+      const data = orderings
+        .flatMap((o) => o.data)
+        .filter((p) => {
+          if (seen.has(p.poll)) return false;
+          seen.add(p.poll);
+          return true;
+        });
 
-      const height = await sdk.getHeight();
-      let merged = data.map(({ id, ...others }) => ({
+      return data.map(({ id, ...others }) => ({
         id,
         ...others,
-        title: contractPolls.get(BigInt(id)).title,
-        endDate: new Date(Date.now() + (others.closeHeight - height) * 3 * 60 * 1000),
+        title: contractPolls.get(BigInt(id))?.title ?? '',
+        endDate: others.closeHeight == null
+          ? undefined
+          : new Date(Date.now() + (others.closeHeight - height) * 3 * 60 * 1000),
         status: (others.closeHeight == null || others.closeHeight > height
           ? 'open' : 'closed') as 'open' | 'closed',
       }));
-
+    },
+    select: (polls) => {
       const search = params.search?.trim().toLowerCase();
-      if (search) {
-        merged = merged.filter((p) => p.title.toLowerCase().includes(search));
-      }
-
-      return merged;
+      return search ? polls.filter((p) => p.title.toLowerCase().includes(search)) : polls;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

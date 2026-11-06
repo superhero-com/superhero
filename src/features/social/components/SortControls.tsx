@@ -45,8 +45,14 @@ const WEIGHT_LABEL_KEYS: Record<WeightKey, string> = {
   interactionsPerHour: 'social.sortControls.weights.interactionsPerHour',
 };
 
+const WEIGHT_VALUE_LABEL_KEYS: Record<WeightValue, string> = {
+  low: 'social.sortControls.weightValues.low',
+  med: 'social.sortControls.weightValues.med',
+  high: 'social.sortControls.weightValues.high',
+};
+
 const WEIGHT_KEYS = Object.keys(WEIGHT_LABEL_KEYS) as WeightKey[];
-const WEIGHT_VALUES: WeightValue[] = ['low', 'med', 'high'];
+const WEIGHT_VALUES = Object.keys(WEIGHT_VALUE_LABEL_KEYS) as WeightValue[];
 
 /**
  * Tailwind `lg` — matches `WebAppHeader` (`hidden lg:flex`).
@@ -215,13 +221,13 @@ const SortControls = memo(
                           handleWeightChange(key, val);
                         }}
                         className={cn(
-                          'px-2.5 py-1 text-[10px] rounded-full border transition-all duration-200 capitalize',
+                          'px-2.5 py-1 text-[10px] rounded-full border transition-all duration-200',
                           isActive
                             ? 'bg-[#1161FE] text-white border-transparent shadow-sm'
                             : 'bg-transparent text-white/60 border-transparent hover:text-white/90 hover:bg-white/10',
                         )}
                       >
-                        {val}
+                        {t(WEIGHT_VALUE_LABEL_KEYS[val])}
                       </button>
                     );
                   })}

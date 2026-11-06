@@ -2254,6 +2254,11 @@
         "reads": "Reads",
         "interactionsPerHour": "Activity Rate"
       },
+      "weightValues": {
+        "low": "Low",
+        "med": "Med",
+        "high": "High"
+      },
       "customizePopularFeedAria": "Customize popular feed",
       "following": "Following",
       "followingEmptyNoFollows": "Follow people to see their posts here.",

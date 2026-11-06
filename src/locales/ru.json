@@ -683,6 +683,11 @@
         "reads": "Прочтения",
         "interactionsPerHour": "Активность"
       },
+      "weightValues": {
+        "low": "Низкий",
+        "med": "Средний",
+        "high": "Высокий"
+      },
       "customizePopularFeedAria": "Настроить ленту «Горячее»",
       "following": "Подписки",
       "followingEmptyNoFollows": "Подпишитесь на людей, чтобы видеть их публикации здесь.",

@@ -2144,6 +2144,11 @@
         "reads": "القراءات",
         "interactionsPerHour": "معدّل النشاط"
       },
+      "weightValues": {
+        "low": "منخفض",
+        "med": "متوسط",
+        "high": "مرتفع"
+      },
       "customizePopularFeedAria": "تخصيص الموجز الشائع",
       "following": "المتابَعون",
       "followingEmptyNoFollows": "تابع أشخاصًا لترى منشوراتهم هنا.",

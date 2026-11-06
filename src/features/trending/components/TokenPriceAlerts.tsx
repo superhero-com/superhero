@@ -31,7 +31,7 @@ const TokenPriceAlerts = ({ saleAddress, symbol, priceAe }: TokenPriceAlertsProp
   const { t } = useTranslation('trending');
   const { activeAccount, signNotificationMessage } = useNotificationSigner();
   const {
-    connected, connecting, connect, error: connectError, sessionToken,
+    connected, connecting, connect, error: connectError, sessionToken, items,
   } = useNotificationsContext();
   const queryClient = useQueryClient();
   const api = useMemo(() => new PriceAlertsApi({ baseUrl: apiBaseUrl() }), []);
@@ -125,8 +125,14 @@ const TokenPriceAlerts = ({ saleAddress, symbol, priceAe }: TokenPriceAlertsProp
     }
   };
 
-  const active = alerts.filter((a) => !a.triggered_at);
-  const fired = alerts.filter((a) => a.triggered_at);
+  // The list stays cached while the page is open; a fired alert's notification
+  // reaches the feed first.
+  const firedIds = new Set(
+    items.filter((item) => item.type === 'token-price-alert').map((item) => item.data?.alertId),
+  );
+  const isFired = (a: PriceAlert) => !!a.triggered_at || firedIds.has(a.id);
+  const active = alerts.filter((a) => !isFired(a));
+  const fired = alerts.filter(isFired);
 
   return (
     <section className="token-price-alerts" aria-labelledby={`${inputId}-title`}>

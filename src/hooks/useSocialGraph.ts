@@ -7,7 +7,7 @@ import i18n from '../i18n';
 import { useAeSdk } from './useAeSdk';
 import { CONFIG } from '../config';
 import { OpenAPI } from '../api/generated/core/OpenAPI';
-import { getCurrentSocialGraphConfig, getSocialGraphCounts } from '../api/socialGraphPolicy';
+import { getCurrentSocialGraphConfig, getSocialGraphCounts, withSocialGraphTimeout } from '../api/socialGraphPolicy';
 import { useTransactionNotification, TxPayloadType } from '../features/transaction-notification';
 import { subscribeSocialGraphQueries } from '../libs/socialGraphUpdates';
 import { classifySocialGraphError, type SocialGraphAction } from '../utils/socialGraph';
@@ -77,7 +77,7 @@ export function useRelationship(from?: string, to?: string, contract?: string) {
   const enabled = !!from && !!to && !!contract && from !== to;
   return useQuery({
     queryKey: relationshipKey(from, to, contract),
-    queryFn: () => SocialGraphService.getSocialGraphRelationship({ from: from!, to: to! }),
+    queryFn: () => withSocialGraphTimeout(SocialGraphService.getSocialGraphRelationship({ from: from!, to: to! })),
     enabled,
     staleTime: 15_000,
   });
@@ -171,9 +171,9 @@ export function useSocialGraph(targetAddress?: string) {
 
         // Advisory precheck: do not ask the user to sign a doomed transaction.
         try {
-          await SocialGraphService.precheckSocialGraphAction({
+          await withSocialGraphTimeout(SocialGraphService.precheckSocialGraphAction({
             requestBody: { action: action as any, from: viewer, to: targetAddress },
-          });
+          }));
         } catch (precheckError) {
           handleError(precheckError);
           return;

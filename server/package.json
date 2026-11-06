@@ -1,0 +1,13 @@
+{
+  "name": "superhero-web-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Production HTTP and SEO server for the Superhero web build",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "dependencies": {
+    "express": "5.2.1"
+  }
+}

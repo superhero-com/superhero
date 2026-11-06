@@ -1,0 +1,500 @@
+import {
+  useEffect, useRef, useState, type DragEvent, type FormEvent,
+} from 'react';
+import {
+  ArrowLeft, ArrowRight, Check, CheckCircle2, Clapperboard,
+  CloudUpload, Film, Info, LoaderCircle, LockKeyhole, Megaphone, ScanEye,
+  Sparkles, TriangleAlert, ChevronDown,
+} from 'lucide-react';
+import type { useShorts } from './use-shorts';
+import './shorts-upload.css';
+import {
+  UploadReview, UploadPublishOverlay,
+} from './shorts-upload-publish';
+
+const languages = [
+  ['und', 'No spoken language'], ['en', 'English'], ['ar', 'Arabic'],
+  ['fr', 'French'], ['es', 'Spanish'], ['de', 'German'], ['zh', 'Chinese'],
+];
+const steps = ['Video', 'Details', 'Review'];
+type VideoInfo = { duration: number; width: number; height: number };
+const durationLabel = (duration: number) => `${Math.floor(duration / 60)}:${String(Math.floor(duration % 60)).padStart(2, '0')}`;
+
+export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
+  const [step, setStep] = useState(Math.min(s.uploadDraft?.step || 0, 2));
+  const [revision, setRevision] = useState(s.uploadDraft?.revision || 0);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [file, setFile] = useState<File | undefined>(s.uploadDraft?.file);
+  const [preview, setPreview] = useState('');
+  const [info, setInfo] = useState<VideoInfo>();
+  const [previewUnavailable, setPreviewUnavailable] = useState(false);
+  const [fileError, setFileError] = useState('');
+  const [dragging, setDragging] = useState(false);
+  const [title, setTitle] = useState(s.uploadDraft?.title ?? '');
+  const [description, setDescription] = useState(s.uploadDraft?.description ?? '');
+  const [topic, setTopic] = useState(s.uploadDraft?.topic ?? '');
+  const [language, setLanguage] = useState(s.uploadDraft?.language ?? 'und');
+  const [captions, setCaptions] = useState(s.uploadDraft?.captions ?? '');
+  const [synthetic, setSynthetic] = useState(s.uploadDraft?.synthetic ?? false);
+  const [sponsored, setSponsored] = useState(s.uploadDraft?.sponsored ?? false);
+  const [rights, setRights] = useState(s.uploadDraft?.rights ?? false);
+  const input = useRef<HTMLInputElement>(null);
+  const heading = useRef<HTMLHeadingElement>(null);
+  const topics = s.config?.topics.filter((value) => value !== 'All') || [];
+  const selectedTopic = topic;
+  const missingDetails = [
+    !title.trim() && 'title', !selectedTopic && 'main topic', !rights && 'publishing rights',
+  ].filter(Boolean);
+  const inputKey = JSON.stringify([revision, file?.name, file?.size, file?.lastModified, title.trim(), description.trim(), selectedTopic, language, captions, synthetic, sponsored, rights]);
+  const publishing = !!s.uploadPublication;
+  const verifying = !publishing && s.busy && s.walletPending && !s.uploadStage;
+  const preparing = !publishing && s.busy && !!s.uploadStage;
+  const canChoose = !s.busy && s.uploadMaxBytes > 0;
+  const canContinue = !!file && (!!info || previewUnavailable) && !fileError;
+  let FileIcon = CloudUpload;
+  let fileHeading = 'Drop your video here';
+  let fileHint = `MP4 / MOV · 2–60 sec · ${s.uploadLimitLabel ? `Up to ${s.uploadLimitLabel}` : 'Loading limits…'}`;
+  if (file) {
+    FileIcon = canContinue ? Check : LoaderCircle;
+    fileHeading = canContinue ? 'A good start.' : 'Reading your video…';
+    fileHint = canContinue ? 'Your original file, ready for the next step.' : 'Checking duration and dimensions.';
+    if (fileError) {
+      FileIcon = TriangleAlert;
+      fileHeading = 'Try another moment.';
+      fileHint = 'Choose another clip to continue.';
+    }
+  }
+  const metadataStatus = previewUnavailable ? 'Preview unavailable' : 'Reading video…';
+  const uploading = s.uploadStage === 'uploading';
+  const processing = s.uploadStage === 'processing';
+  const phase = processing ? 2 : Number(uploading);
+  const phaseTitles = [verifying ? 'Getting your upload ready' : 'Checking your file', 'Sending your video', 'Preparing your video'];
+  const phaseCopy = [
+    'Making sure your file is ready for a reliable upload.',
+    'Your video is being sent privately. Keep this page open.',
+    'Getting your Short ready to play.',
+  ];
+  const previewTitle = title.trim() || 'Your story, in a Short.';
+  const phaseStatus = (index: number) => {
+    if (index < phase) return 'Done';
+    return index === phase ? 'In progress' : 'Next';
+  };
+  let nextLabel = ['Next: Details', 'Next: Review', 'Publish'][step];
+  if (step === 1 && !s.actor) nextLabel = 'Connect wallet to continue';
+  if (publishing) nextLabel = 'Publish';
+  else if (s.busy) nextLabel = 'Please wait…';
+  const disabled = s.busy || publishing || (step > 0 && s.restoringCreatorSession) || !canContinue || (step > 0 && missingDetails.length > 0);
+  const { setUploadDraft } = s;
+  useEffect(() => {
+    setUploadDraft({
+      step, revision, file, title, description, topic, language, captions, synthetic, sponsored, rights,
+    });
+  }, [step, revision, file, title, description, topic, language, captions, synthetic, sponsored, rights, setUploadDraft]);
+  useEffect(() => {
+    if (!file) { setPreview(''); return undefined; }
+    const url = URL.createObjectURL(file); setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+  useEffect(() => {
+    if (!file || s.uploadPublication?.status === 'published') return undefined;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault(); const unloadEvent = event; unloadEvent.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [file, s.uploadPublication]);
+  const go = (next: number) => {
+    if (s.busy || publishing) return;
+    s.clearMessage();
+    setStep(next);
+    requestAnimationFrame(() => heading.current?.focus());
+  };
+  const choose = (files: File[]) => {
+    if (!canChoose || !files.length) return;
+    s.clearMessage(); setDragging(false); setInfo(undefined); setFileError(''); setPreviewUnavailable(false);
+    setFile(undefined); setRights(false);
+    if (files.length !== 1) { setFileError('Choose one video for this Short.'); return; }
+    const next = files[0];
+    if (!/\.(mp4|mov)$/i.test(next.name)) {
+      setFileError('Choose an MP4 or MOV video.'); return;
+    }
+    if (!next.size || next.size > s.uploadMaxBytes) {
+      setFileError(s.uploadLimitLabel ? `Choose a non-empty video up to ${s.uploadLimitLabel}, or resume your saved file.` : 'Upload settings are unavailable. Please reload.'); return;
+    }
+    setRevision((value) => value + 1); setFile(next);
+  };
+  const drop = (event: DragEvent) => {
+    event.preventDefault(); choose(Array.from(event.dataTransfer.files));
+  };
+  const sendVideo = async () => {
+    const data = new FormData();
+    data.set('file', file!); data.set('title', title.trim());
+    data.set('description', description.trim()); data.set('topic', selectedTopic);
+    data.set('language', language); data.set('captions', captions);
+    data.set('synthetic', String(synthetic)); data.set('sponsored', String(sponsored));
+    data.set('rights', 'true');
+    await s.publishUpload(data, inputKey);
+  };
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (disabled) return;
+    if (step === 0) { go(1); return; }
+    if (!s.actor) { await s.signIn(); return; }
+    if (step === 1) { go(2); return; }
+    await sendVideo();
+  };
+  return (
+    <div className="su-composer">
+      <header className="su-header">
+        <div className="su-title">
+          <Clapperboard size={22} aria-hidden="true" />
+          <h1>Create a Short</h1>
+        </div>
+        <span className="su-draft-badge">
+          <span />
+          Draft
+        </span>
+      </header>
+      <nav className="su-step-nav" aria-label="Creation steps">
+        <ol className="su-steps" aria-label="Create a Short progress">
+          {steps.map((label, index) => (
+            <li key={label} className={`${index === step ? 'current' : ''} ${index < step ? 'complete' : ''}`}>
+              <button type="button" aria-label={`${index + 1} ${label}`} aria-current={index === step ? 'step' : undefined} disabled={s.busy || publishing || index > step} onClick={() => go(index)}>
+                <span aria-hidden="true">{index < step ? <Check size={16} /> : `0${index + 1}`}</span>
+                {label}
+              </button>
+            </li>
+          ))}
+        </ol>
+      </nav>
+      <div className={`su-workspace ${previewOpen ? 'su-preview-open' : ''}`}>
+        <button type="button" className="su-mobile-preview-toggle" disabled={publishing} aria-expanded={previewOpen} aria-controls="su-preview" onClick={() => setPreviewOpen(!previewOpen)}>
+          <Film size={17} aria-hidden="true" />
+          {previewOpen ? 'Hide preview' : 'Preview your Short'}
+          <ChevronDown size={16} aria-hidden="true" />
+        </button>
+        <form className="su-editor" onSubmit={submit} noValidate inert={publishing}>
+          <div className="su-intro">
+            <span className="su-kicker">{preparing ? 'IN THE MAKING' : ['THE MOMENT', 'THE STORY', 'THE FINAL CUT'][step]}</span>
+            <h2 ref={heading} tabIndex={-1}>
+              {(preparing || verifying) ? phaseTitles[phase] : ['Start with a moment.', 'Make it yours.', 'Ready for the world?'][step]}
+            </h2>
+            <p>
+              {(preparing || verifying) ? phaseCopy[phase] : [
+                'Big ideas. Small screen. Your next Short starts here.',
+                'A few details. Your own perspective.',
+                'One last look before your Short goes live.',
+              ][step]}
+            </p>
+          </div>
+          {verifying && (
+            <section className="su-processing" aria-label="Preparing upload">
+              <LockKeyhole size={36} aria-hidden="true" />
+              <p role="status">Getting ready to upload. Your video will continue automatically.</p>
+            </section>
+          )}
+          {!verifying && (preparing ? (
+            <section className="su-processing" aria-label="Upload progress">
+              <div className="su-process-icon"><ScanEye size={36} aria-hidden="true" /></div>
+              <div role="status">
+                <strong>{uploading ? `${s.uploadProgress}% uploaded` : phaseTitles[phase]}</strong>
+                <progress aria-label={phaseTitles[phase]} max={100} value={uploading ? s.uploadProgress : undefined} />
+              </div>
+              <ol>
+                {['Check file', 'Upload privately', 'Prepare video'].map((label, index) => (
+                  <li key={label} className={index <= phase ? 'reached' : ''} aria-current={index === phase ? 'step' : undefined}>
+                    {index < phase ? <CheckCircle2 size={18} aria-hidden="true" /> : <span className="su-process-dot" />}
+                    {label}
+                    <small>{phaseStatus(index)}</small>
+                  </li>
+                ))}
+              </ol>
+              {s.config?.visualModeration && (
+              <p>
+                <LockKeyhole size={15} aria-hidden="true" />
+                {' '}
+                Your video will only appear in the feed after review and after publication.
+              </p>
+              )}
+            </section>
+          ) : (
+            <>
+              {fileError && (
+              <p className="su-error" role="alert">
+                {fileError}
+                {step > 0 && <button type="button" onClick={() => go(0)}>Change video</button>}
+              </p>
+              )}
+              {step === 0 && (
+                <div
+                  className={`su-dropzone ${dragging ? 'dragging' : ''} ${file ? 'has-file' : ''}`}
+                  role="region"
+                  aria-label="Video upload"
+                  onDragOver={(event) => { event.preventDefault(); if (canChoose) setDragging(true); }}
+                  onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setDragging(false); }}
+                  onDrop={drop}
+                >
+                  <input
+                    ref={input}
+                    id="short-file"
+                    className="su-file-input"
+                    aria-label="Video file"
+                    type="file"
+                    accept="video/mp4,video/quicktime,.mp4,.mov"
+                    disabled={!canChoose}
+                    onChange={(event) => { const control = event.currentTarget; choose(Array.from(control.files || [])); control.value = ''; }}
+                  />
+                  <div className="su-upload-art" aria-hidden="true">
+                    <span className="su-film-card su-film-card-back" />
+                    <span className="su-film-card su-film-card-front"><Clapperboard size={44} strokeWidth={1.25} /></span>
+                    <span className="su-upload-mark"><FileIcon size={22} className={FileIcon === LoaderCircle ? 'su-publish-spinner' : undefined} /></span>
+                    <Sparkles className="su-art-spark" size={23} strokeWidth={1.5} />
+                  </div>
+                  <h3>{fileHeading}</h3>
+                  <p>{file ? file.name : 'Choose a moment worth sharing.'}</p>
+                  <button type="button" className={file ? '' : 'primary'} disabled={!canChoose} onClick={() => input.current?.click()}>
+                    {file ? 'Change video' : 'Choose video'}
+                    {' '}
+                    <ArrowRight size={16} aria-hidden="true" />
+                  </button>
+                  {file && (
+                  <div className="su-file-facts">
+                    <span>
+                      {(file.size / 1024 / 1024).toFixed(1)}
+                      {' '}
+                      MB
+                    </span>
+                    <span>{info ? durationLabel(info.duration) : metadataStatus}</span>
+                    {info && (
+                    <span>
+                      {info.width}
+                      {' '}
+                      ×
+                      {' '}
+                      {info.height}
+                    </span>
+                    )}
+                  </div>
+                  )}
+                  {previewUnavailable && (
+                  <small role="status">This browser can’t preview this video. You can still upload it; we’ll check the file during preparation.</small>
+                  )}
+                  <small>{fileHint}</small>
+                </div>
+              )}
+              {step === 1 && (
+              <div className="su-fields">
+                <div className="su-form-meta">
+                  <span>YOUR DETAILS</span>
+                  <span>* Required</span>
+                </div>
+                <label className="su-field" htmlFor="short-title">
+                  <span className="su-label-row">
+                    <span>
+                      Title
+                      <span className="su-required" aria-hidden="true">*</span>
+                    </span>
+                    <span className="su-count" aria-hidden="true">{`${title.length}/100`}</span>
+                  </span>
+                  <input id="short-title" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={100} placeholder="Give your Short a title" required />
+                </label>
+                <label className="su-field" htmlFor="short-description">
+                  <span className="su-label-row">
+                    <span>
+                      Description
+                      <span className="su-optional">Optional</span>
+                    </span>
+                    <span className="su-count" aria-hidden="true">{`${description.length}/1000`}</span>
+                  </span>
+                  <textarea id="short-description" value={description} onChange={(event) => setDescription(event.target.value)} maxLength={1000} rows={2} placeholder="A little more to the story…" />
+                </label>
+                <div className="su-field-pair">
+                  <label className="su-field" htmlFor="short-topic">
+                    <span>
+                      Main topic
+                      <span className="su-required" aria-hidden="true">*</span>
+                    </span>
+                    <select id="short-topic" value={selectedTopic} onChange={(event) => setTopic(event.target.value)} required>
+                      <option value="" disabled>Choose a topic</option>
+                      {topics.map((value) => <option key={value}>{value}</option>)}
+                    </select>
+                  </label>
+                  <label className="su-field" htmlFor="short-language">
+                    <span>Spoken language</span>
+                    <select id="short-language" value={language} onChange={(event) => setLanguage(event.target.value)}>{languages.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
+                  </label>
+                </div>
+                <details className="su-captions" hidden>
+                  <summary>
+                    Captions
+                    <span>Optional · WebVTT</span>
+                  </summary>
+                  <label htmlFor="short-captions">
+                    Timed captions
+                    <textarea id="short-captions" value={captions} onChange={(event) => setCaptions(event.target.value)} maxLength={10000} rows={5} placeholder={'WEBVTT\n\n00:00.000 --> 00:03.000\nYour words here'} />
+                  </label>
+                  <small>Help people watch without sound. Captions aren’t generated automatically.</small>
+                </details>
+                <fieldset className="su-disclosures">
+                  <legend>
+                    Content labels
+                    <span className="su-optional">Only if applicable</span>
+                  </legend>
+                  <div className="su-label-options">
+                    <label htmlFor="short-synthetic">
+                      <Sparkles size={19} aria-hidden="true" />
+                      <span>AI-altered</span>
+                      <input id="short-synthetic" className="su-switch" type="checkbox" role="switch" aria-label="AI-altered: AI-generated or substantially altered" checked={synthetic} disabled={s.busy} onChange={(event) => setSynthetic(event.target.checked)} />
+                    </label>
+                    <label htmlFor="short-sponsored">
+                      <Megaphone size={19} aria-hidden="true" />
+                      <span>Sponsored</span>
+                      <input id="short-sponsored" className="su-switch" type="checkbox" role="switch" aria-label="Sponsored or paid promotion" checked={sponsored} disabled={s.busy} onChange={(event) => setSponsored(event.target.checked)} />
+                    </label>
+                  </div>
+                  <details className="su-label-help">
+                    <summary>
+                      <Info size={14} aria-hidden="true" />
+                      When to add a label
+                      <ChevronDown size={14} aria-hidden="true" />
+                    </summary>
+                    <p>
+                      Use AI-altered for AI-generated or substantially changed video or audio.
+                      Use Sponsored for paid promotion. Select both if needed, or leave both off.
+                    </p>
+                  </details>
+                </fieldset>
+                <label className="su-rights" htmlFor="short-rights">
+                  <input id="short-rights" type="checkbox" checked={rights} disabled={s.busy} onChange={(event) => setRights(event.target.checked)} required />
+                  <span>
+                    I have the rights to publish this video and its audio.
+                    <span className="su-required" aria-hidden="true">*</span>
+                  </span>
+                </label>
+              </div>
+              )}
+              {step === 2 && (
+                <UploadReview
+                  video={{
+                    title: title.trim(), description: description.trim(), topic: selectedTopic, synthetic, sponsored,
+                  }}
+                  busy={s.busy || publishing}
+                  onEdit={() => go(1)}
+                  languageLabel={languages.find(([code]) => code === language)?.[1] || 'No spoken language'}
+                />
+              )}
+            </>
+          ))}
+          <div className="su-action-bar">
+            <div className="su-actions">
+              <span className="su-footer-note">
+                <LockKeyhole size={14} aria-hidden="true" />
+                {step === 2 ? 'Free to publish' : 'Only in this tab until you publish'}
+              </span>
+              <div className="su-action-end">
+                {step === 1 && !publishing && !preparing && !verifying && (
+                <p id="su-details-status" className="su-sr-only" role="status">
+                  {missingDetails.length ? `Still needed: ${missingDetails.join(', ')}.` : 'Required details complete'}
+                </p>
+                )}
+                <div className="su-action-buttons">
+                  {s.message && s.messageTone === 'error' && !publishing && (
+                  <button type="button" disabled={s.busy} onClick={s.resetUpload}>Start a new upload</button>
+                  )}
+                  {step > 0 && (
+                  <button type="button" disabled={s.busy || publishing} onClick={() => go(step - 1)}>
+                    <ArrowLeft size={16} aria-hidden="true" />
+                    {' '}
+                    Previous
+                  </button>
+                  )}
+                  <button type="submit" className="primary" disabled={disabled} aria-describedby={step === 1 ? 'su-details-status' : undefined}>
+                    {nextLabel}
+                    <ArrowRight size={17} aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+        <aside id="su-preview" className="su-preview" aria-label="Short preview" inert={publishing}>
+          <div className="su-preview-heading">
+            <span>YOUR SHORT</span>
+            <span>
+              <span />
+              Preview
+            </span>
+          </div>
+          <div className="su-preview-stage">
+            <div className={`su-player ${preview ? 'with-video' : ''}`}>
+              {preview && !previewUnavailable ? (
+                <video
+                  key={preview}
+                  src={preview}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  aria-label="Preview your video"
+                  onLoadedMetadata={(event) => {
+                    const media = event.currentTarget;
+                    if (!Number.isFinite(media.duration) || media.duration < 2 || media.duration > 60) {
+                      setFileError('Your video must be 2–60 seconds long. Choose another clip.'); setInfo(undefined); return;
+                    }
+                    setInfo({ duration: media.duration, width: media.videoWidth, height: media.videoHeight });
+                  }}
+                  onError={() => {
+                    setPreviewUnavailable(true); setInfo(undefined);
+                  }}
+                >
+                  <track kind="captions" />
+                </video>
+              ) : (
+                <div className="su-preview-empty">
+                  <div className="su-orbit"><img src="/logo.png" alt="" /></div>
+                  <p>
+                    {previewUnavailable ? 'Preview unavailable in this browser.' : (
+                      <>
+                        Your next
+                        <br />
+                        <strong>big moment.</strong>
+                      </>
+                    )}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="su-preview-copy">
+            <span className="su-preview-author">
+              <img src="/logo.png" alt="" />
+              Your Short
+            </span>
+            <strong>{previewTitle}</strong>
+            <div className="su-preview-tags">
+              {selectedTopic && (
+              <span>
+                #
+                {selectedTopic.toLowerCase()}
+              </span>
+              )}
+              {synthetic && (
+              <span>
+                <Sparkles size={12} aria-hidden="true" />
+                AI-altered
+              </span>
+              )}
+              {sponsored && (
+              <span>
+                <Megaphone size={12} aria-hidden="true" />
+                Sponsored
+              </span>
+              )}
+            </div>
+          </div>
+          {!file && <p className="su-preview-note">Made for the small screen. 9:16 works best.</p>}
+        </aside>
+      </div>
+      {publishing && <UploadPublishOverlay s={s} />}
+    </div>
+  );
+};

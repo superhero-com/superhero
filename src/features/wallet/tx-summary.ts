@@ -278,6 +278,12 @@ const boolRow = (
  * `Contract` row is what identifies who is really being called.
  */
 const KNOWN_FUNCTIONS: Record<string, readonly KnownFn[]> = {
+  like: [{
+    title: 'Like a Short',
+    effect: 'Calls like for this video and policy version on the contract shown below.',
+    argTypes: [isStringArg, isIntArg],
+    argRows: (a) => [textRow('Video', a[0], true), textRow('Policy version', stringify(a[1]))],
+  }],
   // The one entry here that moves no value: without it every post and comment -
   // the app's primary action - lands on the unrecognised-contract caution path.
   post_without_tip: [{

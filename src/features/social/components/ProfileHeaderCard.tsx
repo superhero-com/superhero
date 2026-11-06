@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
 // eslint-disable-next-line import/no-named-as-default
 import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
+import { ProfileImageButton } from '@/features/profile-images/ProfileImageButton';
+import { ProfileImageStatus } from '@/features/profile-images/ProfileImageStatus';
 import ProfileActionBar from './ProfileActionBar';
 import ProfileBand from './ProfileBand';
 import ProfileCoverActions from './ProfileCoverActions';
@@ -31,12 +33,14 @@ interface ProfileHeaderCardProps {
   errorSlotRef?: RefObject<HTMLElement | null>;
 }
 
-// 3 px page-ground border; identicon only — avatarurl is never rendered because
-// there is no write path to set or clear one.
-const Avatar = ({ address, size, className }: {
+// Keep the avatar separated from the cover and identity.
+const Avatar = ({
+  address, size, className, editable,
+}: {
   address: string;
   size: number;
   className?: string;
+  editable?: boolean;
 }) => (
   <div
     className={`relative z-10 w-fit shrink-0 rounded-[20px] ring-[3px] ring-[var(--background-color)] bg-[var(--background-color)] ${className || ''}`}
@@ -46,9 +50,10 @@ const Avatar = ({ address, size, className }: {
       size={size}
       showAddressAndChainName={false}
       avatarBorderRadius="20px"
-      isHoverEnabled
+      isHoverEnabled={!editable}
       className="rounded-[20px] overflow-hidden"
     />
+    {editable && <ProfileImageButton key={address} imageRole="avatar" className="absolute -bottom-2 -right-2 h-9 w-9 md:h-11 md:w-11" />}
   </div>
 );
 
@@ -93,7 +98,10 @@ const ProfileHeaderCard = ({
             <ArrowLeft className="h-4 w-4" />
             {t('labels.back')}
           </button>
-          <ProfileCoverActions address={address} />
+          <div className="flex items-center gap-2">
+            {ownProfile && <ProfileImageButton key={address} imageRole="cover" className="h-9 w-9 border border-white/20 bg-black/50 text-white" />}
+            <ProfileCoverActions address={address} />
+          </div>
         </div>
       </div>
 
@@ -103,9 +111,10 @@ const ProfileHeaderCard = ({
         <div className="relative -mt-[30px] flex flex-col gap-3 md:-mt-11">
           {/* Top-aligned so the name and address stay put whether or not there is a bio. */}
           <div className="flex min-w-0 items-start gap-3 md:flex-1 md:gap-4">
-            <Avatar address={address} size={60} className="flex md:hidden" />
-            <Avatar address={address} size={88} className="hidden md:flex" />
-            <div className="min-w-0 flex-1 pt-1 md:pt-3">
+            <Avatar address={address} size={60} className="flex md:hidden" editable={ownProfile} />
+            <Avatar address={address} size={88} className="hidden md:flex" editable={ownProfile} />
+            {/* User covers can be bright; keep every identity character readable. */}
+            <div className="min-w-0 flex-1 rounded-lg bg-[var(--background-color)] px-2 py-1 md:pt-3">
               <ProfileIdentity
                 address={address}
                 displayName={displayName}
@@ -143,6 +152,7 @@ const ProfileHeaderCard = ({
           </div>
         </div>
 
+        {ownProfile && <div className="mt-3 empty:hidden"><ProfileImageStatus /></div>}
         {/* Follow / unfollow errors render full width here, under the header. */}
         <div ref={errorSlotRef as RefObject<HTMLDivElement>} className="mt-3 empty:mt-0" />
       </div>

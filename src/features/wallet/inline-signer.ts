@@ -37,7 +37,7 @@ import { unlockVault, type VaultRecord } from './vault-record';
  */
 export type SigningContext =
   /** the exact bytes being signed: the `tx_…` string, or the message text. */
-  | { kind: 'transaction'; payload: string; networkId?: string }
+  | { kind: 'transaction'; payload: string; networkId?: string; innerTx?: boolean }
   | { kind: 'message'; payload: string; networkId?: string }
   /**
    * Not a signature: unlocking the chat identity. The derived nostr key is then
@@ -149,7 +149,9 @@ export class InlineWalletSigner {
     // one handed to the SDK — even if a caller passes networkId: undefined.
     const networkId = options?.networkId ?? this.#networkId;
     return this.#withSigningAccount(
-      { kind: 'transaction', payload: tx, networkId },
+      {
+        kind: 'transaction', payload: tx, networkId, ...(options?.innerTx === true ? { innerTx: true } : {}),
+      },
       (account) => account.signTransaction(tx, { ...options, networkId }),
     );
   }

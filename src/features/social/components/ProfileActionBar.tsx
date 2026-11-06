@@ -35,7 +35,7 @@ const ProfileActionBar = ({
 
   return (
     <div
-      className="flex w-full items-center gap-2 md:w-auto md:shrink-0 md:justify-end"
+      className="flex w-full items-center justify-end gap-2 md:w-auto md:shrink-0"
       data-testid="profile-action-bar"
     >
       {ownProfile ? (

@@ -27,7 +27,7 @@ const FeedbackButton = () => {
         onClick={handleClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 active:scale-95"
+        className="app-feedback-button fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 active:scale-95"
         style={{
           background: 'linear-gradient(to right, var(--neon-teal), var(--neon-teal), #5eead4)',
           color: '#0a0a0f',

@@ -7,6 +7,8 @@ import {
   afterEach, beforeEach, describe, expect, it, vi,
 } from 'vitest';
 
+import { imageRequest } from '@/features/profile-images/api';
+import { uploadProfileImage } from '@/features/profile-images/direct-upload';
 import { TransactionNotificationProvider } from '../../../transaction-notification/transaction-notification.context';
 import {
   clearPendingTransactions,
@@ -16,6 +18,18 @@ import PostForm from '../PostForm';
 
 const mockInitializeContractTyped = vi.fn();
 const mockGetById = vi.fn();
+
+vi.mock('@/features/profile-images/useImageSession', () => ({
+  useImageSession: () => ({ activeAccount: 'ak_author', current: { current: 'ak_author' }, authenticate: async () => ({ address: 'ak_author', token: 'session' }) }),
+}));
+vi.mock('@/features/social/utils/postImages', async (original) => ({
+  ...await original<typeof import('@/features/social/utils/postImages')>(),
+  compressPostImage: vi.fn(async (file) => new Blob([file.name])),
+}));
+vi.mock('@/features/profile-images/direct-upload', () => ({ uploadProfileImage: vi.fn() }));
+vi.mock('@/features/profile-images/api', async (original) => ({
+  ...await original<typeof import('@/features/profile-images/api')>(), imageRequest: vi.fn(),
+}));
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -99,6 +113,11 @@ describe('PostForm', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    clearPendingTransactions();
+    URL.createObjectURL = vi.fn(() => `blob:${Math.random()}`);
+    URL.revokeObjectURL = vi.fn();
+    vi.mocked(uploadProfileImage).mockImplementation(async (blob) => `bafy${await blob.text()}`);
+    vi.mocked(imageRequest).mockImplementation(async (_path, body: any) => ({ media: body.cids.map((cid: string) => `ipfs:superhero:images:${cid}`) }));
 
     queryClient = new QueryClient({
       defaultOptions: {
@@ -148,6 +167,35 @@ describe('PostForm', () => {
     });
   });
 
+  it('publishes four images with an optional empty caption, then clears the previews when mined', async () => {
+    const publish = vi.fn().mockResolvedValue({ decodedResult: '99', hash: 'th_images' });
+    mockInitializeContractTyped.mockResolvedValue({ post_without_tip: publish });
+    mockGetById.mockRejectedValue(new Error('Not indexed yet'));
+    render(<QueryClientProvider client={queryClient}><TransactionNotificationProvider><PostForm /></TransactionNotificationProvider></QueryClientProvider>);
+    const files = Array.from({ length: 4 }, (_, i) => new File([`image ${i}`], `photo${i}.png`, { type: 'image/png' }));
+    fireEvent.change(screen.getByLabelText('social.images.choose'), { target: { files } });
+    expect(screen.getAllByAltText('social.images.preview')).toHaveLength(4);
+    fireEvent.submit(screen.getByRole('textbox').closest('form')!);
+    await waitFor(() => expect(publish).toHaveBeenCalledWith('', files.map((file) => `ipfs:superhero:images:bafy${file.name}`)));
+    await waitFor(() => expect(screen.queryAllByAltText('social.images.preview')).toHaveLength(0));
+    expect(uploadProfileImage).toHaveBeenCalledTimes(4);
+    expect(imageRequest).toHaveBeenCalledWith('/attachments', { cids: files.map((file) => `bafy${file.name}`) }, 'session', expect.any(AbortSignal));
+    expect(URL.revokeObjectURL).toHaveBeenCalledTimes(4);
+  });
+
+  it('keeps images after an upload failure and never asks to publish an incomplete post', async () => {
+    vi.mocked(uploadProfileImage).mockRejectedValue(new Error('Upload interrupted'));
+    render(<QueryClientProvider client={queryClient}><TransactionNotificationProvider><PostForm /></TransactionNotificationProvider></QueryClientProvider>);
+    fireEvent.change(screen.getByLabelText('social.images.choose'), { target: { files: [new File(['image'], 'photo.png', { type: 'image/png' })] } });
+    fireEvent.submit(screen.getByRole('textbox').closest('form')!);
+    await waitFor(() => expect(uploadProfileImage).toHaveBeenCalledOnce());
+    await waitFor(() => expect(screen.getAllByRole('button', { name: 'Post' })[0]).not.toBeDisabled());
+    expect(mockInitializeContractTyped).not.toHaveBeenCalled();
+    expect(screen.getAllByAltText('social.images.preview')).toHaveLength(1);
+    fireEvent.click(screen.getByLabelText('social.images.remove'));
+    expect(screen.queryAllByAltText('social.images.preview')).toHaveLength(0);
+  });
+
   it('keeps the parent comment payload when using the integrated reply appearance', async () => {
     const publish = vi.fn().mockResolvedValue({ decodedResult: 'th_reply' });
     mockInitializeContractTyped.mockResolvedValue({ post_without_tip: publish });
@@ -158,8 +206,6 @@ describe('PostForm', () => {
             isPost={false}
             postId="42_v3"
             appearance="integrated"
-            showEmojiPicker={false}
-            showGifInput={false}
             showMediaFeatures={false}
           />
         </TransactionNotificationProvider>
@@ -206,8 +252,6 @@ describe('PostForm', () => {
             onSuccess={onSuccess}
             onPostCreated={onPostCreated}
             requiredHashtag="#nancy"
-            showEmojiPicker={false}
-            showGifInput={false}
             showMediaFeatures={false}
           />
         </TransactionNotificationProvider>
@@ -264,8 +308,6 @@ describe('PostForm', () => {
       <QueryClientProvider client={queryClient}>
         <TransactionNotificationProvider>
           <PostForm
-            showEmojiPicker={false}
-            showGifInput={false}
             showMediaFeatures={false}
             {...props}
           />

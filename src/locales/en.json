@@ -190,6 +190,8 @@
     },
     "messages": {
       "somethingWentWrong": "Something went wrong",
+      "txCompletedInWalletTab": "Your transaction was confirmed from the wallet tab. Refresh this page to see the result.",
+      "txSendFromCallbackFailed": "Could not send the signed transaction: {{error}}",
       "success": "Success",
       "savingProfile": "Saving profile…",
       "failedToUpdateProfile": "Failed to update profile",

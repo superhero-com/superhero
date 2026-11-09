@@ -74,6 +74,47 @@ export function withStatus(
   }));
 }
 
+/**
+ * Close heights of the votes still open at `height`, newest first. Vote ids follow creation order
+ * and every vote of a DAO runs equally long, so close heights never decrease with the id: the walk
+ * stops at the first closed vote instead of reading them all.
+ */
+export async function fetchOpenVoteCloseHeights(
+  sdk: AeSdkBase,
+  saleAddress: Encoded.ContractAddress,
+  height: number,
+): Promise<number[]> {
+  const dao = await saleDao(sdk, saleAddress);
+  const newest = Array.from((await dao.state()).votes.entries()).sort(([a], [b]) => Number(b - a));
+  const closes: number[] = [];
+  for (let i = 0; i < newest.length; i += 1) {
+    const [id, [, address]] = newest[i];
+    // eslint-disable-next-line no-await-in-loop -- sequential: stop at the first closed vote
+    const close = Number((await (await initDAOVote(sdk, address, id)).state()).close_height);
+    if (close <= height) break;
+    closes.push(close);
+  }
+  return closes;
+}
+
+/** Open votes of a token's DAO, for the count on the token page's Voting tab. */
+export function useDaoOpenVoteCount(saleAddress?: string): number {
+  const { staticAeSdk, currentBlockHeight } = useAeSdk();
+  const { data } = useQuery({
+    queryKey: [...daoVotesQueryKey(saleAddress), 'open'],
+    queryFn: () => fetchOpenVoteCloseHeights(
+      staticAeSdk,
+      saleAddress as Encoded.ContractAddress,
+      currentBlockHeight as number,
+    ),
+    enabled: !!staticAeSdk && !!saleAddress?.startsWith('ct_') && currentBlockHeight != null,
+    staleTime: 60_000,
+    retry: 1,
+  });
+  if (!data || currentBlockHeight == null) return 0;
+  return data.filter((close) => currentBlockHeight < close).length;
+}
+
 /** All votes of a token's DAO with their status, for the DAO page and the token page tab. */
 export function useDaoVotes(saleAddress?: string) {
   const { staticAeSdk, currentBlockHeight } = useAeSdk();

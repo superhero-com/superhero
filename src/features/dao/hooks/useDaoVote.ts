@@ -3,9 +3,7 @@ import {
 } from 'react';
 import { Encoded } from '@aeternity/aepp-sdk';
 import { useQueryClient } from '@tanstack/react-query';
-import {
-  initDAOVote, toTokenDecimals, Vote, VOTE_STATE_LABEL, VoteState,
-} from 'bctsl-sdk';
+import { initDAOVote, Vote, VoteState } from 'bctsl-sdk';
 import { useAeSdk, useAccount } from '@/hooks';
 import { useDao } from './useDao';
 import {
@@ -21,9 +19,9 @@ export interface UseDaoVoteProps {
 export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVoteProps) {
   const [vote, setVote] = useState<Vote>();
   const [voteState, setVoteState] = useState<VoteState>();
-  const [voteStateLabel, setVoteStateLabel] = useState<VOTE_STATE_LABEL>();
   const [actionLoading, setActionLoading] = useState<boolean>(false);
   const [actionError, setActionError] = useState<unknown>();
+  const [loadError, setLoadError] = useState(false);
 
   const { sdk, currentBlockHeight } = useAeSdk();
   const { activeAccount } = useAccount();
@@ -33,51 +31,8 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
     tokenSaleAddress,
   });
 
-  const canVote = useMemo(
-    () => activeAccount
-      && voteState
-      && voteStateLabel
-      && sdk
-      && vote?.canVote(voteStateLabel, voteState, activeAccount as any),
-    [activeAccount, voteState, voteStateLabel, sdk, vote],
-  );
-
-  const canRevokeVote = useMemo(
-    () => voteState
-      && voteStateLabel
-      && activeAccount
-      && sdk
-      && vote?.canRevokeVote(voteStateLabel, voteState, activeAccount as any),
-    [voteState, voteStateLabel, activeAccount, sdk, vote],
-  );
-
-  const canWithdraw = useMemo(
-    () => voteState
-      && voteStateLabel
-      && sdk
-      && vote?.canWithdraw(voteStateLabel, voteState, activeAccount as any),
-    [voteState, voteStateLabel, sdk, vote, activeAccount],
-  );
-
-  const canApply = useMemo(
-    () => voteStateLabel && vote?.canApply(voteStateLabel),
-    [voteStateLabel, vote],
-  );
-
-  const voteYesPercentage = useMemo(
-    () => voteState && vote?.voteYesPercentage(voteState),
-    [voteState, vote],
-  );
-
-  const voteStakeYesPercentage = useMemo(
-    () => (voteState && dao.tokenSupply
-      ? vote?.voteStakeYesPercentage(voteState, dao.tokenSupply)
-      : 1),
-    [voteState, dao.tokenSupply, vote],
-  );
-
   // Status, tally and the account's options, computed with the contract's own pass rules
-  // (see utils/voteRules). The SDK helpers above are kept for existing callers.
+  // (see utils/voteRules).
   const tally = useMemo(
     () => (voteState ? voteTally(voteState, dao.tokenSupply) : undefined),
     [voteState, dao.tokenSupply],
@@ -104,73 +59,18 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
     [status, position, activeAccount],
   );
 
-  const userVoteOrLockedInfo = useMemo(() => {
-    if (
-      voteState
-      && dao.tokenMetaInfo
-      && sdk
-      && vote?.accountVoted(voteState, activeAccount as any)
-    ) {
-      const accountVotedBalance = vote?.accountVotedBalance(
-        voteState,
-        activeAccount as any,
-      );
-
-      const accountVotedBalanceTokenDecimals = accountVotedBalance !== undefined
-        && toTokenDecimals(accountVotedBalance, dao.tokenMetaInfo.decimals, 0n);
-
-      const accountHasLockedBalance = vote?.accountHasLockedBalance(
-        voteState,
-        activeAccount as any,
-      );
-
-      const accountVotedAgreement = vote?.accountVotedAgreement(
-        voteState,
-        activeAccount as any,
-      );
-
-      return `You ${
-        accountHasLockedBalance ? 'Locked' : 'Voted'
-      } ${accountVotedBalanceTokenDecimals} ${
-        dao.tokenMetaInfo.symbol
-      } in ${accountVotedAgreement ? 'Agreement' : 'Disagreement'}`;
-    } return '';
-  }, [voteState, dao.tokenMetaInfo, sdk, vote, activeAccount]);
-
   const refreshVoteState = useCallback(async () => {
     if (!vote) return;
-
-    const newVoteState = await vote.state();
-    setVoteState(newVoteState);
-
-    if (newVoteState && dao.state && dao.tokenSupply !== undefined) {
-      const newVoteStateLabel = await vote.voteStateLabel(
-        newVoteState,
-        dao.state,
-        dao.tokenSupply,
-      );
-      setVoteStateLabel(newVoteStateLabel);
-    }
-  }, [vote, dao.state, dao.tokenSupply]);
+    setVoteState(await vote.state());
+  }, [vote]);
 
   const init = useCallback(async () => {
     if (!sdk) return;
 
     const newVote = await initDAOVote(sdk, voteAddress, voteId);
     setVote(newVote);
-
-    const newVoteState = await newVote.state();
-    setVoteState(newVoteState);
-
-    if (dao.state && dao.tokenSupply !== undefined) {
-      const newVoteStateLabel = await newVote.voteStateLabel(
-        newVoteState,
-        dao.state,
-        dao.tokenSupply,
-      );
-      setVoteStateLabel(newVoteStateLabel);
-    }
-  }, [sdk, voteAddress, voteId, dao.state, dao.tokenSupply]);
+    setVoteState(await newVote.state());
+  }, [sdk, voteAddress, voteId]);
 
   // A failed or cancelled signature is kept in `actionError` for the page to show.
   const applyAction = useCallback(async (action: () => unknown | Promise<unknown>) => {
@@ -216,21 +116,17 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
 
   // Initialize when tokenSaleAddress changes
   useEffect(() => {
-    init().catch(() => undefined);
+    setLoadError(false);
+    // A wrong or missing vote address would otherwise leave the page loading forever.
+    init().catch(() => setLoadError(true));
   }, [tokenSaleAddress, init]);
 
   return {
     vote,
     voteState,
-    voteStateLabel,
     actionLoading,
     actionError,
-
-    canVote,
-    canRevokeVote,
-    canWithdraw,
-    canApply,
-    userVoteOrLockedInfo,
+    loadError,
 
     status,
     tally,
@@ -241,10 +137,8 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
     tokenDecimals: dao.tokenMetaInfo ? Number(dao.tokenMetaInfo.decimals) : 18,
     userTokenBalance: dao.userTokenBalance,
     daoLoaded: dao.loaded,
-
-    voteYesPercentage,
-    voteStakeYesPercentage,
-    hasTokenBalance: dao.userTokenBalance,
+    // The DAO's setup finished without its state, so the status and the ballot can't be shown.
+    daoFailed: dao.loaded && !dao.state,
 
     // methods
     voteOption,

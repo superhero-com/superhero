@@ -1,7 +1,12 @@
+import { createElement, type ReactNode } from 'react';
+import { renderHook, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   beforeEach, describe, expect, it, vi,
 } from 'vitest';
-import { fetchDaoVotes, withStatus } from '../useDaoVotes';
+import {
+  fetchDaoVotes, fetchOpenVoteCloseHeights, useDaoOpenVoteCount, withStatus,
+} from '../useDaoVotes';
 
 // A fake chain: the sale's DAO, its vote list and each vote contract's state, keyed by address.
 let daoVotes: Map<bigint, [boolean, string]>;
@@ -9,6 +14,11 @@ let voteStates: Record<string, { close_height: bigint; vote_state: Map<boolean, 
 let reads: string[];
 let salesRead: string[];
 let tokenRead: boolean;
+let height: number | null;
+
+vi.mock('@/hooks/useAeSdk', () => ({
+  useAeSdk: () => ({ staticAeSdk: {}, currentBlockHeight: height }),
+}));
 
 vi.mock('bctsl-sdk', async (importOriginal) => ({
   ...(await importOriginal<object>()),
@@ -85,5 +95,56 @@ describe('withStatus', () => {
     expect(votes.map((v) => [v.address, v.status])).toEqual([
       ['ct_v2', 'open'], ['ct_v1', 'failed'], ['ct_v0', 'applied'],
     ]);
+  });
+});
+
+describe('open vote count', () => {
+  beforeEach(() => {
+    daoVotes = new Map([0, 1, 2, 3].map((id): [bigint, [boolean, string]] => [BigInt(id), [false, `ct_v${id}`]]));
+    voteStates = {
+      ct_v0: vote(100), ct_v1: vote(200), ct_v2: vote(300), ct_v3: vote(400),
+    };
+  });
+
+  it('reads only the votes that can still be open, newest first', async () => {
+    expect(await fetchOpenVoteCloseHeights(SDK, SALE, 250)).toEqual([400, 300]);
+    expect(reads).toEqual(['ct_v3', 'ct_v2', 'ct_v1']);
+    expect(salesRead).toEqual([SALE]);
+  });
+
+  it('reads no vote of a DAO without votes', async () => {
+    daoVotes = new Map();
+
+    expect(await fetchOpenVoteCloseHeights(SDK, SALE, 250)).toEqual([]);
+    expect(reads).toEqual([]);
+  });
+
+  const renderCount = () => {
+    const client = new QueryClient();
+    return renderHook(() => useDaoOpenVoteCount('ct_sale'), {
+      wrapper: ({ children }: { children: ReactNode }) => (
+        createElement(QueryClientProvider, { client }, children)
+      ),
+    });
+  };
+
+  it('counts against the live height without reading the votes again', async () => {
+    height = 250;
+    const { result, rerender } = renderCount();
+    await waitFor(() => expect(result.current).toBe(2));
+
+    height = 350;
+    rerender();
+
+    expect(result.current).toBe(1);
+    expect(reads).toEqual(['ct_v3', 'ct_v2', 'ct_v1']);
+  });
+
+  it('waits for the block height before reading anything', () => {
+    height = null;
+    const { result } = renderCount();
+
+    expect(result.current).toBe(0);
+    expect(reads).toEqual([]);
   });
 });

@@ -19,6 +19,7 @@ const App = () => {
     <>
       <button type="button" onClick={() => navigate(`/users/${AK}?tab=posts`)}>same page</button>
       <button type="button" onClick={() => navigate('/trends/tokens/WORD')}>token page</button>
+      <button type="button" onClick={() => navigate(-1)}>back</button>
     </>
   );
 };
@@ -53,5 +54,36 @@ describe('useJourneyPageViews', () => {
       ['page_view', { page: '/trends/tokens/:tokenName' }],
       ['token_view', { page: '/trends/tokens/:tokenName' }],
     ]);
+  });
+
+  const walletConnectedCalls = () => vi.mocked(track).mock.calls
+    .filter(([name]) => name === 'wallet_connected');
+
+  it('counts the return from a deep-link connect once, without the address', () => {
+    render(
+      <MemoryRouter initialEntries={[`/?address=${AK}&networkId=ae_mainnet`]}>
+        <App />
+      </MemoryRouter>,
+    );
+    expect(walletConnectedCalls()).toEqual([['wallet_connected']]);
+    expect(JSON.stringify(vi.mocked(track).mock.calls)).not.toContain(AK);
+
+    fireEvent.click(screen.getByRole('button', { name: 'token page' }));
+    expect(walletConnectedCalls()).toHaveLength(1);
+
+    fireEvent.click(screen.getByRole('button', { name: 'back' }));
+    expect(walletConnectedCalls()).toHaveLength(1);
+  });
+
+  it.each([
+    ['an address alone', `/?address=${AK}`],
+    ['something that is not an account', '/?address=nope&networkId=ae_mainnet'],
+  ])('does not count %s as a connection', (_name, url) => {
+    render(
+      <MemoryRouter initialEntries={[url]}>
+        <App />
+      </MemoryRouter>,
+    );
+    expect(walletConnectedCalls()).toEqual([]);
   });
 });

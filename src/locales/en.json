@@ -2254,7 +2254,15 @@
         "reads": "Reads",
         "interactionsPerHour": "Activity Rate"
       },
-      "customizePopularFeedAria": "Customize popular feed"
+      "weightValues": {
+        "low": "Low",
+        "med": "Med",
+        "high": "High"
+      },
+      "customizePopularFeedAria": "Customize popular feed",
+      "following": "Following",
+      "followingEmptyNoFollows": "Follow people to see their posts here.",
+      "followingEmptyNoPosts": "The accounts you follow haven't posted yet."
     },
     "retry": "Retry",
     "tokenTopicFeed": {
@@ -3102,6 +3110,9 @@
       "whenAbove": "When above {{target}} AE",
       "whenBelow": "When below {{target}} AE",
       "remove": "Remove alert",
+      "connectHint": "Turn on notifications to see your alerts here.",
+      "connect": "Turn on notifications",
+      "connecting": "Connecting…",
       "firedCount_one": "{{count}} alert already sent",
       "firedCount_other": "{{count}} alerts already sent"
     }

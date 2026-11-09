@@ -2136,7 +2136,15 @@
         "reads": "阅读量",
         "interactionsPerHour": "活跃度"
       },
-      "customizePopularFeedAria": "自定义热门动态"
+      "weightValues": {
+        "low": "低",
+        "med": "中",
+        "high": "高"
+      },
+      "customizePopularFeedAria": "自定义热门动态",
+      "following": "关注",
+      "followingEmptyNoFollows": "关注其他用户即可在这里看到他们的帖子。",
+      "followingEmptyNoPosts": "你关注的账户还没有发布帖子。"
     },
     "showMore": "再显示 {{count}} 条",
     "showLess": "收起",
@@ -3021,6 +3029,9 @@
       "whenAbove": "高于 {{target}} AE 时",
       "whenBelow": "低于 {{target}} AE 时",
       "remove": "删除提醒",
+      "connectHint": "开启通知后即可在此查看你的提醒。",
+      "connect": "开启通知",
+      "connecting": "正在连接…",
       "firedCount_other": "已发送 {{count}} 条提醒"
     }
   },

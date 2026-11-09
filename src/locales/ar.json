@@ -2144,7 +2144,15 @@
         "reads": "القراءات",
         "interactionsPerHour": "معدّل النشاط"
       },
-      "customizePopularFeedAria": "تخصيص الموجز الشائع"
+      "weightValues": {
+        "low": "منخفض",
+        "med": "متوسط",
+        "high": "مرتفع"
+      },
+      "customizePopularFeedAria": "تخصيص الموجز الشائع",
+      "following": "المتابَعون",
+      "followingEmptyNoFollows": "تابع أشخاصًا لترى منشوراتهم هنا.",
+      "followingEmptyNoPosts": "لم تنشر الحسابات التي تتابعها أي شيء بعد."
     },
     "showMore": "عرض {{count}} المزيد",
     "showLess": "عرض أقل",
@@ -3035,6 +3043,9 @@
       "whenAbove": "عندما يتجاوز {{target}} AE",
       "whenBelow": "عندما يقل عن {{target}} AE",
       "remove": "حذف التنبيه",
+      "connectHint": "فعّل الإشعارات لرؤية تنبيهاتك هنا.",
+      "connect": "تفعيل الإشعارات",
+      "connecting": "جارٍ الاتصال…",
       "firedCount_zero": "لم يُرسل أي تنبيه",
       "firedCount_one": "تم إرسال تنبيه واحد",
       "firedCount_two": "تم إرسال تنبيهين",

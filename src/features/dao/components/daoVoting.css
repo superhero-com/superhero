@@ -128,7 +128,12 @@
 /* Ballot */
 .dao-v-ballot fieldset { display: grid; gap: 10px; margin: 12px 0; padding: 0; border: 0; }
 .dao-v-choice { display: flex; align-items: flex-start; gap: 12px; min-height: 44px; padding: 14px; border: 1px solid var(--dv-border); border-radius: 12px; background: var(--dv-surface); cursor: pointer; }
-.dao-v-choice input { width: 18px; height: 18px; margin-top: 2px; accent-color: #2871ed; flex: none; }
+.dao-v .dao-v-choice input {
+  /* The global form rule sets appearance: none, which hides the native dot. Bring it back. */
+  appearance: auto; -webkit-appearance: radio;
+  width: 18px; height: 18px; margin: 2px 0 0; padding: 0; border-radius: 50%; box-shadow: none;
+  accent-color: #2871ed; flex: none;
+}
 .dao-v-choice strong { display: block; font-size: 14px; }
 .dao-v-choice small { display: block; margin-top: 2px; color: var(--dv-muted); font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }
 .dao-v-choice.is-checked { border-color: var(--dv-blue-border); background: var(--dv-blue-bg); }
@@ -171,7 +176,7 @@
 .dao-v-summary dt { color: var(--dv-muted); }
 .dao-v-summary dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; text-align: end; }
 .dao-v-confirm { display: flex; align-items: flex-start; gap: 10px; min-height: 44px; padding: 8px 0; font-size: 14px; cursor: pointer; }
-.dao-v-confirm input { width: 18px; height: 18px; margin-top: 2px; accent-color: #2871ed; flex: none; }
+.dao-v-confirm label { cursor: pointer; }
 .dao-v-back { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0; margin-bottom: 4px; border: 0; background: none; color: var(--dv-blue); font-size: 14px; cursor: pointer; }
 
 /* Voters */

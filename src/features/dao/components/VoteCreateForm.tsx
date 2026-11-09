@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ConnectWalletButton } from '@/components/ConnectWalletButton';
@@ -240,10 +241,15 @@ const VoteCreateForm = ({
             <p>{t('voting.create.notEnoughAe', { fee })}</p>
           </div>
         )}
-        <label className="dao-v-confirm" htmlFor="dao-v-fee-ack">
-          <input id="dao-v-fee-ack" type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} />
-          <span>{t('voting.create.ack', { fee })}</span>
-        </label>
+        <div className="dao-v-confirm">
+          <Checkbox
+            id="dao-v-fee-ack"
+            checked={ack}
+            onCheckedChange={(checked) => setAck(checked === true)}
+            className="mt-0.5 h-5 w-5 border-[#2871ed] data-[state=checked]:bg-[#2871ed] data-[state=checked]:text-white"
+          />
+          <label htmlFor="dao-v-fee-ack">{t('voting.create.ack', { fee })}</label>
+        </div>
         {submitError && (
           <div className="dao-v-note dao-v-note--error" role="alert"><p>{submitError}</p></div>
         )}

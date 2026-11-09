@@ -23,7 +23,7 @@ import {
   type PushState,
 } from './notification-feed-client';
 
-function apiBaseUrl(): string {
+export function apiBaseUrl(): string {
   // Allow pointing ONLY the notifications backend at a local API (e.g.
   // http://localhost:3000) for testing, without repointing the whole app's API
   // (OpenAPI.BASE) via VITE_SUPERHERO_API_URL. Falls back to the app API origin.
@@ -64,6 +64,8 @@ export interface UseNotifications {
   disablePush: () => Promise<void>;
   /** The most recent live item, for a raw alert/toast in the MVP UI. */
   lastLive: FeedItem | null;
+  /** Bearer of `address`'s session for gated reads (price alerts), or null. Never prompts. */
+  sessionToken: (address: string) => string | null;
 }
 
 /**
@@ -81,7 +83,17 @@ export function connectErrorMessage(e: unknown): string {
   return message || 'Failed to connect notifications';
 }
 
-export function useNotifications(): UseNotifications {
+/**
+ * The wallet signer shared by the notification feed and price alerts: wakes the
+ * wallet session, then signs and locally verifies an intent message. Stable
+ * identity, so effects depending on it do not re-run per render.
+ */
+export interface NotificationSigner {
+  activeAccount: string | undefined;
+  signNotificationMessage: (message: string) => Promise<string>;
+}
+
+export function useNotificationSigner(): NotificationSigner {
   const {
     activeAccount,
     aeSdk,
@@ -132,12 +144,12 @@ export function useNotifications(): UseNotifications {
   // accepts (it verifies with the same `verifyAeAddressSignature` util).
   const signNotificationMessage = useCallback(async (message: string): Promise<string> => {
     const requested = activeAccountRef.current;
-    if (!requested) throw new Error('Connect your wallet to enable notifications');
+    if (!requested) throw new Error('Connect your wallet first.');
     // Reconnect resolves the address the wallet actually signs with; sign for it
     // so a local re-verify against a stale active account can't fail spuriously.
     const target = await waitForWalletReconnectRef.current(requested);
     if (normalizeAddress(target) !== normalizeAddress(requested)) {
-      throw new Error('Connected wallet account changed; reconnect to enable notifications');
+      throw new Error('Connected wallet account changed; reconnect and try again.');
     }
     try {
       await addStaticAccountRef.current?.(target);
@@ -146,6 +158,12 @@ export function useNotifications(): UseNotifications {
     }
     return signAndVerifyLinkMessage(target, signMessageRef.current, message);
   }, []);
+
+  return { activeAccount, signNotificationMessage };
+}
+
+export function useNotifications(): UseNotifications {
+  const { activeAccount, signNotificationMessage } = useNotificationSigner();
 
   const clientRef = useRef<NotificationFeedClient | null>(null);
   /**
@@ -335,6 +353,13 @@ export function useNotifications(): UseNotifications {
     setPushState(next);
   }, []);
 
+  // clientRef keeps the previous account's client until the account-change effect
+  // runs, and that runs after the children's effects, where their queries fetch.
+  const sessionToken = useCallback(
+    (address: string) => clientRef.current?.sessionToken(address) ?? null,
+    [],
+  );
+
   return {
     connected,
     connecting,
@@ -350,5 +375,6 @@ export function useNotifications(): UseNotifications {
     enablePush,
     disablePush,
     lastLive,
+    sessionToken,
   };
 }

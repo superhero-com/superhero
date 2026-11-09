@@ -703,7 +703,7 @@
         "pageTitle": "隐私政策 – Superhero",
         "pageDescription": "Superhero 如何处理你的数据。",
         "title": "隐私政策",
-        "lastUpdated": "本隐私政策最近一次更新于 2025 年 9 月 29 日。",
+        "lastUpdated": "本隐私政策最近一次更新于 2026 年 11 月 9 日。",
         "introHeading": "I. 引言",
         "introP1": "Superhero.com 是部署在 æternity 区块链上的开源去中心化协议。该协议以分布式方式运行，没有任何单一方控制或运营底层智能合约。用户自行决定并自担风险地直接与协议交互。",
         "introP2": "Superhero.com LVC（地址：Dr. Grass-Strasse 12, Vaduz, 9490 Liechtenstein，以下简称\"本公司\"）提供并维护本网站及相关界面（以下简称\"界面\"），以便利对协议的访问。",
@@ -713,7 +713,7 @@
         "collectionIntro": "本平台旨在以去中心化方式运行。用户与应用的所有交互均直接在区块链上进行。因此：",
         "collectionLi1": "我们不会就链上交易收集、存储或处理任何个人数据。",
         "collectionLi2": "记录在区块链上的钱包地址和交易信息不受我们控制，无法被修改、删除或更改。",
-        "collectionLi3": "除非本隐私政策中另有明确说明，我们不会追踪、记录或以其他方式收集诸如 IP 地址、Cookie 或分析数据等链下标识符。",
+        "collectionLi3": "我们不会追踪、记录或以其他方式收集诸如 Cookie 或分析数据之类的链下标识符，但下方附录所述的使用统计除外。你的 IP 地址仅在内存中用于防止滥用，不会与这些统计数据一起存储。",
         "implicationsHeading": "对用户的影响",
         "implicationsLi1": "你在区块链上的活动是化名的，但如果可以与某个可识别的个人关联，则在 GDPR 下可能被视为个人数据。",
         "implicationsLi2": "由于我们不控制区块链，我们无法修改或删除链上数据，且我们不作为此类信息的数据控制者。",
@@ -736,7 +736,9 @@
         "breachHeading": "VII. 泄露措施",
         "breachP1": "如发生泄露，我们将依据适用法律，以适当且及时的方式采取一切可能的行动，以避免对用户造成任何物质或非物质损害，并保护用户的个人数据。",
         "contactHeading": "VIII. 如何联系 Superhero.com？",
-        "contactP1": "如需就本政策或与你使用本网站相关的 Superhero.com 信息收集和传播做法向我们提出疑问或意见，请发送电子邮件至 superherowallet@protonmail.com 联系我们。"
+        "contactP1": "如需就本政策或与你使用本网站相关的 Superhero.com 信息收集和传播做法向我们提出疑问或意见，请发送电子邮件至 superherowallet@protonmail.com 联系我们。",
+        "appendixHeading": "附录：使用统计",
+        "appendixP1": "为了了解哪些页面和步骤效果最好，我们会在一个随机分析 ID 下记录使用事件（步骤、页面类型和时间）。该 ID 从不存储在你的设备上：每次加载页面都会生成一个新的 ID，刷新或关闭标签页后即消失。我们为此不使用 Cookie、不使用指纹识别，也不使用第三方分析工具，并且不会将该 ID 与你的钱包或账户关联。由于会记录每个事件的时间，打赏或兑换等事件在理论上可能与区块链上的公开交易对应起来。这些事件保存 180 天后删除。如果你的浏览器发送“请勿追踪”（Do Not Track）或“全球隐私控制”（Global Privacy Control）信号，则不会记录任何内容。来自其他服务的嵌入内容（例如音乐播放器）可能会根据该服务提供方的政策设置其自己的 Cookie。"
       },
       "landing": {
         "pageTitle": "链上注意力市场 – Superhero",
@@ -2136,7 +2138,15 @@
         "reads": "阅读量",
         "interactionsPerHour": "活跃度"
       },
-      "customizePopularFeedAria": "自定义热门动态"
+      "weightValues": {
+        "low": "低",
+        "med": "中",
+        "high": "高"
+      },
+      "customizePopularFeedAria": "自定义热门动态",
+      "following": "关注",
+      "followingEmptyNoFollows": "关注其他用户即可在这里看到他们的帖子。",
+      "followingEmptyNoPosts": "你关注的账户还没有发布帖子。"
     },
     "showMore": "再显示 {{count}} 条",
     "showLess": "收起",
@@ -3001,6 +3011,28 @@
       "copyFailed": "无法复制。请选择地址并手动复制。",
       "unavailable": "不可用",
       "missingCreator": "创建者信息尚未加载。"
+    },
+    "priceAlerts": {
+      "title": "价格提醒",
+      "hint": "当 {{name}} 达到你设定的价格时提醒你一次。",
+      "thisToken": "该代币",
+      "direction": "方向",
+      "above": "高于",
+      "below": "低于",
+      "target": "目标价格（AE）",
+      "set": "设置提醒",
+      "signing": "请在钱包中签名…",
+      "saved": "提醒已设置，到价时通知你一次。",
+      "invalidTarget": "请输入大于 0 的价格，例如 0.01。",
+      "failed": "无法保存提醒，请重试。",
+      "active": "你的提醒",
+      "whenAbove": "高于 {{target}} AE 时",
+      "whenBelow": "低于 {{target}} AE 时",
+      "remove": "删除提醒",
+      "connectHint": "开启通知后即可在此查看你的提醒。",
+      "connect": "开启通知",
+      "connecting": "正在连接…",
+      "firedCount_other": "已发送 {{count}} 条提醒"
     }
   },
   "errors": {

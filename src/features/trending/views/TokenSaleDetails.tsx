@@ -45,6 +45,7 @@ import {
   TokenTransactionsTab,
 } from '../components/tabs';
 import TokenOverview from '../components/TokenOverview';
+import TokenPriceAlerts from '../components/TokenPriceAlerts';
 import TokenExploreLink from '../components/TokenExploreLink';
 import {
   PendingTransaction,
@@ -475,6 +476,15 @@ const TokenSaleDetails = () => {
             error={isError}
             onShare={() => setShowShareModal(true)}
           />
+
+          {!isTokenPending && !tokenDoesNotExist && token?.sale_address && (
+            <TokenPriceAlerts
+              key={token.sale_address}
+              saleAddress={token.sale_address}
+              symbol={token.symbol || token.name}
+              priceAe={token.price_data?.ae}
+            />
+          )}
 
           {/* Chart */}
           {showTradePanels && !isMobile && !tokenDoesNotExist && (

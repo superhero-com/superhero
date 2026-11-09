@@ -19,6 +19,7 @@ import {
 import { usePendingXLinkChange } from '@/hooks/useXLinkChanges';
 import { XLinkChangePending } from '@/components/XLinkChangePending';
 import { xLinkChangePayload } from '@/features/pending-transactions/payload';
+import { track } from '@/lib/journey';
 
 const LINK_X_PAYLOAD = { type: TxPayloadType.LinkX } as const;
 
@@ -170,6 +171,8 @@ const ProfileXCallback = () => {
   }), []);
 
   const handleLinkSubmitted = useCallback((linkedAddress: string, txHash: string | undefined) => {
+    // OAuth done and the link signed: the user has connected X.
+    track('x_connected');
     if (txHash) {
       const change = trackXLinkChange(linkedAddress, { kind: 'link', txHash });
       pendingLinkRef.current = change;

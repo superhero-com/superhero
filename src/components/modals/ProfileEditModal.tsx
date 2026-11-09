@@ -55,6 +55,7 @@ import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect'
 import Spinner from '@/components/Spinner';
 import { effectiveXLink, onXLinkChangeSettled, resolveXLink } from '@/utils/confirmedXLink';
 import { usePendingXLinkChange } from '@/hooks/useXLinkChanges';
+import { track } from '@/lib/journey';
 import { XLinkChangePending } from '../XLinkChangePending';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -555,6 +556,11 @@ const ProfileEditModal = ({
     load();
   }, [open, address, getProfile, getProfileOnChain, initialBio, activeAccount]);
 
+  // Every open site (profile page, header, footer, deep link) goes through this dialog.
+  useEffect(() => {
+    if (open) track('profile_edit_open');
+  }, [open]);
+
   useEffect(() => {
     if (!open) {
       setFormError(null);
@@ -769,6 +775,7 @@ const ProfileEditModal = ({
   };
 
   const onClaim = async () => {
+    track('claim_account_open');
     try {
       // Not logged in: don't block with an error — guide the visitor into onboarding.
       if (!activeAccount) {
@@ -870,6 +877,7 @@ const ProfileEditModal = ({
           });
           push(<div>{t('messages.chainNameClaimCompleted')}</div>);
           applyClaimedName(claimedName);
+          track('claim_account_done');
           onClaimSuccess?.();
         } catch (selfFundedError) {
           const msg = resolveClaimErrorMessage(selfFundedError, t);
@@ -910,6 +918,7 @@ const ProfileEditModal = ({
         });
         push(<div>{t('messages.chainNameClaimCompleted')}</div>);
         applyClaimedName(claimedName);
+        track('claim_account_done');
         onClaimSuccess?.();
       }).catch((claimError2) => {
         const msg = resolveClaimErrorMessage(claimError2, t);
@@ -1315,7 +1324,10 @@ const ProfileEditModal = ({
                   {!claimFormOpen && (
                     <button
                       type="button"
-                      onClick={() => setClaimFormOpen(true)}
+                      onClick={() => {
+                        track('claim_account_open');
+                        setClaimFormOpen(true);
+                      }}
                       className="mt-2 w-full flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-white/20 py-2 font-sans text-xs text-white/60 hover:text-white hover:border-white/40 hover:bg-white/[0.04] transition-all"
                     >
                       <Plus className="h-3.5 w-3.5" aria-hidden="true" />
@@ -1458,6 +1470,8 @@ const ProfileEditModal = ({
                         state,
                         codeVerifier,
                       });
+                      // Sent by the pagehide beacon as the browser leaves for X.
+                      track('x_connect_start');
                       window.location.href = url;
                     } catch (e) {
                       setFormError(resolveErrorMessage(e));

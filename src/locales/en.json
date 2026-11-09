@@ -1068,7 +1068,7 @@
         "pageTitle": "Privacy Policy – Superhero",
         "pageDescription": "How Superhero handles your data.",
         "title": "PRIVACY POLICY",
-        "lastUpdated": "The present Privacy Policy was last updated on 29 September 2025.",
+        "lastUpdated": "The present Privacy Policy was last updated on 9 November 2026.",
         "introHeading": "I. Introduction",
         "introP1": "Superhero.com is an open-source, decentralised protocol deployed on the æternity blockchain. The protocol operates in a distributed manner, and no single party controls or operates the underlying smart contracts. Users interact with the protocol directly, at their own discretion and risk.",
         "introP2": "Superhero.com LVC, with address Dr. Grass-Strasse 12, Vaduz, 9490 Liechtenstein (\"the Company\") provides and maintains this website and related interfaces (the \"Interface\") to facilitate access to the protocol.",
@@ -1078,7 +1078,7 @@
         "collectionIntro": "The Platform is designed to operate in a decentralized manner. All user interactions with the application occur directly on the blockchain. As a result:",
         "collectionLi1": "We do not collect, store, or process any personal data in connection with on-chain transactions.",
         "collectionLi2": "Wallet addresses and transaction information recorded on the blockchain are not under our control and cannot be amended, deleted, or altered.",
-        "collectionLi3": "We do not track, log, or otherwise collect off-chain identifiers such as IP addresses, cookies, or analytics, unless explicitly stated elsewhere in this Privacy Policy.",
+        "collectionLi3": "We do not track, log, or otherwise collect off-chain identifiers such as cookies or analytics, except for the usage statistics described in the Appendix below. Your IP address is used only in memory to limit abuse and is not stored with those statistics.",
         "implicationsHeading": "Implications for Users",
         "implicationsLi1": "Your activity on the blockchain is pseudonymous, but may be considered personal data under GDPR if it can be linked to an identifiable individual.",
         "implicationsLi2": "Since we do not control the blockchain, we cannot modify or erase on-chain data, and we do not act as a data controller for such information.",
@@ -1101,7 +1101,9 @@
         "breachHeading": "VII. Breach measures",
         "breachP1": "In case of breach, We will undertake every possible action according to the applicable legislation in an appropriate and timely manner, to avoid any material or non-material damage to Users and to protect the personal data of Users.",
         "contactHeading": "VIII. How do I contact Superhero.com?",
-        "contactP1": "To contact us with your questions or comments regarding this Policy or the information collection and dissemination practices of Superhero.com relevant to your use of the Website, please email us at superherowallet@protonmail.com."
+        "contactP1": "To contact us with your questions or comments regarding this Policy or the information collection and dissemination practices of Superhero.com relevant to your use of the Website, please email us at superherowallet@protonmail.com.",
+        "appendixHeading": "Appendix: Usage statistics",
+        "appendixP1": "To see which pages and steps work best, we record usage events (the step, the type of page and the time) under a random analytics ID. The ID is never stored on your device: a new one is created each time a page loads and it is gone when you reload or close the tab. We use no cookies, no fingerprinting and no third-party analytics tools for this, and we do not link the ID to your wallet or accounts. Because the time of each event is recorded, an event such as a tip or a swap could in principle be matched to the public transaction on the blockchain. These events are kept for 180 days and then deleted. Nothing is recorded if your browser sends Do Not Track or Global Privacy Control. Embedded content from other services, such as music players, may set its own cookies under that provider's policy."
       },
       "landing": {
         "pageTitle": "On-Chain Attention Market – Superhero",
@@ -2254,7 +2256,15 @@
         "reads": "Reads",
         "interactionsPerHour": "Activity Rate"
       },
-      "customizePopularFeedAria": "Customize popular feed"
+      "weightValues": {
+        "low": "Low",
+        "med": "Med",
+        "high": "High"
+      },
+      "customizePopularFeedAria": "Customize popular feed",
+      "following": "Following",
+      "followingEmptyNoFollows": "Follow people to see their posts here.",
+      "followingEmptyNoPosts": "The accounts you follow haven't posted yet."
     },
     "retry": "Retry",
     "tokenTopicFeed": {
@@ -3082,6 +3092,29 @@
       "copyFailed": "Couldn’t copy. Select the address and copy it manually.",
       "unavailable": "Unavailable",
       "missingCreator": "Creator information hasn’t loaded yet."
+    },
+    "priceAlerts": {
+      "title": "Price alert",
+      "hint": "Get notified once when {{name}} reaches your price.",
+      "thisToken": "this token",
+      "direction": "Direction",
+      "above": "Above",
+      "below": "Below",
+      "target": "Target price in AE",
+      "set": "Set alert",
+      "signing": "Sign in wallet…",
+      "saved": "Alert set. You will be notified once.",
+      "invalidTarget": "Enter a price above 0, like 0.01.",
+      "failed": "Could not save the alert. Try again.",
+      "active": "Your alerts",
+      "whenAbove": "When above {{target}} AE",
+      "whenBelow": "When below {{target}} AE",
+      "remove": "Remove alert",
+      "connectHint": "Turn on notifications to see your alerts here.",
+      "connect": "Turn on notifications",
+      "connecting": "Connecting…",
+      "firedCount_one": "{{count}} alert already sent",
+      "firedCount_other": "{{count}} alerts already sent"
     }
   },
   "errors": {

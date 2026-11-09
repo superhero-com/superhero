@@ -2602,7 +2602,9 @@
       "noHoldersYetHint": "أنشئ الرمز أولًا لرؤية المالكين.",
       "createToken": "إنشاء الرمز",
       "createTokenSidebarHint": "هذا الرمز غير موجود بعد. كن أول من ينشئه!",
-      "addNewPost": "إضافة منشور جديد"
+      "addNewPost": "إضافة منشور جديد",
+      "tabVoting": "التصويت",
+      "openVotes": "تصويتات مفتوحة: {{count}}"
     },
     "tokenChat": {
       "noMessages": "لا توجد رسائل دردشة عامة بعد",
@@ -3295,6 +3297,243 @@
       "addModerator": "إضافة مشرف",
       "deleteModerator": "حذف مشرف",
       "unknownVoteType": "نوع تصويت غير معروف"
+    },
+    "voting": {
+      "page": {
+        "eyebrow": "DAO الرمز",
+        "intro": "يقرّر الحاملون معًا كيف تُستخدم خزينة المجتمع.",
+        "backTo": "العودة إلى {{token}}",
+        "viewOnAescan": "عرض على æScan",
+        "openVotes": "تصويتات مفتوحة",
+        "allVotes": "كل التصويتات",
+        "holders": "الحاملون"
+      },
+      "status": {
+        "open": "مفتوح",
+        "passed": "تمت الموافقة",
+        "failed": "لم يُقرّ",
+        "applied": "نُفّذ",
+        "expired": "انتهت صلاحيته"
+      },
+      "time": {
+        "ends": "ينتهي {{when}}",
+        "ended": "انتهى {{when}}",
+        "applyBy": "نفّذه {{when}}"
+      },
+      "meters": {
+        "yes": "نعم",
+        "yesNeed": "يحتاج {{percent}}%",
+        "yesAria": "{{percent}}% نعم، والمطلوب {{need}}%",
+        "turnout": "المشاركة",
+        "turnoutNeed": "من كل الرموز · يحتاج {{percent}}%",
+        "turnoutAria": "صوّت {{percent}}% من كل الرموز، والمطلوب {{need}}%",
+        "passingSoFar": "يتجه للإقرار حتى الآن. النتيجة تُحتسب عند انتهاء التصويت.",
+        "needsTurnout": "لم يُقرّ بعد: يجب أن يصوّت مزيد من الحاملين.",
+        "needsYes": "لم يُقرّ بعد: يحتاج مزيدًا من أصوات نعم."
+      },
+      "subject": {
+        "payout": "إرسال {{amount}} AE من الخزينة إلى",
+        "payoutAll": "إرسال كامل الخزينة إلى",
+        "changeDao": "تسليم الـDAO وخزينته إلى",
+        "changeMetaInfo": "تغيير بيانات المجتمع",
+        "minimumTokens": "تحديد الحد الأدنى لإنشاء تصويت بـ {{tokens}} {{symbol}}",
+        "addModerator": "تعيين مشرف:",
+        "removeModerator": "إزالة مشرف:",
+        "unknown": "تغيير آخر"
+      },
+      "list": {
+        "title": "التصويتات",
+        "subtitle": "مقترحات من الحاملين. افتح أحدها للتصويت.",
+        "create": "إنشاء تصويت",
+        "createFirst": "أنشئ أول تصويت",
+        "emptyTitle": "لا توجد تصويتات بعد",
+        "emptyText": "يمكن لأي حامل أن يقترح طريقة لاستخدام الخزينة، ثم يصوّت الحاملون برموزهم.",
+        "filterLabel": "عرض التصويتات",
+        "filters": {
+          "all": "الكل",
+          "open": "مفتوحة",
+          "closed": "منتهية"
+        },
+        "noneInFilter": {
+          "all": "لا توجد تصويتات.",
+          "open": "لا توجد تصويتات مفتوحة الآن.",
+          "closed": "لا توجد تصويتات منتهية بعد."
+        },
+        "by": "من",
+        "openVote": "صوّت",
+        "viewResult": "عرض النتيجة",
+        "openVoteAria": "فتح التصويت رقم {{id}}",
+        "loadError": "تعذّر تحميل التصويتات. تحقق من الاتصال وحاول مجددًا.",
+        "retry": "حاول مجددًا"
+      },
+      "rules": {
+        "title": "كيف يعمل التصويت",
+        "durationTitle": "مفتوح لنحو {{duration}}.",
+        "durationText": "يُقاس بالكتل الرئيسية، لذا وقت الانتهاء تقريبي.",
+        "passTitle": "يُقرّ بنسبة {{percent}}% نعم",
+        "passText": "ومشاركة {{percent}}% على الأقل من كل الرموز.",
+        "lockTitle": "التصويت يقفل رموزك.",
+        "lockText": "يمكنك سحب صوتك ما دام التصويت مفتوحًا، واسترداد رموزك بعد انتهائه.",
+        "applyTitle": "نفّذه خلال نحو {{window}} بعد إقراره.",
+        "applyTitleShort": "نفّذه بعد إقراره بوقت قصير.",
+        "applyText": "يمكن لأي شخص تنفيذه، وعندها فقط يحدث التغيير."
+      },
+      "detail": {
+        "backTo": "العودة إلى DAO {{token}}",
+        "asksFor": "يطلب",
+        "ofTreasury": "{{percent}}% من الخزينة اليوم",
+        "why": "السبب"
+      },
+      "ballot": {
+        "title": "صوتك",
+        "choose": "اختر صوتك",
+        "yes": "نعم",
+        "no": "لا",
+        "yesTitle": "نعم، نفّذ ذلك",
+        "yesText": "طبّق هذا التغيير إذا أُقرّ التصويت.",
+        "noTitle": "لا، أبقِ الأمور كما هي",
+        "noText": "لن يتغير شيء.",
+        "lockNotice": "التصويت يقفل رموز {{token}} حتى نهاية التصويت. يمكنك سحب صوتك قبل ذلك.",
+        "connect": "اربط المحفظة للتصويت",
+        "needTokens": "تحتاج إلى رموز {{token}} للتصويت.",
+        "getTokens": "احصل على {{token}}",
+        "weight": "ستصوّت بكل ما في محفظتك: {{amount}} {{symbol}}.",
+        "chooseFirst": "اختر نعم أو لا",
+        "submit": "صوّت {{side}}",
+        "youVoted": "صوّتّ {{side}} بـ {{amount}} {{symbol}}.",
+        "lockedUntilEnd": "رموز {{token}} الخاصة بك مقفلة حتى نهاية التصويت.",
+        "takeBack": "اسحب صوتك",
+        "withdraw": "استرداد {{amount}} {{symbol}}",
+        "withdrawn": "عادت رموزك إلى محفظتك.",
+        "closed": {
+          "passed": "انتهى التصويت وتم إقراره.",
+          "failed": "انتهى التصويت ولم يُقرّ.",
+          "applied": "انتهى التصويت ونُفّذ التغيير.",
+          "expired": "انتهى التصويت. أُقرّ لكنه لم يُنفّذ في الوقت المحدد."
+        },
+        "apply": "تنفيذ النتيجة",
+        "applyText": "تم إقرار هذا التصويت. تنفيذه يُجري التغيير، ويمكن لأي شخص القيام بذلك.",
+        "applyConnect": "اربط محفظة لتنفيذ النتيجة.",
+        "confirmInWallet": "أكّد في محفظتك…"
+      },
+      "create": {
+        "title": "إنشاء تصويت",
+        "reviewTitle": "راجع وأنشئ",
+        "step": "الخطوة {{step}} من {{total}}",
+        "whatLabel": "ماذا تريد أن تفعل؟",
+        "kinds": {
+          "payout": {
+            "title": "إرسال AE من الخزينة",
+            "text": "موّل فعالية أو ادفع لمساهم."
+          },
+          "payoutAll": {
+            "title": "إرسال كامل الخزينة",
+            "text": "ادفع كل شيء لحساب واحد."
+          },
+          "addModerator": {
+            "title": "إضافة مشرف",
+            "text": "امنح شخصًا صلاحيات الإشراف."
+          },
+          "removeModerator": {
+            "title": "إزالة مشرف",
+            "text": "اسحب صلاحيات الإشراف."
+          },
+          "minimumTokens": {
+            "title": "تغيير من يمكنه إنشاء تصويت",
+            "text": "حدّد الحد الأدنى المطلوب من {{symbol}}."
+          },
+          "changeDao": {
+            "title": "الانتقال إلى DAO جديد",
+            "text": "متقدّم. يسلّم التحكم إلى DAO آخر."
+          }
+        },
+        "amountLabel": "كم AE؟",
+        "amountHelp": "تحتوي الخزينة على {{treasury}} AE. لن يُرسل إلا هذا المبلغ.",
+        "minimumLabel": "الحد الأدنى من {{symbol}} لإنشاء تصويت",
+        "minimumHelp": "من يملك أقل من هذا من {{symbol}} لن يتمكن من إنشاء تصويتات.",
+        "quickAmounts": "مبالغ سريعة",
+        "percentOfTreasury": "{{percent}}%",
+        "accountLabel": {
+          "payout": "من يستلم الـAE؟",
+          "payoutAll": "من يستلم الخزينة؟",
+          "addModerator": "من سيصبح مشرفًا؟",
+          "removeModerator": "أي مشرف تريد إزالته؟",
+          "changeDao": "عنوان الـDAO الجديد"
+        },
+        "accountLabelShort": {
+          "payout": "إلى",
+          "payoutAll": "إلى",
+          "addModerator": "المشرف",
+          "removeModerator": "المشرف",
+          "changeDao": "الـDAO الجديد"
+        },
+        "accountHelp": "عنوان حساب يبدأ بـ ak_.",
+        "daoHelp": "عنوان عقد الـDAO الجديد الذي يبدأ بـ ct_.",
+        "descriptionLabel": "لماذا يجب أن يوافق الحاملون؟",
+        "descriptionHelp": "{{count}} من {{max}} حرفًا. هذا أول ما يراه الحاملون.",
+        "linkLabel": "رابط لمزيد من التفاصيل (اختياري)",
+        "linkHelp": "رابط https، مثل منشور بالخطة الكاملة.",
+        "cancel": "إلغاء",
+        "review": "مراجعة التصويت",
+        "editDetails": "تعديل التفاصيل",
+        "back": "رجوع",
+        "summary": {
+          "action": "الإجراء",
+          "why": "السبب",
+          "link": "الرابط",
+          "ends": "ينتهي التصويت",
+          "endsValue": "بعد نحو {{duration}}"
+        },
+        "action": {
+          "payout": "إرسال {{amount}} AE من الخزينة",
+          "payoutAll": "إرسال كامل الخزينة",
+          "addModerator": "إضافة مشرف",
+          "removeModerator": "إزالة مشرف",
+          "minimumTokens": "تحديد الحد الأدنى بـ {{amount}} {{symbol}}",
+          "changeDao": "نقل الـDAO والخزينة إلى DAO جديد"
+        },
+        "feeTitle": "إنشاء هذا التصويت يكلّف {{fee}} AE",
+        "feeText": "يذهب المبلغ إلى خزينة {{token}}. تدفع أيضًا رسوم شبكة صغيرة، وتحتاج إلى الحد الأدنى من الرموز على الأقل.",
+        "notEnoughAe": "في محفظتك أقل من {{fee}} AE المطلوبة.",
+        "ack": "أفهم أن {{fee}} AE لا تُسترد حتى لو لم يُقرّ التصويت.",
+        "submit": "إنشاء التصويت · {{fee}} AE",
+        "creating": "جارٍ الإنشاء…",
+        "connectToCreate": "اربط المحفظة للإنشاء",
+        "errors": {
+          "accountRequired": "أدخل عنوان حساب.",
+          "accountInvalid": "أدخل عنوان ak_ صالحًا.",
+          "daoRequired": "أدخل عنوان الـDAO الجديد.",
+          "daoInvalid": "أدخل عنوان عقد ct_ صالحًا.",
+          "amountRequired": "أدخل مبلغًا.",
+          "amountInvalid": "أدخل مبلغًا صالحًا.",
+          "amountOverTreasury": "هذا أكثر مما في الخزينة.",
+          "descriptionRequired": "أخبر الحاملين بالسبب.",
+          "descriptionTooLong": "اجعله أقل من 300 حرف.",
+          "linkInvalid": "استخدم رابط http أو https."
+        }
+      },
+      "tab": {
+        "title": "تصويتات {{token}}",
+        "subtitle": "تصويتات مفتوحة: {{count}}. يصوّت الحاملون برموزهم.",
+        "emptyText": "يمكن لحاملي {{token}} اقتراح طريقة لاستخدام الخزينة.",
+        "openDao": "افتح الـDAO"
+      },
+      "errors": {
+        "rejected": "ألغيت الطلب في محفظتك.",
+        "notEnoughTokensToCreate": "تحتاج إلى مزيد من الرموز لإنشاء تصويت هنا.",
+        "feeMismatch": "رسوم الإنشاء غير مطابقة. حاول مجددًا.",
+        "descriptionTooLong": "الوصف طويل جدًا.",
+        "voteClosed": "انتهى هذا التصويت بالفعل.",
+        "alreadyVoted": "لقد صوّتّ بالفعل.",
+        "notVoted": "لم تصوّت على هذا.",
+        "voteNotClosed": "هذا التصويت ما زال مفتوحًا.",
+        "alreadyWithdrawn": "سبق أن استرددت رموزك.",
+        "alreadyApplied": "سبق تنفيذ هذا التصويت.",
+        "applyWindowOver": "انتهى وقت تنفيذ هذا التصويت.",
+        "notPassed": "لم يُقرّ هذا التصويت، لذا لا يمكن تنفيذه.",
+        "notEnoughAe": "لا يوجد AE كافٍ في محفظتك.",
+        "generic": "حدث خطأ ما. حاول مجددًا."
+      }
     }
   },
   "banners": {

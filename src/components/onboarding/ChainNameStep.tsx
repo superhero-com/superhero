@@ -29,6 +29,7 @@ import { track } from '@/lib/journey';
 import Spinner from '@/components/Spinner';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { getFreeClaimOffer } from './chainNameStepGate';
 import './ChainNameStep.scss';
 
 export type ChainNameStepResult = 'claimed' | 'submitted' | 'skipped';
@@ -77,12 +78,20 @@ const ChainNameStep = ({ address, onDone, checkDelayMs = 500 }: Props) => {
   const [waitingForNetwork, setWaitingForNetwork] = useState(false);
   const [claimedName, setClaimedName] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [freeOffer, setFreeOffer] = useState(false);
   const requestIdRef = useRef(0);
   const mountedRef = useRef(true);
 
   useEffect(() => {
     mountedRef.current = true;
     return () => { mountedRef.current = false; };
+  }, []);
+
+  // Lead with "free" only when the sponsor can actually pay for a new name.
+  useEffect(() => {
+    let cancelled = false;
+    getFreeClaimOffer().then((free) => { if (!cancelled) setFreeOffer(free); });
+    return () => { cancelled = true; };
   }, []);
 
   const label = useMemo(() => normalizeChainNameLabel(value), [value]);
@@ -324,8 +333,12 @@ const ChainNameStep = ({ address, onDone, checkDelayMs = 500 }: Props) => {
     <div className="ui-page chain-name-step" data-testid="chain-name-step">
       <div className="ui-panel p-4 sm:p-5">
         <div className="mb-4 text-center">
-          <h2 className="ui-page-title !text-xl">{t('chainNameStep.title')}</h2>
-          <p className="ui-page-description mt-1">{t('chainNameStep.subtitle')}</p>
+          <h2 className="ui-page-title !text-xl">
+            {freeOffer ? t('chainNameStep.titleFree') : t('chainNameStep.title')}
+          </h2>
+          <p className="ui-page-description mt-1">
+            {freeOffer ? t('chainNameStep.subtitleFree') : t('chainNameStep.subtitle')}
+          </p>
         </div>
 
         <label htmlFor={inputId} className="mb-2 block text-sm font-semibold">

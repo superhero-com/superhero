@@ -10,6 +10,7 @@ import { createStore, Provider } from 'jotai';
 import BigNumber from 'bignumber.js';
 import { chainNamesAtom } from '@/atoms/walletAtoms';
 import ChainNameStep from '../ChainNameStep';
+import { resetFreeClaimOffer } from '../chainNameStepGate';
 
 const ADDRESS = 'ak_gAWT7XdGs2wtyCMPJe1K1SneofRFeDGf6Sp5ueftdev36XwHH';
 const NAME = 'mynewname1234';
@@ -86,6 +87,7 @@ async function type(value: string) {
 
 describe('ChainNameStep', () => {
   beforeEach(() => {
+    resetFreeClaimOffer();
     mockClaim.canClaim = true;
     mockClaim.checkNameAvailability.mockResolvedValue(true);
     mockCheckSponsorship.mockResolvedValue(sponsored(true));
@@ -95,6 +97,28 @@ describe('ChainNameStep', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('leads with a free name when the sponsor can pay for one', async () => {
+    renderStep();
+    expect(await screen.findByRole('heading', { name: 'Get your free .chain name' })).toBeInTheDocument();
+    expect(screen.getByText(/Superhero pays the network fee/)).toBeInTheDocument();
+    expect(mockCheckSponsorship).toHaveBeenCalledWith('a'.repeat(13));
+  });
+
+  it('makes no free promise when the sponsor cannot pay', async () => {
+    mockCheckSponsorship.mockResolvedValue(sponsored(false));
+    renderStep();
+    await act(async () => { await new Promise((resolve) => { setTimeout(resolve, 5); }); });
+    expect(screen.getByRole('heading', { name: 'Pick your .chain name' })).toBeInTheDocument();
+    expect(screen.queryByText(/Superhero pays the network fee/)).not.toBeInTheDocument();
+  });
+
+  it('makes no free promise when the sponsor check fails', async () => {
+    mockCheckSponsorship.mockRejectedValue(new Error('offline'));
+    renderStep();
+    await act(async () => { await new Promise((resolve) => { setTimeout(resolve, 5); }); });
+    expect(screen.getByRole('heading', { name: 'Pick your .chain name' })).toBeInTheDocument();
   });
 
   it('asks for a longer name before checking anything', async () => {

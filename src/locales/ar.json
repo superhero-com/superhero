@@ -1399,6 +1399,8 @@
     "chainNameStep": {
       "title": "اختر اسم ‎.chain الخاص بك",
       "subtitle": "اسمك على Superhero بدلاً من عنوان محفظة طويل.",
+      "titleFree": "احصل على اسم ‎.chain مجاناً",
+      "subtitleFree": "اسمك على Superhero بدلاً من عنوان محفظة طويل. تدفع Superhero رسوم الشبكة.",
       "inputLabel": "الاسم",
       "hint": "حروف وأرقام وشرطات، 13 حرفاً على الأقل.",
       "claimFree": "احصل عليه مجاناً",

@@ -1462,6 +1462,8 @@
     "chainNameStep": {
       "title": "Pick your .chain name",
       "subtitle": "Your name on Superhero instead of a long wallet address.",
+      "titleFree": "Get your free .chain name",
+      "subtitleFree": "Your name on Superhero instead of a long wallet address. Superhero pays the network fee.",
       "inputLabel": "Name",
       "hint": "Letters, numbers and hyphens, at least 13 characters.",
       "claimFree": "Claim for free",

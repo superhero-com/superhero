@@ -21,6 +21,7 @@ import ChainNameStep from '@/components/onboarding/ChainNameStep';
 import {
   accountHasChainName,
   dismissChainNameStep,
+  getFreeClaimOffer,
   isChainNameStepDismissed,
   knownChainName,
 } from '@/components/onboarding/chainNameStepGate';
@@ -153,6 +154,8 @@ const OnboardingModal = ({ onClose, onConnected }: Props) => {
       return;
     }
     pendingAccountRef.current = account;
+    // Start the "is it free" read now, so the step opens with the right title.
+    getFreeClaimOffer();
     setNameStep({ address: account, phase: 'checking' });
   }, [chainNames, finish, preferredChainNames]);
 

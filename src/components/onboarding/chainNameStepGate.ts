@@ -4,6 +4,7 @@
  * the dialog) remembers the choice, and the profile editor keeps the claim path.
  */
 import { AccountsService } from '@/api/generated/services/AccountsService';
+import { SuperheroApi } from '@/api/backend';
 
 export const CHAIN_NAME_STEP_DISMISSED_KEY_PREFIX = 'sh:chain-name-step-dismissed:';
 
@@ -44,3 +45,29 @@ export async function accountHasChainName(address: string): Promise<boolean | nu
 }
 
 export const knownChainName = (...values: unknown[]) => values.some(hasChainNameValue);
+
+// The shortest name the step accepts (13 characters) costs the most, so if the
+// sponsor can pay for it, it can pay for any name typed here.
+const FREE_OFFER_PROBE_LABEL = 'a'.repeat(13);
+let freeOfferRequest: Promise<boolean> | null = null;
+
+/**
+ * Whether new names are free right now (the sponsor can pay the claim). Read
+ * once per page load and shared, so the modal can start it while the wallet
+ * finishes and the step reads the same answer. False when it can't be read:
+ * the step then makes no "free" promise.
+ */
+export function getFreeClaimOffer(): Promise<boolean> {
+  if (!freeOfferRequest) {
+    freeOfferRequest = SuperheroApi.checkChainNameSponsorship(FREE_OFFER_PROBE_LABEL)
+      .then((res) => res?.sponsorable === true)
+      .catch(() => {
+        freeOfferRequest = null;
+        return false;
+      });
+  }
+  return freeOfferRequest;
+}
+
+/** Test hook: forget the cached answer. */
+export const resetFreeClaimOffer = () => { freeOfferRequest = null; };

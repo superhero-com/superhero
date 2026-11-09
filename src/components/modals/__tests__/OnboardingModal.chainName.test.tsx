@@ -9,6 +9,7 @@ import {
 import { createStore, Provider } from 'jotai';
 import { AccountsService } from '@/api/generated/services/AccountsService';
 import { chainNamesAtom } from '@/atoms/walletAtoms';
+import { SuperheroApi } from '@/api/backend';
 import { CHAIN_NAME_STEP_DISMISSED_KEY_PREFIX } from '@/components/onboarding/chainNameStepGate';
 import OnboardingModal from '../OnboardingModal';
 
@@ -65,6 +66,7 @@ describe('onboarding .chain name step', () => {
     window.localStorage.clear();
     lookup = vi.spyOn(AccountsService, 'getChainNamesForAddresses')
       .mockResolvedValue({ [ADDRESS]: null } as any);
+    vi.spyOn(SuperheroApi, 'checkChainNameSponsorship').mockResolvedValue({ sponsorable: true } as any);
   });
 
   afterEach(() => {

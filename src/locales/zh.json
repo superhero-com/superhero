@@ -1399,6 +1399,8 @@
     "chainNameStep": {
       "title": "选择你的 .chain 名称",
       "subtitle": "在 Superhero 上用名称代替冗长的钱包地址。",
+      "titleFree": "领取你的免费 .chain 名称",
+      "subtitleFree": "在 Superhero 上用名称代替冗长的钱包地址。网络费用由 Superhero 支付。",
       "inputLabel": "名称",
       "hint": "字母、数字和连字符，至少 13 个字符。",
       "claimFree": "免费领取",

@@ -1,51 +1,41 @@
-import { TokensService } from '@/api/generated';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  Card, CardContent, CardHeader, CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
-import TokenVoteCard from '@/features/dao/components/TokenVoteCard';
-import { useDao } from '@/features/dao/hooks/useDao';
-import { LivePriceFormatter } from '@/features/shared/components';
-import { Decimal } from '@/libs/decimal';
-import { ensureAddress, ensureString } from '@/utils/common';
-import { Encoded, Encoding, toAe } from '@aeternity/aepp-sdk';
-import { useQuery } from '@tanstack/react-query';
-import { VOTE_TYPE, VoteMetadata } from 'bctsl-sdk';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { Encoded, toAe } from '@aeternity/aepp-sdk';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import BigNumber from 'bignumber.js';
+import { VoteMetadata } from 'bctsl-sdk';
+import { ChevronLeft, ExternalLink, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Link, useParams } from 'react-router-dom';
+import {
+  Link, useNavigate, useParams, useSearchParams,
+} from 'react-router-dom';
+import { TokensService } from '@/api/generated';
+import { Button } from '@/components/ui/button';
+import { LivePriceFormatter } from '@/features/shared/components';
+import { useAccount } from '@/hooks';
+import { Decimal } from '@/libs/decimal';
+import TokenVoteCard, { voteDetailsPath } from '../components/TokenVoteCard';
+import VoteCreateForm from '../components/VoteCreateForm';
+import VoteRulesCard from '../components/VoteRulesCard';
+import { useDao } from '../hooks/useDao';
+import { daoVotesQueryKey, useDaoVotes } from '../hooks/useDaoVotes';
+import '../components/daoVoting.css';
 
-const voteTypes = [
-  VOTE_TYPE.VotePayout,
-  // VOTE_TYPE.VotePayoutAmount, // two fields
-  VOTE_TYPE.ChangeDAO,
-  // VOTE_TYPE.ChangeMetaInfo, // a map
-  VOTE_TYPE.ChangeMinimumTokenThreshold,
-  VOTE_TYPE.AddModerator,
-  VOTE_TYPE.DeleteModerator,
-] as const;
+type Filter = 'all' | 'open' | 'closed';
 
-const Dao = () => {
+const toBigInt = (value?: string | number | null) => {
+  if (value == null || value === '') return undefined;
+  const n = new BigNumber(value);
+  return n.isFinite() ? BigInt(n.integerValue(BigNumber.ROUND_DOWN).toFixed()) : undefined;
+};
+
+const TokenDaosListView = () => {
   const { t } = useTranslation('dao');
   const { saleAddress } = useParams();
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [creating, setCreating] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<{
-    value?: string;
-    description?: string;
-    link?: string;
-  }>({});
-  const [newVote, setNewVote] = useState<{
-    type:(typeof voteTypes)[number];
-    value?: string;
-    description?: string;
-    link?: string;
-      }>({ type: VOTE_TYPE.VotePayout, value: '' });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [filter, setFilter] = useState<Filter>('all');
+  const creating = searchParams.get('create') === '1';
 
   const { data: token, isLoading, error } = useQuery({
     queryFn: () => TokensService.findByAddress({ address: saleAddress }),
@@ -54,355 +44,206 @@ const Dao = () => {
     retryDelay: 1000 * 5,
   });
 
-  const { addVote, state, updateState } = useDao({
+  const { addVote, tokenMetaInfo } = useDao({
     tokenSaleAddress: saleAddress as Encoded.ContractAddress,
   });
+  const { activeAccount, balance } = useAccount();
 
-  const validateForm = () => {
-    const errors: { value?: string; description?: string; link?: string } = {};
+  const {
+    votes, openCount, data: votesData, isLoading: votesLoading, isError: votesError, refetch, currentBlockHeight,
+  } = useDaoVotes(token?.dao_address);
 
-    // Validate subject value (should be an address)
-    if (!newVote.value || newVote.value.trim() === '') {
-      errors.value = t('subjectValueRequired');
-    } else {
-      try {
-        ensureAddress(newVote.value.trim(), Encoding.ContractAddress);
-      } catch {
-        errors.value = t('subjectValueInvalid');
-      }
-    }
+  const tokenName = token?.name || token?.symbol || '';
+  const tokenLabel = tokenName ? `#${tokenName}` : '';
+  const tokenSymbol = tokenMetaInfo?.symbol || token?.symbol || '';
+  const treasuryAettos = toBigInt(token?.dao_balance);
 
-    // Validate description (should be a string)
-    if (!newVote.description || newVote.description.trim() === '') {
-      errors.description = t('descriptionRequired');
-    } else {
-      try {
-        ensureString(newVote.description.trim());
-      } catch {
-        errors.description = t('descriptionInvalid');
-      }
-    }
+  const shown = useMemo(() => votes.filter((v) => {
+    if (filter === 'open') return v.status === 'open';
+    if (filter === 'closed') return v.status !== 'open';
+    return true;
+  }), [votes, filter]);
 
-    // Validate link (should be a string)
-    if (!newVote.link || newVote.link.trim() === '') {
-      errors.link = t('linkRequired');
-    } else {
-      try {
-        ensureString(newVote.link.trim());
-      } catch {
-        errors.link = t('linkInvalid');
-      }
-    }
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
+  const setCreating = (value: boolean) => {
+    const next = new URLSearchParams(searchParams);
+    if (value) next.set('create', '1'); else next.delete('create');
+    setSearchParams(next);
+    try { window.scrollTo({ top: 0 }); } catch { /* jsdom */ }
   };
 
-  const clearFieldError = (field: keyof typeof validationErrors) => {
-    if (validationErrors[field]) {
-      setValidationErrors((prev) => ({ ...prev, [field]: undefined }));
-    }
+  const onCreate = async (metadata: VoteMetadata) => {
+    const vote = await addVote(metadata);
+    await queryClient.invalidateQueries({ queryKey: daoVotesQueryKey(token?.dao_address) });
+    if (vote && saleAddress) navigate(voteDetailsPath(saleAddress, { id: vote.voteId, address: vote.address }));
+    else setCreating(false);
   };
 
-  async function createVote() {
-    if (!saleAddress) return;
+  const filters: { id: Filter; count: number }[] = [
+    { id: 'all', count: votes.length },
+    { id: 'open', count: openCount },
+    { id: 'closed', count: votes.length - openCount },
+  ];
 
-    // Validate form before proceeding
-    if (!validateForm()) {
-      return;
-    }
-
-    setCreating(true);
-    setErrorMessage(null);
-    try {
-      const metadata: any = {
-        subject: { VotePayout: [newVote.value] },
-        description: newVote.description || '',
-        link: newVote.link || '',
-
-      };
-      await addVote(metadata as VoteMetadata);
-      await updateState();
-    } catch (e: any) {
-      setErrorMessage(e?.message || t('failedToCreateVote'));
-    } finally {
-      setCreating(false);
-    }
+  let list;
+  if (votesLoading || (!votesData && !votesError) || (votesData && currentBlockHeight == null)) {
+    list = <div className="dao-v-empty dao-v-muted" role="status">{t('loading')}</div>;
+  } else if (votesError) {
+    list = (
+      <div className="dao-v-empty" role="alert">
+        <p>{t('voting.list.loadError')}</p>
+        <Button type="button" variant="outline" className="dao-v-btn ui-secondary" onClick={() => refetch()}>
+          {t('voting.list.retry')}
+        </Button>
+      </div>
+    );
+  } else if (votes.length === 0) {
+    list = (
+      <div className="dao-v-empty">
+        <p><strong>{t('voting.list.emptyTitle')}</strong></p>
+        <p className="dao-v-muted">{t('voting.list.emptyText')}</p>
+        <Button type="button" className="dao-v-btn ui-primary" onClick={() => setCreating(true)}>
+          <Plus aria-hidden="true" />
+          {t('voting.list.createFirst')}
+        </Button>
+      </div>
+    );
+  } else if (shown.length === 0) {
+    list = <div className="dao-v-empty dao-v-muted">{t(`voting.list.noneInFilter.${filter}`)}</div>;
+  } else {
+    list = (
+      <ul className="dao-v-items">
+        {shown.map((vote) => (
+          <TokenVoteCard
+            key={vote.address}
+            vote={vote}
+            saleAddress={saleAddress as string}
+            height={currentBlockHeight as number}
+            tokenSupply={votesData?.tokenSupply}
+            voteTimeout={votesData?.voteTimeout}
+            tokenSymbol={tokenSymbol}
+          />
+        ))}
+      </ul>
+    );
   }
 
   return (
-    <div className="ui-page dao-page max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-4">
-      {/* Header Section */}
-      <div className="mb-6">
-        {token && (
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <h1 className="ui-page-title break-words">
-                {token.name || token.symbol}
-                {' '}
-                [
-                {t('badge')}
-                ]
-              </h1>
-              <Badge
-                variant="secondary"
-                className="bg-gradient-to-r from-slate-600/80 to-slate-700/80 text-white text-xs font-medium px-2.5 py-1 rounded-full border-0 shadow-sm"
-              >
-                {t('badge')}
-              </Badge>
-            </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <div className="flex flex-row gap-2 items-center font-bold text-white">
-                <div className="font-bold opacity-80 text-white/80">{t('treasury')}</div>
-                <div className="font-bold text-white">
-                  {token?.dao_balance ? (
-                    <LivePriceFormatter
-                      aePrice={Decimal.from(toAe(token?.dao_balance))}
-                      watchKey={token?.sale_address}
-                      className="text-xs sm:text-base"
-                      hideFiatPrice
-                    />
-                  ) : (
-                    '—'
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4">
-          <Link
-            to={`/trends/tokens/${encodeURIComponent(token?.name || '')}`}
-            className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
-          >
-            {t('backToTokenSale')}
-          </Link>
-          <a
-            href={`https://aescan.io/contracts/${encodeURIComponent(
-              saleAddress || '',
-            )}?type=call-transactions`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
-          >
-            {t('viewOnAescan')}
-          </a>
-        </div>
+    <div className="ui-page dao-page dao-v max-w-[min(1200px,100%)] mx-auto min-h-screen px-4">
+      <div className="dao-v-topline">
+        <Link to={`/trends/tokens/${encodeURIComponent(token?.name || '')}`}>
+          <ChevronLeft size={16} aria-hidden="true" />
+          {tokenLabel ? t('voting.page.backTo', { token: tokenLabel }) : t('backToTokenSale')}
+        </Link>
+        <a
+          href={`https://aescan.io/contracts/${encodeURIComponent(token?.dao_address || saleAddress || '')}?type=call-transactions`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {t('voting.page.viewOnAescan')}
+          <ExternalLink size={13} aria-hidden="true" />
+        </a>
       </div>
 
-      {isLoading && (
-        <Card className="ui-panel">
-          <CardContent className="p-6">
-            <div className="text-white/80">{t('loading')}</div>
-          </CardContent>
-        </Card>
-      )}
-
       {error && (
-        <Card className="bg-red-500/10 border-red-500/30">
-          <CardContent className="p-6">
-            <div className="text-red-400">{error.message}</div>
-          </CardContent>
-        </Card>
+        <div className="dao-v-note dao-v-note--error" role="alert"><p>{error.message}</p></div>
       )}
+      {isLoading && <div className="dao-v-empty dao-v-muted" role="status">{t('loading')}</div>}
 
-      {!isLoading && !error && (
-        <div className="grid grid-cols-1 gap-6">
-          {/* Stats Card */}
-          <Card className="ui-panel">
-            <CardContent className="p-6">
-              <div className="flex flex-wrap gap-6 text-sm mb-4">
-                <div>
-                  <span className="opacity-75 text-xs text-white/75">
-                    {t('proposals')}
-                  </span>
-                  {' '}
-                  <strong className="text-white">
-                    {Array.isArray((state as any)?.votes)
-                      ? (state as any).votes.length
-                      : 0}
-                  </strong>
-                </div>
-                {token?.holders_count != null && (
-                  <div>
-                    <span className="opacity-75 text-xs text-white/75">
-                      {t('holders')}
-                    </span>
-                    {' '}
-                    <strong className="text-white">
-                      {Number(token.holders_count).toLocaleString()}
-                    </strong>
-                  </div>
-                )}
-                {token?.market_cap != null && (
-                  <div className="flex flex-row gap-2 items-center">
-                    <span className="opacity-75 text-xs text-white/75">
-                      {t('marketCap')}
-                    </span>
-                    {' '}
-                    <strong className="text-white">
-                      <LivePriceFormatter
-                        aePrice={Decimal.from(toAe(token.market_cap))}
-                        watchKey={token.sale_address}
-                        className="text-xs"
-                        hideFiatPrice
-                      />
-                    </strong>
-                  </div>
-                )}
+      {token && (
+        <>
+          <header className="dao-v-head">
+            <div>
+              <p className="dao-v-eyebrow">{t('voting.page.eyebrow')}</p>
+              <h1 className="ui-page-title break-words">
+                {tokenLabel}
+                {' '}
+                <span>{t('badge')}</span>
+              </h1>
+              <p className="dao-v-muted">{t('voting.page.intro')}</p>
+            </div>
+            <div className="dao-v-treasury">
+              <span>{t('treasury')}</span>
+              <strong>
+                {token.dao_balance ? (
+                  <LivePriceFormatter
+                    aePrice={Decimal.from(toAe(token.dao_balance))}
+                    watchKey={token.sale_address}
+                    hideFiatPrice
+                  />
+                ) : '—'}
+              </strong>
+            </div>
+          </header>
+
+          <dl className="dao-v-stats">
+            <div>
+              <dt>{t('voting.page.openVotes')}</dt>
+              <dd data-testid="dao-open-votes">{votesData ? openCount : '—'}</dd>
+            </div>
+            <div>
+              <dt>{t('voting.page.allVotes')}</dt>
+              <dd>{votesData ? votes.length : '—'}</dd>
+            </div>
+            {token.holders_count != null && (
+              <div>
+                <dt>{t('voting.page.holders')}</dt>
+                <dd>{Number(token.holders_count).toLocaleString()}</dd>
               </div>
-              <div className="text-sm opacity-80 text-white/80 leading-relaxed">
-                {t('intro')}
-              </div>
-            </CardContent>
-          </Card>
-          {/* Create Vote and Votes in a row */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Create Vote Card */}
-            <Card className="ui-panel">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold text-white">{t('createVote')}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-4">
-                  <div>
-                    <div className="text-sm font-medium text-white/80 mb-2 block">
-                      {t('voteType')}
-                    </div>
-                    <Select
-                      value={newVote.type}
-                      onValueChange={(value) => setNewVote((v) => ({
-                        ...v,
-                        type: value as (typeof voteTypes)[number],
-                      }))}
-                    >
-                      <SelectTrigger className="bg-white/5 border-white/20 text-white">
-                        <SelectValue placeholder={t('selectVoteType')} />
-                      </SelectTrigger>
-                      <SelectContent className="bg-slate-900 border-white/20">
-                        {voteTypes.map((type) => (
-                          <SelectItem key={type} value={type} className="text-white">
-                            {type}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+            )}
+          </dl>
 
-                  <div>
-                    <div className="text-sm font-medium text-white/80 mb-2 block">
-                      {t('subjectValue')}
+          <div className="dao-v-grid">
+            <div className="min-w-0">
+              {creating ? (
+                <VoteCreateForm
+                  tokenLabel={tokenLabel}
+                  tokenSymbol={tokenSymbol}
+                  treasuryAettos={treasuryAettos}
+                  aeBalanceAettos={activeAccount ? toBigInt(balance as any) : undefined}
+                  connected={!!activeAccount}
+                  onCancel={() => setCreating(false)}
+                  onCreate={onCreate}
+                />
+              ) : (
+                <section className="dao-v-card" aria-labelledby="dao-v-list-title">
+                  <div className="dao-v-list-head">
+                    <div>
+                      <h2 id="dao-v-list-title">{t('voting.list.title')}</h2>
+                      <p className="dao-v-muted">{t('voting.list.subtitle')}</p>
                     </div>
-                    <Input
-                      placeholder={t('subjectValuePlaceholder')}
-                      value={newVote.value}
-                      onChange={(e) => {
-                        setNewVote((v) => ({ ...v, value: e.target.value }));
-                        clearFieldError('value');
-                      }}
-                      className={`bg-white/5 border-white/20 text-white placeholder:text-white/60 ${
-                        validationErrors.value ? 'border-red-500' : ''
-                      }`}
-                    />
-                    {validationErrors.value && (
-                      <p className="text-red-400 text-xs mt-1">{validationErrors.value}</p>
-                    )}
+                    <Button type="button" className="dao-v-btn ui-primary" onClick={() => setCreating(true)}>
+                      <Plus aria-hidden="true" />
+                      {t('voting.list.create')}
+                    </Button>
                   </div>
-
-                  <div>
-                    <div className="text-sm font-medium text-white/80 mb-2 block">
-                      {t('description')}
-                    </div>
-                    <Input
-                      placeholder={t('descriptionPlaceholder')}
-                      value={newVote.description || ''}
-                      onChange={(e) => {
-                        setNewVote((v) => ({ ...v, description: e.target.value }));
-                        clearFieldError('description');
-                      }}
-                      className={`bg-white/5 border-white/20 text-white placeholder:text-white/60 ${
-                        validationErrors.description ? 'border-red-500' : ''
-                      }`}
-                    />
-                    {validationErrors.description && (
-                      <p className="text-red-400 text-xs mt-1">{validationErrors.description}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <div className="text-sm font-medium text-white/80 mb-2 block">
-                      {t('link')}
-                    </div>
-                    <Input
-                      placeholder={t('linkPlaceholder')}
-                      value={newVote.link || ''}
-                      onChange={(e) => {
-                        setNewVote((v) => ({ ...v, link: e.target.value }));
-                        clearFieldError('link');
-                      }}
-                      className={`bg-white/5 border-white/20 text-white placeholder:text-white/60 ${
-                        validationErrors.link ? 'border-red-500' : ''
-                      }`}
-                    />
-                    {validationErrors.link && (
-                      <p className="text-red-400 text-xs mt-1">{validationErrors.link}</p>
-                    )}
-                  </div>
-
-                  {errorMessage && (
-                    <div className="text-red-400 text-sm bg-red-500/10 border border-red-500/30 rounded-lg p-3">
-                      {errorMessage}
+                  {votes.length > 0 && (
+                    <div className="dao-v-filters" role="group" aria-label={t('voting.list.filterLabel')}>
+                      {filters.map(({ id, count }) => (
+                        <button
+                          key={id}
+                          type="button"
+                          className="dao-v-chip"
+                          aria-pressed={filter === id}
+                          onClick={() => setFilter(id)}
+                        >
+                          {t(`voting.list.filters.${id}`)}
+                          <span>{count}</span>
+                        </button>
+                      ))}
                     </div>
                   )}
-
-                  <Button
-                    onClick={createVote}
-                    disabled={creating}
-                    className="ui-primary w-full"
-                  >
-                    {creating ? t('creating') : t('createVoteButton')}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Votes Card */}
-            <Card className="ui-panel">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold text-white">{t('votes')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {!state || !state?.votes || Array.from(state?.votes).length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500/10 to-blue-500/5 flex items-center justify-center mb-4">
-                      <svg className="w-8 h-8 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-semibold text-white mb-2">{t('noVotesYet')}</h3>
-                    <p className="text-white/60 text-sm max-w-xs leading-relaxed">
-                      {t('noVotesYetDescription')}
-                    </p>
-                  </div>
-                ) : (
-                  Array.from(state?.votes).map((vote: any, index: number) => (
-                    <TokenVoteCard
-                      // eslint-disable-next-line react/no-array-index-key
-                      key={index}
-                      address={vote[1][1]}
-                      saleAddress={saleAddress as Encoded.ContractAddress}
-                      voteId={vote[0]}
-                    />
-                  ))
-                )}
-              </CardContent>
-            </Card>
+                  {list}
+                </section>
+              )}
+            </div>
+            <aside className="dao-v-side">
+              <VoteRulesCard voteTimeout={votesData?.voteTimeout} />
+            </aside>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
 };
 
-export default Dao;
+export default TokenDaosListView;

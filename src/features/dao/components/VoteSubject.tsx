@@ -1,52 +1,29 @@
-import React from 'react';
-import { VOTE_TYPE, VoteState } from 'bctsl-sdk';
+import { VoteState } from 'bctsl-sdk';
 import { useTranslation } from 'react-i18next';
 import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
+import { formatUnits, summarizeSubject } from '../utils/voteRules';
 
 interface VoteSubjectProps {
-  voteState: VoteState;
+  voteState: Pick<VoteState, 'metadata'>;
+  tokenSymbol?: string;
 }
 
-function voteTypeHeadlineKey(voteType: VOTE_TYPE): string {
-  switch (voteType) {
-    case VOTE_TYPE.VotePayout:
-      return 'voteSubject.payoutTreasuryBalance';
-    case VOTE_TYPE.VotePayoutAmount:
-      return 'voteSubject.votePayoutAmount';
-    case VOTE_TYPE.ChangeDAO:
-      return 'voteSubject.changeDao';
-    case VOTE_TYPE.ChangeMetaInfo:
-      return 'voteSubject.changeMetaInfo';
-    case VOTE_TYPE.ChangeMinimumTokenThreshold:
-      return 'voteSubject.changeMinimumTokenThreshold';
-    case VOTE_TYPE.AddModerator:
-      return 'voteSubject.addModerator';
-    case VOTE_TYPE.DeleteModerator:
-      return 'voteSubject.deleteModerator';
-    default:
-      return 'voteSubject.unknownVoteType';
-  }
-}
-
-const VoteSubject = ({ voteState }: VoteSubjectProps) => {
-  const { t } = useTranslation('dao');
-  const subjectEntries = Object.entries(voteState.metadata.subject);
-  const subjectText = t(voteTypeHeadlineKey(subjectEntries[0][0] as VOTE_TYPE));
-  const beneficiary = subjectEntries[0][1][0];
+/** One plain line saying what happens if the vote passes, e.g. "Send 1,500 AE to organiser.chain". */
+const VoteSubject = ({ voteState, tokenSymbol }: VoteSubjectProps) => {
+  const { t, i18n } = useTranslation('dao');
+  const summary = summarizeSubject(voteState.metadata?.subject);
+  const amount = summary.amountAettos != null
+    ? formatUnits(summary.amountAettos, 18, i18n.language)
+    : undefined;
+  const tokens = summary.tokenAmount != null
+    ? formatUnits(summary.tokenAmount, 18, i18n.language)
+    : undefined;
 
   return (
-    <div className="text-white flex items-center gap-2 flex-wrap">
-      <span className="font-medium">{subjectText}</span>
-      <div className="flex items-center gap-4">
-        <span className="text-white/80">
-          {' '}
-          {t('voteSubject.to')}
-          {' '}
-        </span>
-        <AddressAvatarWithChainName address={beneficiary} variant="feed" />
-      </div>
-
-    </div>
+    <span className="dao-v-subject">
+      <span>{t(`voting.subject.${summary.kind}`, { amount, tokens, symbol: tokenSymbol ?? '' })}</span>
+      {summary.account && <AddressAvatarWithChainName address={summary.account} variant="feed" />}
+    </span>
   );
 };
 

@@ -1,30 +1,27 @@
+import { useState } from 'react';
+import { Encoded, Encoding } from '@aeternity/aepp-sdk';
+import { useQuery } from '@tanstack/react-query';
+import {
+  ChevronLeft, CircleCheckBig, ExternalLink, Info, Lock,
+} from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Link, useParams } from 'react-router-dom';
 import { TokensService } from '@/api/generated';
+import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
+import { ConnectWalletButton } from '@/components/ConnectWalletButton';
+import { Button } from '@/components/ui/button';
 import { useDaoVote } from '@/features/dao/hooks/useDaoVote';
 import { useAeSdk } from '@/hooks';
 import { ensureAddress, ensureString } from '@/utils/common';
 import { safeHref } from '@/utils/safeHref';
-import { Encoded, Encoding } from '@aeternity/aepp-sdk';
-import { useQuery } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
-import { Link, useParams } from 'react-router-dom';
-
-// UI Components
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  Card, CardContent, CardHeader, CardTitle,
-} from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
-
-// Custom Components
-import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
-import TokenSummary from '@/features/bcl/components/TokenSummary';
+import VoteRulesCard from '@/features/dao/components/VoteRulesCard';
 import VoteSubject from '@/features/dao/components/VoteSubject';
 import VotersTable from '@/features/dao/components/VotersTable';
-import { TokenRanking } from '@/features/trending/components/TokenRanking';
-import TokenTradeCard from '@/features/trending/components/TokenTradeCard';
+import { VoteMeters, VoteStatusBadge, VoteTime } from '@/features/dao/components/VoteStatus';
+import { daoErrorKey } from '@/features/dao/utils/daoErrors';
+import { formatUnits, summarizeSubject } from '@/features/dao/utils/voteRules';
 import Spinner from '@/components/Spinner';
+import '@/features/dao/components/daoVoting.css';
 
 type DaoVoteDetailsParams = {
   saleAddress: string;
@@ -37,8 +34,9 @@ const DaoVoteDetailsContent = ({
   voteAddress,
   voteId,
 }: DaoVoteDetailsParams) => {
-  const { t } = useTranslation('dao');
-  const { currentBlockHeight } = useAeSdk();
+  const { t, i18n } = useTranslation('dao');
+  const { currentBlockHeight, activeAccount } = useAeSdk();
+  const [choice, setChoice] = useState<'yes' | 'no' | ''>('');
 
   ensureAddress(saleAddress, Encoding.ContractAddress);
   ensureString(saleAddress);
@@ -47,18 +45,22 @@ const DaoVoteDetailsContent = ({
   ensureString(voteId);
 
   const {
-    hasTokenBalance,
     voteState,
-    canVote,
-    canRevokeVote,
-    canWithdraw,
-    canApply,
-    voteYesPercentage,
-    userVoteOrLockedInfo,
+    status,
+    tally,
+    position,
+    actions,
+    voteTimeout,
+    tokenSymbol: chainSymbol,
+    tokenDecimals,
+    userTokenBalance,
+    daoLoaded,
     actionLoading,
+    actionError,
     voteOption,
     revokeVote,
     withdraw,
+    applyVote,
   } = useDaoVote({
     tokenSaleAddress: saleAddress as Encoded.ContractAddress,
     voteAddress: voteAddress as Encoded.ContractAddress,
@@ -76,52 +78,17 @@ const DaoVoteDetailsContent = ({
     retryDelay: 1000 * 5,
   });
 
-  const formatDate = (height: bigint) => {
-    const timeDiff = (Number(height) - currentBlockHeight) * 3 * 60 * 1000;
-    return new Date(Date.now() + timeDiff).toDateString();
-  };
-
-  const formatTimeRemaining = (height: bigint) => {
-    const blocksRemaining = Number(height) - currentBlockHeight;
-    const minutesRemaining = blocksRemaining * 3;
-    const hoursRemaining = Math.floor(minutesRemaining / 60);
-    const daysRemaining = Math.floor(hoursRemaining / 24);
-
-    if (daysRemaining > 0) {
-      return `${daysRemaining}d ${hoursRemaining % 24}h remaining`;
-    } if (hoursRemaining > 0) {
-      return `${hoursRemaining}h ${minutesRemaining % 60}m remaining`;
-    }
-    return `${minutesRemaining}m remaining`;
-  };
-
-  const isOpen = voteState
-    ? currentBlockHeight < voteState.close_height
-    : false;
-
   // `voteState.metadata.link` is free-text supplied by whoever created the poll — no scheme
   // validation happens on-chain, so a `javascript:`/`data:` payload must be rejected here before
   // it can ever reach an `href`.
   const proposalLink = safeHref(voteState?.metadata?.link);
-
-  const getVoteStatusColor = () => {
-    if (!isOpen) return 'bg-red-500/20 text-red-400 border-red-500/30';
-    if (voteYesPercentage && voteYesPercentage > 0.5) return 'bg-green-500/20 text-green-400 border-green-500/30';
-    return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-  };
-
-  const getVoteStatusText = () => {
-    if (!isOpen) return t('voteStatus.closed');
-    if (voteYesPercentage && voteYesPercentage > 0.5) return t('voteStatus.passing');
-    return t('voteStatus.open');
-  };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <Spinner className="w-20 h-20 mx-auto" />
-          <div className="text-white/80 mt-4">{t('loading')}</div>
+          <div className="mt-4">{t('loading')}</div>
         </div>
       </div>
     );
@@ -138,268 +105,251 @@ const DaoVoteDetailsContent = ({
   }
 
   if (!token) {
-    return <div className="text-slate-400 p-4">{t('tokenNotFound')}</div>;
+    return <div className="p-4">{t('tokenNotFound')}</div>;
   }
 
-  return (
-    <div className="ui-page dao-page max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Left sidebar - Token info (hidden on mobile) */}
-        <div className="hidden lg:block lg:col-span-1 space-y-4">
-          {/* TokenTradeCard placeholder */}
+  const tokenLabel = `#${token.name || token.symbol}`;
+  const symbol = chainSymbol || token.symbol || '';
+  const fmtTokens = (value?: bigint) => formatUnits(value ?? 0n, tokenDecimals, i18n.language);
+  const summary = summarizeSubject(voteState?.metadata?.subject);
+  const height = currentBlockHeight ?? 0;
+  const hasTokens = (userTokenBalance ?? 0n) > 0n;
+  const errorText = actionError ? t(daoErrorKey(actionError)) : '';
 
-          <TokenTradeCard token={token} />
+  let treasuryShare: string | undefined;
+  if (summary.amountAettos != null && token.dao_balance) {
+    const treasury = Number(token.dao_balance);
+    if (treasury > 0) {
+      treasuryShare = Math.round((Number(summary.amountAettos) / treasury) * 100).toLocaleString(i18n.language);
+    }
+  }
 
-          <TokenSummary token={token} />
+  const ballot = () => {
+    if (!status || !actions) {
+      return <div className="dao-v-muted" role="status">{t('loading')}</div>;
+    }
 
-          <TokenRanking token={token} />
-        </div>
-
-        {/* Main content */}
-        <div className="lg:col-span-3">
-          {voteState && (
+    if (position) {
+      const side = position.agreed ? t('voting.ballot.yes') : t('voting.ballot.no');
+      return (
+        <>
+          <div className="dao-v-note dao-v-note--ok">
+            <CircleCheckBig aria-hidden="true" />
+            <p>{t('voting.ballot.youVoted', { side, amount: fmtTokens(position.amount), symbol })}</p>
+          </div>
+          {actions.canRevoke && (
             <>
-              {/* Back button */}
-              <div className="mb-4 flex items-center gap-4">
-                <Link
-                  to={`/trends/dao/${saleAddress}`}
-                  className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
-                >
-                  {t('backToTreasury')}
-                </Link>
+              <div className="dao-v-note">
+                <Lock aria-hidden="true" />
+                <p>{t('voting.ballot.lockedUntilEnd', { token: tokenLabel })}</p>
               </div>
-
-              {/* Enhanced Vote Card */}
-              <div className="space-y-6">
-                {/* Vote Header */}
-                <Card className="ui-panel">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-xl font-semibold text-white">
-                        {t('voteNumber', { voteId })}
-                      </CardTitle>
-                      <Badge
-                        variant="secondary"
-                        className={getVoteStatusColor()}
-                      >
-                        {getVoteStatusText()}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="space-y-6">
-                    {/* Vote Subject */}
-                    <div>
-                      <VoteSubject voteState={voteState} />
-                    </div>
-
-                    {/* Vote Progress */}
-                    {voteYesPercentage !== undefined && (
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium text-white/80">{t('voteProgress')}</span>
-                          <span className="text-sm text-white/60">
-                            {Math.round(voteYesPercentage * 100)}
-                            % Yes
-                          </span>
-                        </div>
-                        <Progress
-                          value={voteYesPercentage * 100}
-                          className="h-2 bg-white/10"
-                        />
-                        <div className="flex justify-between text-xs text-white/60">
-                          <span>
-                            No (
-                            {Math.round((1 - voteYesPercentage) * 100)}
-                            %)
-                          </span>
-                          <span>
-                            Yes (
-                            {Math.round(voteYesPercentage * 100)}
-                            %)
-                          </span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Vote Metadata */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-white/60 font-medium min-w-[120px]">{t('proposedBy')}</span>
-                          <AddressAvatarWithChainName address={voteState.author} variant="feed" />
-                        </div>
-
-                        {voteState?.create_height && (
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-white/60 font-medium min-w-[120px]">{t('createdLabel')}</span>
-                            <span className="text-white">{formatDate(voteState.create_height)}</span>
-                          </div>
-                        )}
-
-                        {voteState?.close_height && (
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-white/60 font-medium min-w-[120px]">
-                              {isOpen ? t('closes') : t('closed')}
-                            </span>
-                            <span className="text-white">
-                              {formatDate(voteState.close_height)}
-                              {isOpen && (
-                                <span className="ml-2 text-yellow-400 text-xs">
-                                  (
-                                  {formatTimeRemaining(voteState.close_height)}
-                                  )
-                                </span>
-                              )}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="space-y-3">
-                        {proposalLink && (
-                          <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
-                            <span className="text-white/60 font-medium min-w-[120px]">{t('linkLabel')}</span>
-                            <a
-                              href={proposalLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-400 hover:text-blue-300 underline"
-                            >
-                              {t('viewProposal')}
-                            </a>
-                          </div>
-                        )}
-
-                        {userVoteOrLockedInfo && (
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-white/60 font-medium min-w-[120px]">{t('yourStatus')}</span>
-                            <span className="text-white/80 text-sm">{userVoteOrLockedInfo}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Description */}
-                    {voteState?.metadata?.description && (
-                      <div>
-                        <div className="text-white/60 font-medium mb-2">{t('descriptionLabel')}</div>
-                        <div className="text-white/80 bg-white/5 rounded-lg p-4 border border-white/10">
-                          {voteState.metadata.description}
-                        </div>
-                      </div>
-                    )}
-
-                    <Separator className="bg-white/10" />
-
-                    {/* Token balance check */}
-                    {canVote && !hasTokenBalance && (
-                      <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
-                        <div className="text-center space-y-4">
-                          <div className="text-yellow-400 font-medium">
-                            {t('needTokensToVote', { symbol: token.symbol })}
-                          </div>
-                          <div className="text-white/80 text-sm">
-                            {t('getTokensToVote', { symbol: token.symbol })}
-                          </div>
-                          <Link
-                            to={`/trends/tokens/${token.symbol}`}
-                            className="inline-block"
-                          >
-                            <Button variant="outline" size="sm" className="border-yellow-500/30 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20">
-                              {t('getTokensButton', { symbol: token.symbol })}
-                            </Button>
-                          </Link>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Action Buttons */}
-                    <div className="flex flex-wrap gap-3">
-                      {canVote && hasTokenBalance && (
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => voteOption(true)}
-                            disabled={actionLoading}
-                            className="border-green-500/30 bg-green-500/10 text-green-400 hover:bg-green-500/20"
-                          >
-                            {t('voteYes')}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => voteOption(false)}
-                            disabled={actionLoading}
-                            className="border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20"
-                          >
-                            {t('voteNo')}
-                          </Button>
-                        </div>
-                      )}
-
-                      {canRevokeVote && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={revokeVote}
-                          disabled={actionLoading}
-                          className="border-yellow-500/30 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20"
-                        >
-                          {t('revokeVote')}
-                        </Button>
-                      )}
-
-                      {canWithdraw && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={withdraw}
-                          disabled={actionLoading}
-                          className="border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20"
-                        >
-                          {t('withdraw')}
-                        </Button>
-                      )}
-
-                      {canApply && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={actionLoading}
-                          className="border-purple-500/30 bg-purple-500/10 text-blue-300 hover:bg-purple-500/20"
-                        >
-                          {t('apply')}
-                        </Button>
-                      )}
-
-                    </div>
-
-                    {actionLoading && (
-                      <div className="flex items-center justify-center py-4">
-                        <Spinner className="w-6 h-6" />
-                        <span className="ml-3 text-white/60">{t('processing')}</span>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Voters Table */}
-
-                <Card className="ui-panel">
-                  <CardHeader>
-                    <CardTitle className="text-lg font-semibold text-white">{t('voters.title')}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <VotersTable voteState={voteState} token={token} />
-                  </CardContent>
-                </Card>
-              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="dao-v-btn ui-secondary w-full"
+                disabled={actionLoading}
+                onClick={revokeVote}
+              >
+                {t('voting.ballot.takeBack')}
+              </Button>
             </>
           )}
+          {actions.canWithdraw && (
+            <Button
+              type="button"
+              className="dao-v-btn ui-primary w-full"
+              disabled={actionLoading}
+              onClick={withdraw}
+            >
+              {t('voting.ballot.withdraw', { amount: fmtTokens(position.amount), symbol })}
+            </Button>
+          )}
+          {position.withdrawn && <p className="dao-v-help">{t('voting.ballot.withdrawn')}</p>}
+        </>
+      );
+    }
+
+    if (status !== 'open') {
+      return <p className="dao-v-muted">{t(`voting.ballot.closed.${status}`)}</p>;
+    }
+
+    return (
+      <>
+        <fieldset>
+          <legend className="sr-only">{t('voting.ballot.choose')}</legend>
+          {(['yes', 'no'] as const).map((c) => (
+            <label
+              key={c}
+              htmlFor={`dao-v-choice-${c}`}
+              className={`dao-v-choice${choice === c ? ' is-checked' : ''}`}
+            >
+              <input
+                id={`dao-v-choice-${c}`}
+                type="radio"
+                name="dao-v-choice"
+                value={c}
+                checked={choice === c}
+                onChange={() => setChoice(c)}
+              />
+              <span>
+                <strong>{t(`voting.ballot.${c}Title`)}</strong>
+                <small>{t(`voting.ballot.${c}Text`)}</small>
+              </span>
+            </label>
+          ))}
+        </fieldset>
+        <div className="dao-v-note">
+          <Lock aria-hidden="true" />
+          <p>{t('voting.ballot.lockNotice', { token: tokenLabel })}</p>
         </div>
+        {!activeAccount && (
+          <ConnectWalletButton label={t('voting.ballot.connect')} block className="dao-v-btn w-full" />
+        )}
+        {activeAccount && daoLoaded && !hasTokens && (
+          <div className="dao-v-note dao-v-note--warn">
+            <Info aria-hidden="true" />
+            <div>
+              <p>{t('voting.ballot.needTokens', { token: tokenLabel })}</p>
+              <Link to={`/trends/tokens/${encodeURIComponent(token.name || token.symbol)}`} className="dao-v-link">
+                {t('voting.ballot.getTokens', { token: tokenLabel })}
+              </Link>
+            </div>
+          </div>
+        )}
+        {activeAccount && hasTokens && (
+          <>
+            <p className="dao-v-help">
+              {t('voting.ballot.weight', { amount: fmtTokens(userTokenBalance), symbol })}
+            </p>
+            <Button
+              type="button"
+              className="dao-v-btn ui-primary w-full mt-3"
+              disabled={!choice || actionLoading || !actions.canVote}
+              onClick={() => voteOption(choice === 'yes')}
+            >
+              {choice
+                ? t('voting.ballot.submit', { side: choice === 'yes' ? t('voting.ballot.yes') : t('voting.ballot.no') })
+                : t('voting.ballot.chooseFirst')}
+            </Button>
+          </>
+        )}
+      </>
+    );
+  };
+
+  return (
+    <div className="ui-page dao-page dao-v max-w-[min(1200px,100%)] mx-auto min-h-screen px-4">
+      <div className="dao-v-topline">
+        <Link to={`/trends/dao/${saleAddress}`}>
+          <ChevronLeft size={16} aria-hidden="true" />
+          {t('voting.detail.backTo', { token: tokenLabel })}
+        </Link>
+        <a
+          href={`https://aescan.io/contracts/${encodeURIComponent(voteAddress)}?type=call-transactions`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {t('voting.page.viewOnAescan')}
+          <ExternalLink size={13} aria-hidden="true" />
+        </a>
       </div>
+
+      {!voteState && <div className="dao-v-empty dao-v-muted" role="status">{t('loading')}</div>}
+
+      {voteState && (
+        <div className="dao-v-grid">
+          <div className="min-w-0 grid gap-4">
+            <section className="dao-v-card" aria-labelledby="dao-v-vote-title">
+              <div className="dao-v-item-top">
+                {status ? <VoteStatusBadge status={status} /> : <span />}
+                {status && currentBlockHeight != null && (
+                  <VoteTime
+                    status={status}
+                    closeHeight={Number(voteState.close_height)}
+                    height={height}
+                    voteTimeout={voteTimeout}
+                  />
+                )}
+              </div>
+              <p className="dao-v-eyebrow mt-3">{t('voteNumber', { voteId })}</p>
+              <h1 id="dao-v-vote-title" className="ui-page-title">
+                <VoteSubject voteState={voteState} tokenSymbol={symbol} />
+              </h1>
+              <p className="dao-v-by dao-v-muted mt-2">
+                {t('voting.list.by')}
+                <AddressAvatarWithChainName address={voteState.author} variant="feed" />
+              </p>
+
+              {summary.amountAettos != null && (
+                <div className="dao-v-ask">
+                  <span>{t('voting.detail.asksFor')}</span>
+                  <strong>{`${formatUnits(summary.amountAettos, 18, i18n.language)} AE`}</strong>
+                  {treasuryShare && (
+                    <span>{t('voting.detail.ofTreasury', { percent: treasuryShare })}</span>
+                  )}
+                </div>
+              )}
+
+              {tally && status && (
+                <div className="dao-v-box mt-4">
+                  <VoteMeters tally={tally} status={status} withNote />
+                </div>
+              )}
+
+              {voteState.metadata?.description && (
+                <>
+                  <h3 className="mt-5">{t('voting.detail.why')}</h3>
+                  <p className="dao-v-prose" dir="auto">{voteState.metadata.description}</p>
+                </>
+              )}
+              {proposalLink && (
+                <a href={proposalLink} target="_blank" rel="noopener noreferrer" className="dao-v-link">
+                  {t('viewProposal')}
+                  <ExternalLink aria-hidden="true" />
+                </a>
+              )}
+            </section>
+
+            <section className="dao-v-card" aria-labelledby="dao-v-voters-title">
+              <h2 id="dao-v-voters-title" className="mb-3">{t('voters.title')}</h2>
+              <VotersTable voteState={voteState} token={token} decimals={tokenDecimals} />
+            </section>
+          </div>
+
+          <aside className="dao-v-side">
+            <section className="dao-v-card dao-v-ballot" aria-labelledby="dao-v-ballot-title" aria-busy={actionLoading}>
+              <h3 id="dao-v-ballot-title">{t('voting.ballot.title')}</h3>
+              <div className="mt-3">{ballot()}</div>
+              {actions?.canApply && (
+                <div className="mt-4">
+                  <p className="dao-v-help mb-2">{t('voting.ballot.applyText')}</p>
+                  <Button
+                    type="button"
+                    className="dao-v-btn ui-primary w-full"
+                    disabled={actionLoading}
+                    onClick={applyVote}
+                  >
+                    {t('voting.ballot.apply')}
+                  </Button>
+                </div>
+              )}
+              {status === 'passed' && !activeAccount && (
+                <p className="dao-v-help mt-3">{t('voting.ballot.applyConnect')}</p>
+              )}
+              {actionLoading && (
+                <div className="flex items-center gap-2 mt-3 dao-v-muted" role="status">
+                  <Spinner className="w-5 h-5" />
+                  {t('voting.ballot.confirmInWallet')}
+                </div>
+              )}
+              {errorText && (
+                <div className="dao-v-note dao-v-note--error" role="alert"><p>{errorText}</p></div>
+              )}
+            </section>
+            <VoteRulesCard voteTimeout={voteTimeout} />
+          </aside>
+        </div>
+      )}
     </div>
   );
 };

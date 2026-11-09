@@ -54,25 +54,27 @@ export const TokenVotingTab = ({ token }: { token: TokenDto }) => {
   }
 
   return (
-    <section className="dao-v dao-v-card" aria-labelledby="token-voting-title">
-      <div className="dao-v-tab-head">
-        <div>
-          <h2 id="token-voting-title">{t('voting.tab.title', { token: label })}</h2>
-          <p className="dao-v-muted">
-            {data ? t('voting.tab.subtitle', { count: openCount }) : t('voting.page.intro')}
-          </p>
+    <section className="dao-v" aria-labelledby="token-voting-title">
+      <div className="dao-v-card">
+        <div className="dao-v-tab-head">
+          <div>
+            <h2 id="token-voting-title">{t('voting.tab.title', { token: label })}</h2>
+            <p className="dao-v-muted">
+              {data ? t('voting.tab.subtitle', { count: openCount }) : t('voting.page.intro')}
+            </p>
+          </div>
+          <div className="dao-v-tab-actions">
+            <Link to={`${daoPath}?create=1`} className="dao-v-chip">
+              <Plus size={16} aria-hidden="true" />
+              {t('voting.list.create')}
+            </Link>
+            <Link to={daoPath} className="dao-v-chip">
+              {t('voting.tab.openDao')}
+            </Link>
+          </div>
         </div>
-        <div className="dao-v-tab-actions">
-          <Link to={`${daoPath}?create=1`} className="dao-v-chip">
-            <Plus size={16} aria-hidden="true" />
-            {t('voting.list.create')}
-          </Link>
-          <Link to={daoPath} className="dao-v-chip">
-            {t('voting.tab.openDao')}
-          </Link>
-        </div>
+        {body}
       </div>
-      {body}
     </section>
   );
 };

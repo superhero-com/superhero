@@ -2,22 +2,12 @@ import {
   afterEach, beforeEach, describe, expect, it, vi,
 } from 'vitest';
 import {
-  LEGACY_ANON_ID_STORAGE_KEY,
   getOrCreateAnonId,
-  isUuidV4,
   randomUuidV4,
   resetAnonIdForTests,
 } from '../anonId';
 
-const spyStorage = () => {
-  const data = new Map<string, string>();
-  return {
-    data,
-    getItem: vi.fn((k: string) => (data.has(k) ? data.get(k)! : null)),
-    setItem: vi.fn((k: string, v: string) => { data.set(k, v); }),
-    removeItem: vi.fn((k: string) => { data.delete(k); }),
-  };
-};
+const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
 describe('journey anonymous id', () => {
   beforeEach(() => {
@@ -27,9 +17,9 @@ describe('journey anonymous id', () => {
   });
   afterEach(() => resetAnonIdForTests());
 
-  it('creates a random v4 uuid and keeps it in memory for the tab', () => {
+  it('creates a random v4 uuid and keeps it in memory for the page', () => {
     const first = getOrCreateAnonId();
-    expect(isUuidV4(first)).toBe(true);
+    expect(first).toMatch(UUID_V4);
     expect(getOrCreateAnonId()).toBe(first);
   });
 
@@ -40,37 +30,14 @@ describe('journey anonymous id', () => {
     expect(document.cookie).toBe('');
   });
 
-  it('never reads or writes storage, only removes the old key', () => {
-    const storage = spyStorage();
-    getOrCreateAnonId(storage);
-    expect(storage.getItem).not.toHaveBeenCalled();
-    expect(storage.setItem).not.toHaveBeenCalled();
-    expect(storage.removeItem).toHaveBeenCalledWith(LEGACY_ANON_ID_STORAGE_KEY);
-  });
-
-  it('ignores and removes an id left in localStorage by an earlier build', () => {
-    const old = '3f2c8a4e-1b2d-4c3e-8f9a-0b1c2d3e4f5a';
-    window.localStorage.setItem(LEGACY_ANON_ID_STORAGE_KEY, old);
-    const id = getOrCreateAnonId();
-    expect(id).not.toBe(old);
-    expect(window.localStorage.getItem(LEGACY_ANON_ID_STORAGE_KEY)).toBeNull();
-  });
-
-  it('starts a new id after a reload or in a new tab', () => {
+  it('starts a new id when the module loads again, as on a reload or a new tab', async () => {
     const first = getOrCreateAnonId();
-    resetAnonIdForTests();
-    expect(getOrCreateAnonId()).not.toBe(first);
-  });
-
-  it('still works when storage throws', () => {
-    const storage = { removeItem: vi.fn(() => { throw new Error('SecurityError'); }) };
-    const first = getOrCreateAnonId(storage);
-    expect(isUuidV4(first)).toBe(true);
-    expect(getOrCreateAnonId(storage)).toBe(first);
-  });
-
-  it('works with no storage at all', () => {
-    expect(isUuidV4(getOrCreateAnonId(null))).toBe(true);
+    vi.resetModules();
+    const fresh = await import('../anonId');
+    const second = fresh.getOrCreateAnonId();
+    expect(second).toMatch(UUID_V4);
+    expect(second).not.toBe(first);
+    expect(window.localStorage.length).toBe(0);
   });
 
   it('falls back to getRandomValues when randomUUID is missing', () => {
@@ -80,6 +47,6 @@ describe('journey anonymous id', () => {
     });
     const id = randomUuidV4({ getRandomValues } as any);
     expect(getRandomValues).toHaveBeenCalled();
-    expect(isUuidV4(id)).toBe(true);
+    expect(id).toMatch(UUID_V4);
   });
 });

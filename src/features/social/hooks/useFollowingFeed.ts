@@ -10,7 +10,7 @@ type Language = 'en' | 'zh' | 'ar' | 'ru';
 
 const FOLLOWING_FEED_PAGE_SIZE = 10;
 
-export const followingFeedKey = (viewer?: string, language?: Language) => [
+const followingFeedKey = (viewer?: string, language?: Language) => [
   'following-feed', ...socialGraphScope(), viewer, language,
 ];
 
@@ -39,13 +39,17 @@ export function useFollowingFeed(
       return meta && meta.currentPage < meta.totalPages ? meta.currentPage + 1 : undefined;
     },
     staleTime: 10_000,
-    refetchOnWindowFocus: false,
   });
 
-  const items = useMemo<PostDto[]>(
-    () => feedQuery.data?.pages.flatMap((page) => page?.items || []) ?? [],
-    [feedQuery.data],
-  );
+  const items = useMemo<PostDto[]>(() => {
+    // Pages are offset-based: a post landing between two loads repeats the row at the boundary.
+    const seen = new Set<string>();
+    return (feedQuery.data?.pages.flatMap((page) => page?.items || []) ?? []).filter((post) => {
+      if (seen.has(post.id)) return false;
+      seen.add(post.id);
+      return true;
+    });
+  }, [feedQuery.data]);
   const feedEmpty = feedQuery.isSuccess && items.length === 0;
 
   // Only an empty feed needs this, to tell "follows nobody" from "nobody posted".
@@ -66,7 +70,8 @@ export function useFollowingFeed(
     items,
     followsNobody: followsAnyoneQuery.data === false,
     isLoading: isEnabled && (feedQuery.isPending || (feedEmpty && followsAnyoneQuery.isPending)),
-    error: feedQuery.error,
+    // A failed refresh leaves the loaded posts valid, and the next focus retries it.
+    error: feedQuery.isRefetchError && items.length ? null : feedQuery.error,
     hasNextPage: feedQuery.hasNextPage,
     isFetchingNextPage: feedQuery.isFetchingNextPage,
     fetchNextPage: feedQuery.fetchNextPage,

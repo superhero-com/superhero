@@ -1,12 +1,13 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { VoteState } from 'bctsl-sdk';
-import { Decimal } from '@/libs/decimal';
 import { AddressChip } from '@/components/AddressChip';
+import { formatUnits } from '../utils/voteRules';
 
 interface VotersTableProps {
-  voteState: VoteState;
-  token: any;
+  voteState: Pick<VoteState, 'vote_accounts'>;
+  token: { symbol?: string; name?: string };
+  decimals?: number;
 }
 
 interface VoterItem {
@@ -15,130 +16,47 @@ interface VoterItem {
   choice: boolean;
 }
 
-const VotersTable = ({ voteState, token }: VotersTableProps) => {
-  const { t } = useTranslation();
+/** Who voted, which side and with how many tokens, biggest stake first. */
+const VotersTable = ({ voteState, token, decimals = 18 }: VotersTableProps) => {
+  const { t, i18n } = useTranslation('dao');
   const items = useMemo((): VoterItem[] => {
     const voterItems: VoterItem[] = [];
-
-    if (voteState?.vote_accounts) {
-      voteState.vote_accounts.forEach((vote, address) => {
-        voterItems.push({
-          address,
-          amount: vote[0],
-          choice: vote[1],
-        });
-      });
-    }
-
-    return voterItems;
+    voteState?.vote_accounts?.forEach((vote, address) => {
+      voterItems.push({ address, amount: vote[0], choice: vote[1] });
+    });
+    return voterItems.sort((a, b) => (b.amount > a.amount ? 1 : -1));
   }, [voteState]);
 
   if (!items.length) {
-    return (
-      <div className="ui-panel border border-white/10 rounded-xl p-3 sm:p-4 bg-[#11161d] text-white">
-        <div className="text-base sm:text-lg font-bold mb-3 sm:mb-4">{t('dao.voters.title')}</div>
-        <div className="text-xs sm:text-sm text-white/80">
-          {t('dao.voters.noVotersFound')}
-        </div>
-      </div>
-    );
+    return <p className="dao-v-muted text-sm">{t('voters.noVotersFound')}</p>;
   }
 
   return (
-    <div className="ui-panel border border-white/10 rounded-xl bg-[#11161d] text-white">
-      <div className="p-3 sm:p-4 border-b border-white/10">
-        <div className="text-base sm:text-lg font-bold">{t('dao.voters.title')}</div>
-      </div>
-
-      {/* Mobile Card Layout */}
-      <div className="block sm:hidden">
-        <div className="divide-y divide-white/5">
+    <div className="overflow-x-auto">
+      <table className="dao-v-voters">
+        <thead>
+          <tr>
+            <th scope="col">{t('voters.voter')}</th>
+            <th scope="col">{t('voters.choice')}</th>
+            <th scope="col" className="text-end">{t('voters.votingPower')}</th>
+          </tr>
+        </thead>
+        <tbody>
           {items.map((item) => (
-            <div key={item.address} className="p-3 hover:bg-white/5 transition-colors duration-200">
-              <div className="space-y-2">
-                {/* Voter Address */}
-                <div>
-                  <div className="text-xs text-white/60 mb-1">{t('dao.voters.voter')}</div>
-                  <AddressChip address={item.address} linkToExplorer />
-                </div>
-
-                {/* Choice and Voting Power Row */}
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="text-xs text-white/60 mb-1">{t('dao.voters.choice')}</div>
-                    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${item.choice
-                      ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                      : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                    }`}
-                    >
-                      <span className="text-xs">
-                        {item.choice ? '✓' : '○'}
-                      </span>
-                      <span>
-                        {item.choice ? t('dao.voters.yes') : t('dao.voters.no')}
-                      </span>
-                    </span>
-                  </div>
-
-                  <div className="flex-1 text-right">
-                    <div className="text-xs text-white/60 mb-1">{t('dao.voters.votingPower')}</div>
-                    <div className="text-sm font-medium">
-                      {Decimal.fromBigNumberString(item.amount.toString()).prettify()}
-                    </div>
-                    <div className="text-xs text-white/60">
-                      {token.symbol || token.name}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Desktop Table Layout */}
-      <div className="hidden sm:block overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-white/10">
-              <th className="text-left p-3 lg:p-4 text-xs lg:text-sm font-medium text-white/80">{t('dao.voters.voter')}</th>
-              <th className="text-left p-3 lg:p-4 text-xs lg:text-sm font-medium text-white/80">{t('dao.voters.choice')}</th>
-              <th className="text-left p-3 lg:p-4 text-xs lg:text-sm font-medium text-white/80">{t('dao.voters.votingPower')}</th>
+            <tr key={item.address}>
+              <td><AddressChip address={item.address} linkToExplorer /></td>
+              <td>
+                <span className={`dao-v-status dao-v-status--${item.choice ? 'open' : 'failed'}`}>
+                  {item.choice ? t('voters.yes') : t('voters.no')}
+                </span>
+              </td>
+              <td className="text-end">
+                {`${formatUnits(item.amount, decimals, i18n.language)} ${token.symbol || token.name || ''}`}
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {items.map((item) => (
-              <tr key={item.address} className="border-b border-white/5 hover:bg-white/5 transition-colors duration-200">
-                <td className="p-3 lg:p-4">
-                  <AddressChip address={item.address} linkToExplorer />
-                </td>
-                <td className="p-3 lg:p-4">
-                  <span className={`inline-flex items-center gap-2 px-2 lg:px-3 py-1 rounded-full text-xs lg:text-sm font-medium ${item.choice
-                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                    : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                  }`}
-                  >
-                    <span className="text-xs">
-                      {item.choice ? '✓' : '○'}
-                    </span>
-                    <span>
-                      {item.choice ? t('dao.voters.yes') : t('dao.voters.no')}
-                    </span>
-                  </span>
-                </td>
-                <td className="p-3 lg:p-4">
-                  <div className="text-sm lg:text-base">
-                    {Decimal.fromBigNumberString(item.amount.toString()).prettify()}
-                  </div>
-                  <div className="text-xs text-white/60">
-                    {token.symbol || token.name}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };

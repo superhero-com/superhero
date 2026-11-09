@@ -1,0 +1,204 @@
+/* Token DAO voting. Colours follow the page's color-scheme (light-dark), so the same rules
+   serve the dark app and :root[data-theme='light']. */
+.dao-v {
+  --dv-surface: light-dark(#fff, #11161d);
+  --dv-surface-2: light-dark(#f6f8fb, #0d1219);
+  --dv-border: light-dark(#dce2e9, #29313b);
+  --dv-text: light-dark(#1d2b3e, #edf1f7);
+  --dv-muted: light-dark(#56657a, #a3b0c3);
+  --dv-blue: light-dark(#2357a7, #a8caff);
+  --dv-blue-bg: light-dark(#e9f0fc, #1c304f);
+  --dv-blue-border: light-dark(#adc4e6, #42618d);
+  --dv-green: light-dark(#106b3c, #7ee2a8);
+  --dv-green-bg: light-dark(#e4f5eb, #12301f);
+  --dv-amber: light-dark(#7a4f00, #f5c56b);
+  --dv-amber-bg: light-dark(#fff5df, #33270f);
+  --dv-amber-border: light-dark(#ecd197, #5c4719);
+  --dv-red: light-dark(#a8261b, #ffa08f);
+  --dv-red-bg: light-dark(#fdeceb, #3a1816);
+  --dv-track: light-dark(#e3e9f0, #222b37);
+  --dv-tick: light-dark(#1d2b3e, #edf1f7);
+  color: var(--dv-text);
+}
+
+.dao-v .dao-v-muted { color: var(--dv-muted); }
+.dao-v .dao-v-card {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--dv-border);
+  border-radius: 16px;
+  background: var(--dv-surface);
+  color: var(--dv-text);
+  box-shadow: none;
+}
+.dao-v .dao-v-card h2 { margin: 0; font-size: 18px; font-weight: 650; letter-spacing: -.3px; }
+.dao-v .dao-v-card h3 { margin: 0; font-size: 15px; font-weight: 650; letter-spacing: -.2px; }
+
+.dao-v a:focus-visible,
+.dao-v button:focus-visible,
+.dao-v input:focus-visible,
+.dao-v textarea:focus-visible,
+.dao-v label:focus-within {
+  outline: 2px solid #6196ff;
+  outline-offset: 2px;
+}
+
+/* Page header */
+.dao-v-topline { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; margin-bottom: 12px; }
+.dao-v-topline a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--dv-blue); font-size: 14px; text-decoration: none; }
+.dao-v-topline a:hover { text-decoration: underline; }
+.dao-v-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.dao-v-eyebrow { margin: 0 0 4px; color: var(--dv-blue); font-size: 13px; font-weight: 600; }
+.dao-v-head h1 span { color: var(--dv-muted); font-weight: 500; }
+.dao-v-head p { margin: 6px 0 0; font-size: 14px; }
+.dao-v-treasury { min-width: 170px; padding: 12px 16px; border: 1px solid var(--dv-border); border-radius: 14px; background: var(--dv-surface); text-align: end; }
+.dao-v-treasury span { display: block; color: var(--dv-muted); font-size: 12px; }
+.dao-v-treasury strong { display: block; font-size: 22px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.dao-v-stats { display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 0 0 20px; padding: 12px 16px; border-radius: 12px; background: var(--dv-surface-2); border: 1px solid var(--dv-border); }
+.dao-v-stats div { display: flex; align-items: baseline; gap: 8px; }
+.dao-v-stats dt { color: var(--dv-muted); font-size: 13px; }
+.dao-v-stats dd { margin: 0; font-weight: 650; font-variant-numeric: tabular-nums; }
+
+.dao-v-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.dao-v-side { display: grid; gap: 16px; }
+@media (min-width: 1024px) {
+  .dao-v-grid { grid-template-columns: minmax(0, 1.75fr) minmax(280px, 1fr); }
+  .dao-v-side { position: sticky; top: 24px; }
+}
+
+/* Status */
+.dao-v .dao-v-status { border-radius: 999px; padding: 2px 10px; font-size: 12px; font-weight: 600; border: 1px solid transparent; }
+.dao-v .dao-v-status--open { background: var(--dv-green-bg); color: var(--dv-green); }
+.dao-v .dao-v-status--passed { background: var(--dv-blue-bg); color: var(--dv-blue); border-color: var(--dv-blue-border); }
+.dao-v .dao-v-status--applied { background: var(--dv-surface-2); color: var(--dv-text); border-color: var(--dv-border); }
+.dao-v .dao-v-status--failed,
+.dao-v .dao-v-status--expired { background: var(--dv-red-bg); color: var(--dv-red); }
+.dao-v-when { display: inline-flex; align-items: center; gap: 6px; color: var(--dv-muted); font-size: 13px; }
+.dao-v-when svg { width: 14px; height: 14px; }
+
+/* Meters */
+.dao-v-meters { display: grid; gap: 6px; }
+.dao-v-meter-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; font-size: 13px; }
+.dao-v-meter-row strong { font-variant-numeric: tabular-nums; }
+.dao-v-meter-row .dao-v-muted { margin-inline-start: auto; font-size: 12px; }
+.dao-v-meter { position: relative; height: 8px; margin-bottom: 8px; border-radius: 999px; background: var(--dv-track); }
+.dao-v-meter > span { display: block; height: 100%; max-width: 100%; border-radius: inherit; background: light-dark(#c47f00, #e0a640); transition: width .3s ease; }
+.dao-v-meter.is-met > span { background: light-dark(#16894c, #4fcf87); }
+.dao-v-meter > i { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-inline-start: -1px; border-radius: 1px; background: var(--dv-tick); }
+.dao-v-meter-note { margin: 0; color: var(--dv-muted); font-size: 12px; line-height: 1.5; }
+
+/* Vote list */
+.dao-v-list-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.dao-v-list-head p { margin: 4px 0 0; font-size: 13px; }
+.dao-v-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.dao-v-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border: 1px solid var(--dv-border); border-radius: 999px; background: transparent; color: var(--dv-text); font-size: 14px; cursor: pointer; }
+.dao-v-chip span { color: var(--dv-muted); font-variant-numeric: tabular-nums; }
+.dao-v-chip[aria-pressed='true'] { background: var(--dv-blue-bg); border-color: var(--dv-blue-border); color: var(--dv-blue); }
+.dao-v-items { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.dao-v-item { display: grid; gap: 10px; padding: 16px; border: 1px solid var(--dv-border); border-radius: 14px; background: var(--dv-surface); }
+.dao-v-item-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.dao-v-item p { margin: 0; font-size: 13px; line-height: 1.55; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.dao-v-item-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; }
+.dao-v-by { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.dao-v-empty { padding: 28px 12px; text-align: center; font-size: 14px; }
+.dao-v-empty p { margin: 0 0 12px; }
+
+/* Subject line */
+.dao-v-subject { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0; font-weight: 650; overflow-wrap: anywhere; }
+
+/* Buttons from the kit, sized for touch */
+.dao-v .dao-v-btn { min-height: 44px; padding-inline: 16px; font-size: 14px; }
+
+/* Rules */
+.dao-v-rules ul { display: grid; gap: 12px; margin: 12px 0 0; padding: 0; list-style: none; font-size: 13px; line-height: 1.55; }
+.dao-v-rules li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 10px; }
+.dao-v-rules li svg { width: 16px; height: 16px; margin-top: 2px; color: var(--dv-blue); }
+.dao-v-rules h3 { display: flex; align-items: center; gap: 8px; }
+.dao-v-rules h3 svg { width: 18px; height: 18px; color: var(--dv-green); }
+
+/* Proposal detail */
+.dao-v-ask { display: grid; gap: 2px; margin: 16px 0; }
+.dao-v-ask span { color: var(--dv-muted); font-size: 13px; }
+.dao-v-ask strong { font-size: 28px; font-weight: 700; letter-spacing: -.5px; font-variant-numeric: tabular-nums; }
+.dao-v-box { padding: 14px; border: 1px solid var(--dv-border); border-radius: 12px; background: var(--dv-surface-2); }
+.dao-v-prose { margin: 8px 0 0; font-size: 14px; line-height: 1.65; white-space: pre-line; overflow-wrap: anywhere; }
+.dao-v-link { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--dv-blue); font-weight: 600; font-size: 14px; }
+.dao-v-link svg { width: 14px; height: 14px; }
+
+/* Ballot */
+.dao-v-ballot fieldset { display: grid; gap: 10px; margin: 12px 0; padding: 0; border: 0; }
+.dao-v-choice { display: flex; align-items: flex-start; gap: 12px; min-height: 44px; padding: 14px; border: 1px solid var(--dv-border); border-radius: 12px; background: var(--dv-surface); cursor: pointer; }
+.dao-v .dao-v-choice input {
+  /* The global form rule sets appearance: none, which hides the native dot. Bring it back. */
+  appearance: auto; -webkit-appearance: radio;
+  width: 18px; height: 18px; margin: 2px 0 0; padding: 0; border-radius: 50%; box-shadow: none;
+  accent-color: #2871ed; flex: none;
+}
+.dao-v-choice strong { display: block; font-size: 14px; }
+.dao-v-choice small { display: block; margin-top: 2px; color: var(--dv-muted); font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }
+.dao-v-choice.is-checked { border-color: var(--dv-blue-border); background: var(--dv-blue-bg); }
+.dao-v-note { display: flex; gap: 10px; margin: 12px 0; padding: 12px; border-radius: 12px; background: var(--dv-surface-2); border: 1px solid var(--dv-border); font-size: 13px; line-height: 1.5; }
+.dao-v-note svg { width: 16px; height: 16px; flex: none; margin-top: 2px; }
+.dao-v-note--warn { background: var(--dv-amber-bg); border-color: var(--dv-amber-border); color: var(--dv-amber); }
+.dao-v-note--error { background: var(--dv-red-bg); border-color: transparent; color: var(--dv-red); }
+.dao-v-note--ok { background: var(--dv-green-bg); border-color: transparent; color: var(--dv-green); }
+.dao-v-note p { margin: 0; }
+.dao-v-note strong { display: block; margin-bottom: 2px; }
+.dao-v-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+.dao-v-ballot .dao-v-actions > * { flex: 1 1 auto; }
+
+/* Create form */
+.dao-v-panel-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 16px; }
+.dao-v-types { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin: 0 0 20px; padding: 0; border: 0; }
+.dao-v-types legend { margin-bottom: 10px; font-size: 14px; font-weight: 600; }
+.dao-v-type { display: flex; align-items: flex-start; gap: 10px; min-height: 44px; padding: 14px; border: 1px solid var(--dv-border); border-radius: 12px; background: var(--dv-surface); cursor: pointer; }
+.dao-v-type input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.dao-v-type svg { width: 20px; height: 20px; flex: none; color: var(--dv-muted); }
+.dao-v-type strong { display: block; font-size: 14px; }
+.dao-v-type small { display: block; margin-top: 2px; color: var(--dv-muted); font-size: 12px; line-height: 1.45; }
+.dao-v-type.is-checked { border-color: var(--dv-blue-border); background: var(--dv-blue-bg); }
+.dao-v-type.is-checked svg { color: var(--dv-blue); }
+.dao-v-field { display: grid; gap: 6px; margin-bottom: 16px; }
+.dao-v-field > label { font-size: 14px; font-weight: 600; }
+.dao-v .dao-v-input { min-height: 44px; border-color: var(--dv-border); background: var(--dv-surface); color: var(--dv-text); font-size: 15px; }
+.dao-v .dao-v-input::placeholder { color: var(--dv-muted); }
+.dao-v .dao-v-input[aria-invalid='true'] { border-color: var(--dv-red); }
+.dao-v textarea.dao-v-input { min-height: 110px; }
+.dao-v-help { margin: 0; color: var(--dv-muted); font-size: 12px; line-height: 1.5; }
+.dao-v-error { margin: 0; color: var(--dv-red); font-size: 12px; line-height: 1.5; }
+.dao-v-amount { position: relative; }
+.dao-v-amount .dao-v-input { padding-inline-end: 64px; }
+.dao-v-amount > span { position: absolute; inset-inline-end: 14px; top: 50%; transform: translateY(-50%); color: var(--dv-muted); font-size: 14px; pointer-events: none; }
+.dao-v-quick { display: flex; flex-wrap: wrap; gap: 8px; }
+.dao-v-summary { margin: 0 0 16px; border: 1px solid var(--dv-border); border-radius: 12px; overflow: hidden; }
+.dao-v-summary div { display: grid; grid-template-columns: minmax(110px, 1fr) minmax(0, 2fr); gap: 12px; padding: 12px 14px; font-size: 14px; }
+.dao-v-summary div + div { border-top: 1px solid var(--dv-border); }
+.dao-v-summary dt { color: var(--dv-muted); }
+.dao-v-summary dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; text-align: end; }
+.dao-v-confirm { display: flex; align-items: flex-start; gap: 10px; min-height: 44px; padding: 8px 0; font-size: 14px; cursor: pointer; }
+.dao-v-confirm label { cursor: pointer; }
+.dao-v-back { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0; margin-bottom: 4px; border: 0; background: none; color: var(--dv-blue); font-size: 14px; cursor: pointer; }
+
+/* Voters */
+.dao-v-voters { width: 100%; border-collapse: collapse; font-size: 14px; }
+.dao-v-voters th { padding: 8px 10px; color: var(--dv-muted); font-size: 12px; font-weight: 600; text-align: start; border-bottom: 1px solid var(--dv-border); }
+.dao-v-voters td { padding: 10px; border-bottom: 1px solid var(--dv-border); vertical-align: middle; font-variant-numeric: tabular-nums; }
+.dao-v-voters .text-end { text-align: end; }
+.dao-v-voters tr:last-child td { border-bottom: 0; }
+
+/* Token page tab */
+.dao-v-tab-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.dao-v-tab-head p { margin: 4px 0 0; font-size: 13px; }
+.dao-v-tab-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.dao-v-count { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: #2871ed; color: #fff; font-size: 11px; font-weight: 700; line-height: 1; }
+
+@media (max-width: 600px) {
+  .dao-v .dao-v-card { padding: 16px; }
+  .dao-v-treasury { text-align: start; width: 100%; }
+  .dao-v-summary div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .dao-v-summary dd { text-align: start; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dao-v-meter > span { transition: none; }
+}

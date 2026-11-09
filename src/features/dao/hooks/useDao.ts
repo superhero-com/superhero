@@ -29,6 +29,10 @@ export function useDao({ tokenSaleAddress }: UseDaoProps) {
   const tokenSaleFactoryRef = useRef<TokenSale>(undefined);
   const tokenInstanceRef = useRef<Contract<ContractMethodsBase>>(undefined);
   const daoRef = useRef<DAO>(undefined);
+  // The contracts are bound to the SDK they were created with. Connecting a wallet swaps the
+  // read-only SDK for the wallet one, so they are rebuilt then; otherwise calls that need a
+  // signature (create, vote, apply) would go to the read-only SDK.
+  const boundSdkRef = useRef<unknown>(undefined);
 
   // State
   const [state, setState] = useState<DAOState>();
@@ -36,6 +40,7 @@ export function useDao({ tokenSaleAddress }: UseDaoProps) {
   const [tokenSupply, setTokenSupply] = useState<bigint>();
   const [userTokenBalance, setUserTokenBalance] = useState<bigint>();
   const [tokenMetaInfo, setTokenMetaInfo] = useState<{ symbol: string; decimals: bigint }>();
+  const [loaded, setLoaded] = useState(false);
 
   const updateState = useCallback(async () => {
     if (!tokenInstanceRef.current || !daoRef.current) return;
@@ -61,6 +66,8 @@ export function useDao({ tokenSaleAddress }: UseDaoProps) {
       if (activeAccount) {
         const balanceResult = await tokenInstanceRef.current.balance(activeAccount);
         setUserTokenBalance(balanceResult.decodedResult || 0n);
+      } else {
+        setUserTokenBalance(undefined);
       }
     } catch {
       // Ignore DAO state update errors
@@ -71,8 +78,8 @@ export function useDao({ tokenSaleAddress }: UseDaoProps) {
     if (!sdk) return;
 
     try {
-      // Initialize token sale factory if not already done
-      if (!tokenSaleFactoryRef.current) {
+      if (!tokenSaleFactoryRef.current || boundSdkRef.current !== sdk) {
+        boundSdkRef.current = sdk;
         tokenSaleFactoryRef.current = await initFallBack(sdk, tokenSaleAddress);
         tokenInstanceRef.current = await tokenSaleFactoryRef.current.tokenContractInstance();
         daoRef.current = await tokenSaleFactoryRef.current.checkAndGetDAO();
@@ -81,20 +88,23 @@ export function useDao({ tokenSaleAddress }: UseDaoProps) {
       await updateState();
     } catch {
       // Ignore DAO init errors
+    } finally {
+      setLoaded(true);
     }
   }, [sdk, tokenSaleAddress, updateState]);
 
+  // Errors are passed on: the create form shows them.
   const addVote = useCallback(async (metadata: VoteMetadata): Promise<Vote | undefined> => {
     if (!daoRef.current) return undefined;
-    try {
-      const vote = await daoRef.current.addVote(metadata);
-      await updateState();
-      return vote;
-    } catch {
-      // Ignore vote add errors
-      return undefined;
-    }
+    const vote = await daoRef.current.addVote(metadata);
+    await updateState();
+    return vote;
   }, [updateState]);
+
+  const applyVoteSubject = useCallback(async (voteId: bigint) => {
+    if (!daoRef.current) return;
+    await daoRef.current.applyVoteSubject(voteId);
+  }, []);
 
   // Initialize when tokenSaleAddress or sdk changes
   useEffect(() => {
@@ -108,9 +118,11 @@ export function useDao({ tokenSaleAddress }: UseDaoProps) {
     state,
     balance,
     addVote,
+    applyVoteSubject,
     tokenSupply,
     userTokenBalance,
     tokenMetaInfo,
+    loaded,
     updateState,
     init,
   };

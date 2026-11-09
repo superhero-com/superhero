@@ -10,6 +10,7 @@ import {
   Plus,
   TrendingUp,
   Users,
+  Vote,
 } from 'lucide-react';
 import {
   useEffect, useMemo, useRef, useState,
@@ -44,6 +45,8 @@ import {
   TokenTradeTab,
   TokenTransactionsTab,
 } from '../components/tabs';
+import { TokenVotingTab } from '../components/tabs/TokenVotingTab';
+import { useDaoVotes } from '../../dao/hooks/useDaoVotes';
 import TokenOverview from '../components/TokenOverview';
 import TokenPriceAlerts from '../components/TokenPriceAlerts';
 import TokenExploreLink from '../components/TokenExploreLink';
@@ -66,13 +69,15 @@ const TAB_CHAT = 'posts';
 const TAB_TRADE = 'trade';
 const TAB_TRANSACTIONS = 'transactions';
 const TAB_HOLDERS = 'holders';
+const TAB_VOTING = 'voting';
 
 type TabType =
   | typeof TAB_DETAILS
   | typeof TAB_CHAT
   | typeof TAB_TRADE
   | typeof TAB_TRANSACTIONS
-  | typeof TAB_HOLDERS;
+  | typeof TAB_HOLDERS
+  | typeof TAB_VOTING;
 
 // .
 function tabBorderClass(disabled: boolean, active: boolean): string {
@@ -343,10 +348,13 @@ const TokenSaleDetails = () => {
   // Check if token doesn't exist (but don't block the UI)
   const tokenDoesNotExist = isError && !isTokenNewlyCreated && !isLoading;
 
+  // Open DAO votes, for the count on the Voting tab.
+  const { openCount: openVoteCount } = useDaoVotes(tokenDoesNotExist ? undefined : token?.dao_address);
+
   // Switch to an available tab if token doesn't exist and current tab requires token
   useEffect(() => {
     if (tokenDoesNotExist) {
-      const lockedTabs = [TAB_TRADE, TAB_TRANSACTIONS, TAB_HOLDERS];
+      const lockedTabs = [TAB_TRADE, TAB_TRANSACTIONS, TAB_HOLDERS, TAB_VOTING];
       if (lockedTabs.includes(activeTab)) {
         setActiveTab(TAB_CHAT);
       }
@@ -398,6 +406,9 @@ const TokenSaleDetails = () => {
                   {
                     id: TAB_HOLDERS, label: t('trending.tokenSale.tabHolders'), Icon: Users, requiresToken: true,
                   },
+                  {
+                    id: TAB_VOTING, label: t('trending.tokenSale.tabVoting'), Icon: Vote, requiresToken: true,
+                  },
                 ].map((tab) => {
                   const isActive = activeTab === tab.id;
                   const isDisabled = tokenDoesNotExist && tab.requiresToken;
@@ -425,6 +436,11 @@ const TokenSaleDetails = () => {
                         <span className={`text-xs ${tabLabelClass(isDisabled, isActive)}`}>
                           {tab.label}
                         </span>
+                        {tab.id === TAB_VOTING && !isDisabled && openVoteCount > 0 && (
+                          <span className="dao-v-count" aria-label={t('trending.tokenSale.openVotes', { count: openVoteCount })}>
+                            {openVoteCount}
+                          </span>
+                        )}
                       </span>
                     </button>
                   );
@@ -535,6 +551,23 @@ const TokenSaleDetails = () => {
                     {t('trending.tokenSale.tabHolders')}
                     {!tokenDoesNotExist && ` (${token?.holders_count || 0})`}
                   </span>
+                </span>
+              </button>
+              <button
+                type="button"
+                disabled={tokenDoesNotExist}
+                onClick={() => !tokenDoesNotExist && setActiveTab(TAB_VOTING)}
+                className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${mobileTabBtnClass(tokenDoesNotExist, activeTab === TAB_VOTING)}`}
+                title={tokenDoesNotExist ? t('trending.tokenSale.createTokenToUnlock') : undefined}
+              >
+                <span className="flex items-center justify-center gap-1.5">
+                  {tokenDoesNotExist && <Lock className="h-3 w-3" />}
+                  <span>{t('trending.tokenSale.tabVoting')}</span>
+                  {!tokenDoesNotExist && openVoteCount > 0 && (
+                    <span className="dao-v-count" aria-label={t('trending.tokenSale.openVotes', { count: openVoteCount })}>
+                      {openVoteCount}
+                    </span>
+                  )}
                 </span>
               </button>
             </div>
@@ -669,6 +702,10 @@ const TokenSaleDetails = () => {
               ) : (
                 <TokenHoldersTab token={token} />
               )
+            )}
+
+            {activeTab === TAB_VOTING && !tokenDoesNotExist && token && (
+              <TokenVotingTab token={token} />
             )}
           </div>
         </div>

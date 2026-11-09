@@ -2384,10 +2384,9 @@
     },
     "polls": {
       "loading": "Loading…",
-      "title": "Governance",
-      "subtitle": "Shape the future of the ecosystem through community-driven decisions",
+      "intro": "Polls for the whole æternity network. Each vote is weighted by the voter's AE balance plus any stake delegated to them.",
       "active": "Active",
-      "closing": "Closing",
+      "closed": "Closed",
       "searchLabel": "Search polls",
       "searchPlaceholder": "Find polls by title or description...",
       "filterByStatus": "Filter by status",
@@ -2396,6 +2395,9 @@
       "closedPolls": "🔴 Closed polls",
       "noPollsFound": "No polls found",
       "noPollsHint": "Try adjusting your search terms or filters to discover governance polls that match your interests.",
+      "loadFailed": "Couldn't load polls.",
+      "retry": "Try again",
+      "noEndDate": "No end date",
       "unknown": "Unknown",
       "votes": "votes"
     },
@@ -2753,7 +2755,9 @@
       "noHoldersYetHint": "Create the token first to see holders.",
       "createToken": "Create Token",
       "createTokenSidebarHint": "This token doesn't exist yet. Be the first to create it!",
-      "addNewPost": "Add new post"
+      "addNewPost": "Add new post",
+      "tabVoting": "Voting",
+      "openVotes": "Open votes: {{count}}"
     },
     "inviteView": {
       "title": "Invite & Earn",
@@ -3262,7 +3266,9 @@
   },
   "dao": {
     "search": "Search",
-    "daosTitle": "DAOs",
+    "sectionsLabel": "DAO sections",
+    "tokenDaosTab": "Token DAOs",
+    "pollsTab": "æternity polls",
     "listIntro": "DAOs hold protocol fees collected from trades. Each card shows the treasury balance for that token, along with basic stats.",
     "owned": "Owned",
     "openDao": "Open DAO",
@@ -3356,6 +3362,245 @@
       "daysHours": "{{days}}d {{hours}}h remaining",
       "hoursMinutes": "{{hours}}h {{minutes}}m remaining",
       "minutes": "{{minutes}}m remaining"
+    },
+    "voting": {
+      "page": {
+        "eyebrow": "Token DAO",
+        "intro": "Holders decide together how the community treasury is used.",
+        "backTo": "Back to {{token}}",
+        "viewOnAescan": "View on æScan",
+        "openVotes": "Open votes",
+        "allVotes": "All votes",
+        "holders": "Holders",
+        "loadErrorTitle": "This vote could not be loaded",
+        "loadErrorText": "Check the link, or go back to the DAO to see its votes."
+      },
+      "status": {
+        "open": "Open",
+        "passed": "Passed",
+        "failed": "Not passed",
+        "applied": "Applied",
+        "expired": "Expired"
+      },
+      "time": {
+        "ends": "Ends {{when}}",
+        "ended": "Ended {{when}}",
+        "applyBy": "Apply by {{when}}"
+      },
+      "meters": {
+        "yes": "Yes",
+        "yesNeed": "needs {{percent}}%",
+        "yesAria": "{{percent}}% yes, {{need}}% needed",
+        "turnout": "Turnout",
+        "turnoutNeed": "of all tokens · needs {{percent}}%",
+        "turnoutAria": "{{percent}}% of all tokens voted, {{need}}% needed",
+        "passingSoFar": "Passing so far. The result counts when voting ends.",
+        "needsTurnout": "Not passing yet: more holders need to vote.",
+        "needsYes": "Not passing yet: it needs more Yes votes."
+      },
+      "subject": {
+        "payout": "Send {{amount}} AE from the treasury to",
+        "payoutAll": "Send the whole treasury to",
+        "changeDao": "Hand the DAO and its treasury over to",
+        "changeMetaInfo": "Change the community details",
+        "minimumTokens": "Set the minimum to create a vote to {{tokens}} {{symbol}}",
+        "addModerator": "Make a moderator:",
+        "removeModerator": "Remove a moderator:",
+        "unknown": "Other change"
+      },
+      "list": {
+        "title": "Votes",
+        "subtitle": "Proposals from holders. Open one to vote.",
+        "create": "Create a vote",
+        "createFirst": "Create the first vote",
+        "emptyTitle": "No votes yet",
+        "emptyText": "Any holder can propose how to use the treasury. Holders then vote with their tokens.",
+        "filterLabel": "Show votes",
+        "filters": {
+          "all": "All",
+          "open": "Open",
+          "closed": "Closed"
+        },
+        "noneInFilter": {
+          "all": "No votes.",
+          "open": "No open votes right now.",
+          "closed": "No closed votes yet."
+        },
+        "by": "By",
+        "openVote": "Vote",
+        "viewResult": "See result",
+        "openVoteAria": "Open vote #{{id}}",
+        "loadError": "Could not load the votes. Check your connection and try again.",
+        "retry": "Try again"
+      },
+      "rules": {
+        "title": "How a vote works",
+        "durationTitle": "Open for about {{duration}}.",
+        "durationText": "Measured in key blocks, so the end time is approximate.",
+        "passTitle": "Passes with {{percent}}% Yes",
+        "passText": "and at least {{percent}}% of all tokens taking part.",
+        "lockTitle": "Voting locks your tokens.",
+        "lockText": "You can take your vote back while it is open, and withdraw your tokens after it ends.",
+        "applyTitle": "Apply within about {{window}} after it passes.",
+        "applyTitleShort": "Apply soon after it passes.",
+        "applyText": "Anyone can apply it. Only then does the change happen."
+      },
+      "detail": {
+        "backTo": "Back to the {{token}} DAO",
+        "asksFor": "Asks for",
+        "ofTreasury": "{{percent}}% of today's treasury",
+        "why": "Why"
+      },
+      "ballot": {
+        "title": "Your vote",
+        "choose": "Choose your vote",
+        "yes": "Yes",
+        "no": "No",
+        "yesTitle": "Yes, do it",
+        "yesText": "Apply this change if the vote passes.",
+        "noTitle": "No, keep things as they are",
+        "noText": "Nothing changes.",
+        "lockNotice": "Voting locks your {{token}} tokens until the vote ends. You can take your vote back before that.",
+        "connect": "Connect wallet to vote",
+        "needTokens": "You need {{token}} tokens to vote.",
+        "getTokens": "Get {{token}}",
+        "weight": "You vote with all {{amount}} {{symbol}} in your wallet.",
+        "chooseFirst": "Choose Yes or No",
+        "submit": "Vote {{side}}",
+        "youVoted": "You voted {{side}} with {{amount}} {{symbol}}.",
+        "lockedUntilEnd": "Your {{token}} tokens are locked until the vote ends.",
+        "takeBack": "Take vote back",
+        "withdraw": "Withdraw {{amount}} {{symbol}}",
+        "withdrawn": "Your tokens are back in your wallet.",
+        "closed": {
+          "passed": "Voting has ended. The vote passed.",
+          "failed": "Voting has ended. The vote did not pass.",
+          "applied": "Voting has ended. The change has been applied.",
+          "expired": "Voting has ended. It passed but was not applied in time."
+        },
+        "apply": "Apply the result",
+        "applyText": "This vote passed. Applying it carries out the change. Anyone can do this.",
+        "applyConnect": "Connect a wallet to apply the result.",
+        "confirmInWallet": "Confirm in your wallet…"
+      },
+      "create": {
+        "title": "Create a vote",
+        "reviewTitle": "Review and create",
+        "step": "Step {{step}} of {{total}}",
+        "whatLabel": "What do you want to do?",
+        "kinds": {
+          "payout": {
+            "title": "Send AE from the treasury",
+            "text": "Fund an event or pay a contributor."
+          },
+          "payoutAll": {
+            "title": "Send the whole treasury",
+            "text": "Pay out everything to one account."
+          },
+          "addModerator": {
+            "title": "Add a moderator",
+            "text": "Give someone moderator rights."
+          },
+          "removeModerator": {
+            "title": "Remove a moderator",
+            "text": "Take moderator rights away."
+          },
+          "minimumTokens": {
+            "title": "Change who can create votes",
+            "text": "Set the minimum {{symbol}} needed."
+          },
+          "changeDao": {
+            "title": "Move to a new DAO",
+            "text": "Advanced. Hands control to another DAO."
+          }
+        },
+        "amountLabel": "How much AE?",
+        "amountHelp": "The treasury holds {{treasury}} AE. Only this amount can be sent.",
+        "minimumLabel": "Minimum {{symbol}} to create a vote",
+        "minimumHelp": "Holders with less {{symbol}} than this can no longer create votes.",
+        "quickAmounts": "Quick amounts",
+        "percentOfTreasury": "{{percent}}%",
+        "accountLabel": {
+          "payout": "Who receives the AE?",
+          "payoutAll": "Who receives the treasury?",
+          "addModerator": "Who becomes a moderator?",
+          "removeModerator": "Which moderator to remove?",
+          "changeDao": "Address of the new DAO"
+        },
+        "accountLabelShort": {
+          "payout": "To",
+          "payoutAll": "To",
+          "addModerator": "Moderator",
+          "removeModerator": "Moderator",
+          "changeDao": "New DAO"
+        },
+        "accountHelp": "An ak_ account address.",
+        "daoHelp": "The ct_ address of the new DAO contract.",
+        "descriptionLabel": "Why should holders say yes?",
+        "descriptionHelp": "{{count}} of {{max}} characters. Holders see this first.",
+        "linkLabel": "Link to more details (optional)",
+        "linkHelp": "An https link, for example a post with the full plan.",
+        "cancel": "Cancel",
+        "review": "Review vote",
+        "editDetails": "Edit details",
+        "back": "Back",
+        "summary": {
+          "action": "Action",
+          "why": "Why",
+          "link": "Link",
+          "ends": "Voting ends",
+          "endsValue": "In about {{duration}}"
+        },
+        "action": {
+          "payout": "Send {{amount}} AE from the treasury",
+          "payoutAll": "Send the whole treasury",
+          "addModerator": "Add a moderator",
+          "removeModerator": "Remove a moderator",
+          "minimumTokens": "Set the minimum to {{amount}} {{symbol}}",
+          "changeDao": "Move the DAO and treasury to a new DAO"
+        },
+        "feeTitle": "Creating this vote costs {{fee}} AE",
+        "feeText": "It goes into the {{token}} treasury. You also pay a small network fee, and you need at least the minimum token balance.",
+        "notEnoughAe": "Your wallet has less than the {{fee}} AE needed.",
+        "ack": "I understand the {{fee}} AE is not refunded, even if the vote fails.",
+        "submit": "Create vote · {{fee}} AE",
+        "creating": "Creating…",
+        "connectToCreate": "Connect wallet to create",
+        "errors": {
+          "accountRequired": "Enter an account address.",
+          "accountInvalid": "Enter a valid ak_ address.",
+          "daoRequired": "Enter the new DAO address.",
+          "daoInvalid": "Enter a valid ct_ contract address.",
+          "amountRequired": "Enter an amount.",
+          "amountInvalid": "Enter a valid amount.",
+          "amountOverTreasury": "That is more than the treasury holds.",
+          "descriptionRequired": "Tell holders why.",
+          "descriptionTooLong": "Keep it under 300 characters.",
+          "linkInvalid": "Use an http or https link."
+        }
+      },
+      "tab": {
+        "title": "{{token}} votes",
+        "subtitle": "Open votes: {{count}}. Holders vote with their tokens.",
+        "emptyText": "Holders of {{token}} can propose how to use the treasury.",
+        "openDao": "Open the DAO"
+      },
+      "errors": {
+        "rejected": "You cancelled the request in your wallet.",
+        "notEnoughTokensToCreate": "You need more tokens to create a vote here.",
+        "feeMismatch": "The creation fee did not match. Please try again.",
+        "descriptionTooLong": "The description is too long.",
+        "voteClosed": "This vote has already ended.",
+        "alreadyVoted": "You have already voted.",
+        "notVoted": "You have not voted on this.",
+        "voteNotClosed": "This vote is still open.",
+        "alreadyWithdrawn": "Your tokens were already withdrawn.",
+        "alreadyApplied": "This vote has already been applied.",
+        "applyWindowOver": "The time to apply this vote has passed.",
+        "notPassed": "This vote did not pass, so it can't be applied.",
+        "notEnoughAe": "Not enough AE in your wallet for this.",
+        "generic": "Something went wrong. Please try again."
+      }
     }
   },
   "banners": {

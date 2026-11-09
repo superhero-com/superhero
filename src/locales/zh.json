@@ -2307,10 +2307,9 @@
     },
     "polls": {
       "loading": "加载中…",
-      "title": "治理",
-      "subtitle": "通过社区驱动的决策塑造生态系统的未来",
+      "intro": "面向整个 æternity 网络的投票。每一票的权重取决于投票者的 AE 余额，以及委托给其的权益。",
       "active": "进行中",
-      "closing": "即将结束",
+      "closed": "已结束",
       "searchLabel": "搜索投票",
       "searchPlaceholder": "按标题或描述查找投票...",
       "filterByStatus": "按状态筛选",
@@ -2319,6 +2318,9 @@
       "closedPolls": "🔴 已结束投票",
       "noPollsFound": "未找到投票",
       "noPollsHint": "请尝试调整你的搜索词或筛选条件，发现符合你兴趣的治理投票。",
+      "loadFailed": "无法加载投票。",
+      "retry": "重试",
+      "noEndDate": "无截止日期",
       "unknown": "未知",
       "votes": "票"
     },
@@ -2594,7 +2596,9 @@
       "noHoldersYetHint": "请先创建代币以查看持有者。",
       "createToken": "创建代币",
       "createTokenSidebarHint": "该代币尚不存在。成为第一个创建它的人！",
-      "addNewPost": "添加新帖子"
+      "addNewPost": "添加新帖子",
+      "tabVoting": "投票",
+      "openVotes": "进行中的投票：{{count}}"
     },
     "tokenChat": {
       "noMessages": "尚无公开聊天消息",
@@ -3220,7 +3224,9 @@
     "processing": "处理中...",
     "closes": "结束于：",
     "closed": "已结束：",
-    "daosTitle": "DAO",
+    "sectionsLabel": "DAO 板块",
+    "tokenDaosTab": "代币 DAO",
+    "pollsTab": "æternity 投票",
     "listIntro": "DAO 持有从交易中收取的协议费用。每张卡片显示该代币的金库余额以及基本统计数据。",
     "owned": "已拥有",
     "openDao": "打开 DAO",
@@ -3274,6 +3280,245 @@
       "addModerator": "添加管理员",
       "deleteModerator": "删除管理员",
       "unknownVoteType": "未知投票类型"
+    },
+    "voting": {
+      "page": {
+        "eyebrow": "代币 DAO",
+        "intro": "持有者共同决定社区金库如何使用。",
+        "backTo": "返回 {{token}}",
+        "viewOnAescan": "在 æScan 查看",
+        "openVotes": "进行中的投票",
+        "allVotes": "全部投票",
+        "holders": "持有者",
+        "loadErrorTitle": "无法加载此投票",
+        "loadErrorText": "请检查链接，或返回 DAO 查看其投票。"
+      },
+      "status": {
+        "open": "进行中",
+        "passed": "已通过",
+        "failed": "未通过",
+        "applied": "已执行",
+        "expired": "已过期"
+      },
+      "time": {
+        "ends": "{{when}}结束",
+        "ended": "{{when}}已结束",
+        "applyBy": "请在{{when}}前执行"
+      },
+      "meters": {
+        "yes": "赞成",
+        "yesNeed": "需要 {{percent}}%",
+        "yesAria": "赞成 {{percent}}%，需要 {{need}}%",
+        "turnout": "参与度",
+        "turnoutNeed": "占全部代币 · 需要 {{percent}}%",
+        "turnoutAria": "{{percent}}% 的代币已投票，需要 {{need}}%",
+        "passingSoFar": "目前会通过。结果以投票结束时为准。",
+        "needsTurnout": "尚未通过：需要更多持有者投票。",
+        "needsYes": "尚未通过：需要更多赞成票。"
+      },
+      "subject": {
+        "payout": "从金库发送 {{amount}} AE 给",
+        "payoutAll": "将整个金库发送给",
+        "changeDao": "将 DAO 及其金库移交给",
+        "changeMetaInfo": "修改社区信息",
+        "minimumTokens": "将创建投票的最低持有量设为 {{tokens}} {{symbol}}",
+        "addModerator": "设为管理员：",
+        "removeModerator": "移除管理员：",
+        "unknown": "其他变更"
+      },
+      "list": {
+        "title": "投票",
+        "subtitle": "持有者的提案。打开即可投票。",
+        "create": "创建投票",
+        "createFirst": "创建第一个投票",
+        "emptyTitle": "还没有投票",
+        "emptyText": "任何持有者都可以提议如何使用金库，然后持有者用代币投票。",
+        "filterLabel": "显示投票",
+        "filters": {
+          "all": "全部",
+          "open": "进行中",
+          "closed": "已结束"
+        },
+        "noneInFilter": {
+          "all": "没有投票。",
+          "open": "目前没有进行中的投票。",
+          "closed": "还没有已结束的投票。"
+        },
+        "by": "发起人",
+        "openVote": "投票",
+        "viewResult": "查看结果",
+        "openVoteAria": "打开投票 #{{id}}",
+        "loadError": "无法加载投票。请检查网络后重试。",
+        "retry": "重试"
+      },
+      "rules": {
+        "title": "投票规则",
+        "durationTitle": "开放约 {{duration}}。",
+        "durationText": "按关键区块计算，结束时间为估计值。",
+        "passTitle": "赞成达到 {{percent}}% 即通过",
+        "passText": "且至少 {{percent}}% 的代币参与投票。",
+        "lockTitle": "投票会锁定你的代币。",
+        "lockText": "投票进行中可以撤回，结束后可以取回代币。",
+        "applyTitle": "通过后约 {{window}} 内执行。",
+        "applyTitleShort": "通过后请尽快执行。",
+        "applyText": "任何人都可以执行。执行后变更才会生效。"
+      },
+      "detail": {
+        "backTo": "返回 {{token}} DAO",
+        "asksFor": "申请",
+        "ofTreasury": "占当前金库的 {{percent}}%",
+        "why": "理由"
+      },
+      "ballot": {
+        "title": "你的投票",
+        "choose": "选择你的投票",
+        "yes": "赞成",
+        "no": "反对",
+        "yesTitle": "赞成，执行",
+        "yesText": "如果投票通过，执行此变更。",
+        "noTitle": "反对，保持不变",
+        "noText": "不做任何改变。",
+        "lockNotice": "投票会锁定你的 {{token}} 代币直到投票结束。在此之前你可以撤回投票。",
+        "connect": "连接钱包投票",
+        "needTokens": "你需要持有 {{token}} 代币才能投票。",
+        "getTokens": "获取 {{token}}",
+        "weight": "你将用钱包中全部 {{amount}} {{symbol}} 投票。",
+        "chooseFirst": "请选择赞成或反对",
+        "submit": "投{{side}}",
+        "youVoted": "你已用 {{amount}} {{symbol}} 投了{{side}}。",
+        "lockedUntilEnd": "你的 {{token}} 代币将锁定到投票结束。",
+        "takeBack": "撤回投票",
+        "withdraw": "取回 {{amount}} {{symbol}}",
+        "withdrawn": "你的代币已回到钱包。",
+        "closed": {
+          "passed": "投票已结束，已通过。",
+          "failed": "投票已结束，未通过。",
+          "applied": "投票已结束，变更已执行。",
+          "expired": "投票已结束。已通过但未按时执行。"
+        },
+        "apply": "执行结果",
+        "applyText": "此投票已通过。执行后变更生效。任何人都可以执行。",
+        "applyConnect": "连接钱包以执行结果。",
+        "confirmInWallet": "请在钱包中确认…"
+      },
+      "create": {
+        "title": "创建投票",
+        "reviewTitle": "确认并创建",
+        "step": "第 {{step}} 步，共 {{total}} 步",
+        "whatLabel": "你想做什么？",
+        "kinds": {
+          "payout": {
+            "title": "从金库发送 AE",
+            "text": "资助活动或支付贡献者。"
+          },
+          "payoutAll": {
+            "title": "发送整个金库",
+            "text": "全部支付给一个账户。"
+          },
+          "addModerator": {
+            "title": "添加管理员",
+            "text": "授予某人管理员权限。"
+          },
+          "removeModerator": {
+            "title": "移除管理员",
+            "text": "收回管理员权限。"
+          },
+          "minimumTokens": {
+            "title": "修改谁能创建投票",
+            "text": "设置所需的最低 {{symbol}}。"
+          },
+          "changeDao": {
+            "title": "迁移到新 DAO",
+            "text": "高级。将控制权交给另一个 DAO。"
+          }
+        },
+        "amountLabel": "发送多少 AE？",
+        "amountHelp": "金库现有 {{treasury}} AE。只会发送这个数额。",
+        "minimumLabel": "创建投票所需的最低 {{symbol}}",
+        "minimumHelp": "持有少于此数量 {{symbol}} 的人将无法创建投票。",
+        "quickAmounts": "快捷金额",
+        "percentOfTreasury": "{{percent}}%",
+        "accountLabel": {
+          "payout": "谁接收 AE？",
+          "payoutAll": "谁接收金库？",
+          "addModerator": "谁成为管理员？",
+          "removeModerator": "移除哪位管理员？",
+          "changeDao": "新 DAO 地址"
+        },
+        "accountLabelShort": {
+          "payout": "接收方",
+          "payoutAll": "接收方",
+          "addModerator": "管理员",
+          "removeModerator": "管理员",
+          "changeDao": "新 DAO"
+        },
+        "accountHelp": "一个 ak_ 账户地址。",
+        "daoHelp": "新 DAO 合约的 ct_ 地址。",
+        "descriptionLabel": "持有者为什么应该赞成？",
+        "descriptionHelp": "{{count}} / {{max}} 个字符。持有者会首先看到这段话。",
+        "linkLabel": "详情链接（可选）",
+        "linkHelp": "一个 https 链接，例如完整计划的帖子。",
+        "cancel": "取消",
+        "review": "确认投票",
+        "editDetails": "修改信息",
+        "back": "返回",
+        "summary": {
+          "action": "操作",
+          "why": "理由",
+          "link": "链接",
+          "ends": "投票结束",
+          "endsValue": "约 {{duration}} 后"
+        },
+        "action": {
+          "payout": "从金库发送 {{amount}} AE",
+          "payoutAll": "发送整个金库",
+          "addModerator": "添加管理员",
+          "removeModerator": "移除管理员",
+          "minimumTokens": "将最低持有量设为 {{amount}} {{symbol}}",
+          "changeDao": "将 DAO 和金库迁移到新 DAO"
+        },
+        "feeTitle": "创建此投票需要 {{fee}} AE",
+        "feeText": "这笔费用进入 {{token}} 金库。你还需支付少量网络费，并且至少持有最低数量的代币。",
+        "notEnoughAe": "你的钱包少于所需的 {{fee}} AE。",
+        "ack": "我了解这 {{fee}} AE 不予退还，即使投票未通过。",
+        "submit": "创建投票 · {{fee}} AE",
+        "creating": "创建中…",
+        "connectToCreate": "连接钱包以创建",
+        "errors": {
+          "accountRequired": "请输入账户地址。",
+          "accountInvalid": "请输入有效的 ak_ 地址。",
+          "daoRequired": "请输入新 DAO 地址。",
+          "daoInvalid": "请输入有效的 ct_ 合约地址。",
+          "amountRequired": "请输入数额。",
+          "amountInvalid": "请输入有效的数额。",
+          "amountOverTreasury": "超过了金库余额。",
+          "descriptionRequired": "请说明理由。",
+          "descriptionTooLong": "请控制在 300 个字符以内。",
+          "linkInvalid": "请使用 http 或 https 链接。"
+        }
+      },
+      "tab": {
+        "title": "{{token}} 投票",
+        "subtitle": "进行中的投票：{{count}}。持有者用代币投票。",
+        "emptyText": "{{token}} 的持有者可以提议如何使用金库。",
+        "openDao": "打开 DAO"
+      },
+      "errors": {
+        "rejected": "你在钱包中取消了请求。",
+        "notEnoughTokensToCreate": "你需要更多代币才能在这里创建投票。",
+        "feeMismatch": "创建费用不匹配，请重试。",
+        "descriptionTooLong": "描述太长。",
+        "voteClosed": "此投票已结束。",
+        "alreadyVoted": "你已经投过票了。",
+        "notVoted": "你还没有对此投票。",
+        "voteNotClosed": "此投票仍在进行中。",
+        "alreadyWithdrawn": "你的代币已经取回。",
+        "alreadyApplied": "此投票已执行。",
+        "applyWindowOver": "执行此投票的时间已过。",
+        "notPassed": "此投票未通过，无法执行。",
+        "notEnoughAe": "钱包中的 AE 不足。",
+        "generic": "出错了，请重试。"
+      }
     }
   },
   "banners": {

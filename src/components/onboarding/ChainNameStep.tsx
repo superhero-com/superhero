@@ -351,7 +351,7 @@ const ChainNameStep = ({ address, onDone, checkDelayMs = 500 }: Props) => {
             disabled={busy}
             aria-describedby={`${hintId} ${statusId}`}
             aria-invalid={Boolean(label && (validationError || (isCurrent && availability === 'taken')))}
-            className="chain-name-step__input h-11 pr-16 font-mono text-base"
+            className="chain-name-step__input h-11 pr-20 font-mono text-base"
           />
           <span className="chain-name-step__suffix pointer-events-none absolute inset-y-0 right-3 flex items-center font-mono text-base md:text-sm">
             .chain

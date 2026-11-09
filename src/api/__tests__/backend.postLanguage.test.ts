@@ -27,3 +27,19 @@ describe.each(['listPosts', 'listPopularPosts'] as const)('%s language contract'
     await expect(SuperheroApi[method]({ language: 'ar' })).rejects.toThrow('Post language filtering is unavailable');
   });
 });
+
+describe('listPosts followed-by contract', () => {
+  it('sends the viewer as followed_by, the name the API filters on', async () => {
+    const request = vi.spyOn(SuperheroApi, 'fetchJson').mockResolvedValue({ items: [] });
+    await SuperheroApi.listPosts({ followedBy: 'ak_viewer' });
+    const url = new URL(request.mock.calls[0][0], 'https://example.test');
+    expect(url.pathname).toBe('/api/posts');
+    expect(url.searchParams.get('followed_by')).toBe('ak_viewer');
+  });
+
+  it('omits the filter for the global feeds', async () => {
+    const request = vi.spyOn(SuperheroApi, 'fetchJson').mockResolvedValue({ items: [] });
+    await SuperheroApi.listPosts({});
+    expect(request.mock.calls[0][0]).not.toContain('followed_by');
+  });
+});

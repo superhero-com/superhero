@@ -230,6 +230,13 @@ describe('DaoVoteDetailsView ballot', () => {
     await waitFor(() => expect(calls).toEqual(['withdraw', 'apply']));
   });
 
+  it('says the vote could not be loaded instead of loading forever', async () => {
+    mockHook = { voteState: undefined, loadError: true };
+    renderView();
+    expect(await screen.findByRole('alert')).toHaveTextContent('This vote could not be loaded');
+    expect(screen.queryByText('Loading…')).toBeNull();
+  });
+
   it('shows a plain message when the wallet request fails', async () => {
     mockAccount = ACCOUNT;
     mockHook = { actionError: new Error('Invocation failed: VOTER_ALREADY_VOTED') };

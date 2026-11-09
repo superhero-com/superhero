@@ -24,6 +24,7 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
   const [voteStateLabel, setVoteStateLabel] = useState<VOTE_STATE_LABEL>();
   const [actionLoading, setActionLoading] = useState<boolean>(false);
   const [actionError, setActionError] = useState<unknown>();
+  const [loadError, setLoadError] = useState(false);
 
   const { sdk, currentBlockHeight } = useAeSdk();
   const { activeAccount } = useAccount();
@@ -216,7 +217,9 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
 
   // Initialize when tokenSaleAddress changes
   useEffect(() => {
-    init().catch(() => undefined);
+    setLoadError(false);
+    // A wrong or missing vote address would otherwise leave the page loading forever.
+    init().catch(() => setLoadError(true));
   }, [tokenSaleAddress, init]);
 
   return {
@@ -225,6 +228,7 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
     voteStateLabel,
     actionLoading,
     actionError,
+    loadError,
 
     canVote,
     canRevokeVote,

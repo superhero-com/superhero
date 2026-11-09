@@ -3287,7 +3287,9 @@
         "viewOnAescan": "在 æScan 查看",
         "openVotes": "进行中的投票",
         "allVotes": "全部投票",
-        "holders": "持有者"
+        "holders": "持有者",
+        "loadErrorTitle": "无法加载此投票",
+        "loadErrorText": "请检查链接，或返回 DAO 查看其投票。"
       },
       "status": {
         "open": "进行中",

@@ -3369,7 +3369,9 @@
         "viewOnAescan": "View on æScan",
         "openVotes": "Open votes",
         "allVotes": "All votes",
-        "holders": "Holders"
+        "holders": "Holders",
+        "loadErrorTitle": "This vote could not be loaded",
+        "loadErrorText": "Check the link, or go back to the DAO to see its votes."
       },
       "status": {
         "open": "Open",

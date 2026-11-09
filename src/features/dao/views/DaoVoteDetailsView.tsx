@@ -57,6 +57,7 @@ const DaoVoteDetailsContent = ({
     daoLoaded,
     actionLoading,
     actionError,
+    loadError,
     voteOption,
     revokeVote,
     withdraw,
@@ -254,7 +255,15 @@ const DaoVoteDetailsContent = ({
         </a>
       </div>
 
-      {!voteState && <div className="dao-v-empty dao-v-muted" role="status">{t('loading')}</div>}
+      {!voteState && loadError && (
+        <div className="dao-v-empty" role="alert">
+          <h2>{t('voting.page.loadErrorTitle')}</h2>
+          <p className="dao-v-muted">{t('voting.page.loadErrorText')}</p>
+        </div>
+      )}
+      {!voteState && !loadError && (
+        <div className="dao-v-empty dao-v-muted" role="status">{t('loading')}</div>
+      )}
 
       {voteState && (
         <div className="dao-v-grid">

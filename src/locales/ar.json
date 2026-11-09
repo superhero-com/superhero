@@ -3306,7 +3306,9 @@
         "viewOnAescan": "عرض على æScan",
         "openVotes": "تصويتات مفتوحة",
         "allVotes": "كل التصويتات",
-        "holders": "الحاملون"
+        "holders": "الحاملون",
+        "loadErrorTitle": "تعذّر تحميل هذا التصويت",
+        "loadErrorText": "تحقّق من الرابط، أو ارجع إلى الـ DAO لعرض تصويتاته."
       },
       "status": {
         "open": "مفتوح",

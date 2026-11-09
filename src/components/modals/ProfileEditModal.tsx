@@ -28,8 +28,8 @@ import { useModal } from '@/hooks/useModal';
 import { useProfile } from '@/hooks/useProfile';
 import { useClaimChainName } from '@/hooks/useClaimChainName';
 import {
-  CLAIMABLE_CHAIN_NAME_LABEL_REGEX,
   computeSelfFundedClaimAe,
+  getChainNameClaimValidationError,
   resolveClaimErrorMessage,
   resolveClaimNotificationStep,
 } from '@/utils/claimChainName';
@@ -622,12 +622,7 @@ const ProfileEditModal = ({
   // When the user owns no names, they type one to claim it. Mirrors the standalone claim flow.
   const normalizedClaimValue = useMemo(() => normalizeChainNameLabel(claimValue), [claimValue]);
   const normalizedClaimValueLength = normalizedClaimValue.length;
-  const validateClaimChainName = (name: string): string | null => {
-    if (!name) return t('messages.chainNameClaimRequired');
-    if (!CLAIMABLE_CHAIN_NAME_LABEL_REGEX.test(name)) return t('messages.chainNameClaimInvalidChars');
-    if (name.length <= 12) return t('messages.chainNameClaimTooShort');
-    return null;
-  };
+  const validateClaimChainName = (name: string) => getChainNameClaimValidationError(name, t);
   const claimValidationError = validateClaimChainName(normalizedClaimValue);
   const isClaimTooShort = Boolean(normalizedClaimValue && normalizedClaimValueLength <= 12);
 

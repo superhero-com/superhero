@@ -1395,6 +1395,24 @@
       "empty": "暂无{{language}}的帖子",
       "showAll": "显示所有语言",
       "error": "无法加载{{language}}的帖子。请重试或显示所有语言的帖子。"
+    },
+    "chainNameStep": {
+      "title": "选择你的 .chain 名称",
+      "subtitle": "在 Superhero 上用名称代替冗长的钱包地址。",
+      "inputLabel": "名称",
+      "hint": "字母、数字和连字符，至少 13 个字符。",
+      "claimFree": "免费领取",
+      "buyFor": "以 ≈ {{amount}} AE 购买",
+      "notEnoughAe": "AE 不足。你的余额为 {{balance}} AE。",
+      "confirmInWallet": "请在钱包中确认…",
+      "confirmStep": "请在钱包中确认第 {{step}} 步，共 {{total}} 步…",
+      "waitingForNetwork": "正在等待网络…",
+      "processingTitle": "{{name}} 正在注册",
+      "doneTitle": "{{name}} 归你了",
+      "doneDesc": "它现在会显示在你的个人资料和帖子中。",
+      "continue": "继续",
+      "later": "稍后",
+      "laterHint": "你可以随时在个人资料中领取名称。"
     }
   },
   "dex": {

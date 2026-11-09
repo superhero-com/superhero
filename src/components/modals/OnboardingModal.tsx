@@ -3,6 +3,7 @@ import React, {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { useAtomValue } from 'jotai';
 import { Smartphone } from 'lucide-react';
 import { AeButton } from '@/components/ui/ae-button';
 import { useAeSdk, useWalletConnect } from '@/hooks';
@@ -14,6 +15,15 @@ import { MobileAppCard } from '@/components/MobileAppInstall';
 import chromeLogoUrl from '@/svg/brands/chrome-logo.svg';
 import firefoxLogoUrl from '@/svg/brands/firefox-logo.svg';
 import Favicon from '@/svg/favicon.svg?react';
+import { chainNamesAtom, preferredChainNamesAtom } from '@/atoms/walletAtoms';
+import Spinner from '@/components/Spinner';
+import ChainNameStep from '@/components/onboarding/ChainNameStep';
+import {
+  accountHasChainName,
+  dismissChainNameStep,
+  isChainNameStepDismissed,
+  knownChainName,
+} from '@/components/onboarding/chainNameStepGate';
 
 /**
  * The one sign-in modal, on every surface.
@@ -42,6 +52,9 @@ type Props = {
   onClose: () => void;
   onConnected?: (address: string) => void;
 };
+
+// How long the name lookup may hold the modal open before the step is skipped.
+const CHAIN_NAME_LOOKUP_TIMEOUT_MS = 4000;
 
 const APP_LINKS = {
   appStore: 'https://apps.apple.com/us/app/superhero-web3-communities/id6758045846',
@@ -95,19 +108,72 @@ const OnboardingModal = ({ onClose, onConnected }: Props) => {
   const [importOpen, setImportOpen] = useState(false);
   const connectRequestedRef = useRef(false);
   const didAdvanceRef = useRef(false);
+  const chainNames = useAtomValue(chainNamesAtom);
+  const preferredChainNames = useAtomValue(preferredChainNamesAtom);
+  // Set once a wallet is connected: the modal then shows the .chain name step
+  // (or the short lookup before it) instead of the sign-in cards.
+  const [nameStep, setNameStep] = useState<{ address: string; phase: 'checking' | 'pick' } | null>(null);
+  const finishedRef = useRef(false);
+  const pendingAccountRef = useRef<string | null>(null);
+  const onConnectedRef = useRef(onConnected);
+  onConnectedRef.current = onConnected;
 
   useEffect(() => { if (pwa) loadWalletOnboarding().catch(() => {}); }, [pwa]);
   // The "Connect wallet" and onboarding modals are this one component.
   useEffect(() => { track('wallet_connect_open'); }, []);
+
+  const finish = useCallback((account: string) => {
+    if (finishedRef.current) return;
+    finishedRef.current = true;
+    pendingAccountRef.current = null;
+    onClose();
+    onConnectedRef.current?.(account);
+  }, [onClose]);
+
+  // Closing the modal on the name step (Escape, outside click) is a "Later":
+  // the caller still learns the wallet is connected.
+  useEffect(() => () => {
+    const account = pendingAccountRef.current;
+    if (!account || finishedRef.current) return;
+    finishedRef.current = true;
+    dismissChainNameStep(account);
+    onConnectedRef.current?.(account);
+  }, []);
 
   const advanceAfterConnect = useCallback((account: string) => {
     if (didAdvanceRef.current) return;
     didAdvanceRef.current = true;
     connectRequestedRef.current = false;
     track('wallet_connected');
-    onClose();
-    onConnected?.(account);
-  }, [onClose, onConnected]);
+    if (
+      isChainNameStepDismissed(account)
+      || knownChainName(chainNames[account], preferredChainNames[account]?.name)
+    ) {
+      finish(account);
+      return;
+    }
+    pendingAccountRef.current = account;
+    setNameStep({ address: account, phase: 'checking' });
+  }, [chainNames, finish, preferredChainNames]);
+
+  // Users who already own a name skip the step; an unknown answer skips it too.
+  const checkingAddress = nameStep?.phase === 'checking' ? nameStep.address : null;
+  useEffect(() => {
+    if (!checkingAddress) return undefined;
+    let settled = false;
+    const settle = (hasName: boolean | null) => {
+      if (settled) return;
+      settled = true;
+      if (hasName === false) setNameStep({ address: checkingAddress, phase: 'pick' });
+      else finish(checkingAddress);
+    };
+    const timeoutId = window.setTimeout(() => settle(null), CHAIN_NAME_LOOKUP_TIMEOUT_MS);
+    accountHasChainName(checkingAddress).then(settle);
+    return () => {
+      settled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [checkingAddress, finish]);
 
   useEffect(() => {
     if (!connectRequestedRef.current || !activeAccount) return;
@@ -145,6 +211,29 @@ const OnboardingModal = ({ onClose, onConnected }: Props) => {
     walletSubtitle = t('common.modals.onboarding.walletDescMobile', { defaultValue: 'Connect with the Superhero Wallet app' });
   } else {
     walletSubtitle = t('common.modals.onboarding.walletDescDesktop', { defaultValue: 'Connect the browser extension or mobile app' });
+  }
+
+  if (nameStep?.phase === 'checking') {
+    return (
+      <div className="flex min-h-40 items-center justify-center p-6" role="status">
+        <Spinner className="h-6 w-6" />
+        <span className="sr-only">{t('common.messages.chainNameClaimChecking')}</span>
+      </div>
+    );
+  }
+
+  if (nameStep?.phase === 'pick') {
+    return (
+      <div className="p-2 sm:p-0">
+        <ChainNameStep
+          address={nameStep.address}
+          onDone={(result) => {
+            if (result === 'skipped') dismissChainNameStep(nameStep.address);
+            finish(nameStep.address);
+          }}
+        />
+      </div>
+    );
   }
 
   return (

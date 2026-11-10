@@ -189,6 +189,9 @@
       "whenAbove": "Когда выше {{target}} AE",
       "whenBelow": "Когда ниже {{target}} AE",
       "remove": "Удалить оповещение",
+      "connectHint": "Включите уведомления, чтобы видеть здесь свои оповещения.",
+      "connect": "Включить уведомления",
+      "connecting": "Подключение…",
       "firedCount_one": "{{count}} оповещение уже отправлено",
       "firedCount_few": "{{count}} оповещения уже отправлены",
       "firedCount_many": "{{count}} оповещений уже отправлено",
@@ -656,7 +659,40 @@
       "next": "Следующие активы"
     },
     "trendingAssets": "Популярные активы",
-    "viewAll": "Все активы"
+    "viewAll": "Все активы",
+    "sortControls": {
+      "latestFeed": "Свежие публикации",
+      "latest": "Свежее",
+      "popular": "Горячее",
+      "customizeFeed": "Настроить ленту",
+      "reset": "Сбросить",
+      "weightsLabel": "Веса",
+      "feedSortOptions": "Сортировка ленты",
+      "customizePopularFeed": "Настроить ленту «Горячее»",
+      "tunePopularFeed": "Настройте порядок ленты «Горячее».",
+      "closeCustomizationPanel": "Закрыть настройки",
+      "popularFeedSettings": "Настройки ленты «Горячее»",
+      "done": "Готово",
+      "weights": {
+        "comments": "Комментарии",
+        "tipsAmountAE": "Сумма чаевых",
+        "tipsCount": "Число чаевых",
+        "uniqueTippers": "Отправители чаевых",
+        "trendingBoost": "Бонус тренда",
+        "contentQuality": "Качество контента",
+        "reads": "Прочтения",
+        "interactionsPerHour": "Активность"
+      },
+      "weightValues": {
+        "low": "Низкий",
+        "med": "Средний",
+        "high": "Высокий"
+      },
+      "customizePopularFeedAria": "Настроить ленту «Горячее»",
+      "following": "Подписки",
+      "followingEmptyNoFollows": "Подпишитесь на людей, чтобы видеть их публикации здесь.",
+      "followingEmptyNoPosts": "Аккаунты, на которые вы подписаны, ещё ничего не опубликовали."
+    }
   },
   "dex": {
     "swapCard": {

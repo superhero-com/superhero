@@ -562,7 +562,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
       // Also refetch any topic feeds related to this hashtag so other viewers update quickly
       try {
         if (requiredHashtag) {
-          queryClient.invalidateQueries({ queryKey: ['topic-by-name'] });
+          queryClient.invalidateQueries({ queryKey: ['topic-posts'] });
         }
       } catch {
         // Ignore topic refresh errors

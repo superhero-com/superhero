@@ -12,8 +12,9 @@ import { Decimal } from '../../../libs/decimal';
 import {
   calculateBuyPrice,
   calculateBuyPriceWithAffiliationFee,
+  calculateBuyTokensFromAE,
   calculateSellReturn,
-  calculateTokensFromAE,
+  calculateSellTokensFromAE,
   toAe,
   toDecimals,
 } from '../../../utils/bondingCurve';
@@ -101,8 +102,10 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
           toAe(calculateBuyPriceWithAffiliationFee(tokenSupply, tokenAmountBigNumber)),
         );
       } else {
+        // Rounded so the quote errs for the user: a buy never costs more than typed,
+        // a sell (below) never pays less.
         tokenAmountCostDecimal = Decimal.from(
-          calculateTokensFromAE(tokenSupply, amount).toFixed(2),
+          calculateBuyTokensFromAE(tokenSupply, amount).toFixed(2, BigNumber.ROUND_DOWN),
         );
         currentSupply = currentSupply.add(tokenAmountCostDecimal.toString());
       }
@@ -113,7 +116,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
       );
     } else {
       tokenAmountCostDecimal = Decimal.from(
-        calculateTokensFromAE(tokenSupply, amount).toFixed(2),
+        calculateSellTokensFromAE(tokenSupply, amount).toFixed(2, BigNumber.ROUND_UP),
       );
       currentSupply = currentSupply.sub(tokenAmountCostDecimal.toString());
     }

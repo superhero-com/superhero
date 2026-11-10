@@ -18,6 +18,7 @@ import {
   type PendingTransaction,
   type PendingTransactionResolver,
 } from '@/features/pending-transactions/store';
+import { topicPostsKey } from '../hooks/useTopicPosts';
 
 type Post = Record<string, any>;
 
@@ -160,12 +161,25 @@ export function prependToLatestFeed(
 /** Put `post` on top of a hashtag feed, unless it is already there. */
 export function prependToTopicFeed(queryClient: QueryClient, queryKey: QueryKey, post: Post): void {
   queryClient.setQueryData(queryKey, (old: any) => {
-    const posts = Array.isArray(old?.posts) ? old.posts : [];
-    if (containsPost(posts, post)) return old;
+    if (!old || !Array.isArray(old.pages)) {
+      return {
+        pages: [{ items: [post], meta: { currentPage: 1, totalPages: 1 } }],
+        pageParams: [1],
+      };
+    }
+    if (old.pages.some((page: any) => containsPost(page?.items, post))) return old;
+    const firstPage = old.pages[0] || { items: [], meta: {} };
+    const totalItems = firstPage.meta?.totalItems;
     return {
-      ...(old || {}),
-      posts: [post, ...posts],
-      post_count: typeof old?.post_count === 'number' ? old.post_count + 1 : old?.post_count,
+      ...old,
+      pages: [{
+        ...firstPage,
+        items: [post, ...(firstPage.items || [])],
+        meta: {
+          ...firstPage.meta,
+          totalItems: typeof totalItems === 'number' ? totalItems + 1 : totalItems,
+        },
+      }, ...old.pages.slice(1)],
     };
   });
 }
@@ -189,7 +203,7 @@ export function insertPostIntoFeeds(
     keys.set(JSON.stringify(DEFAULT_LATEST_FEED_KEY), DEFAULT_LATEST_FEED_KEY);
   }
   keys.forEach((key) => prependToLatestFeed(queryClient, key, post));
-  if (topic) prependToTopicFeed(queryClient, ['topic-by-name', topic.toLowerCase()], post);
+  if (topic) prependToTopicFeed(queryClient, topicPostsKey(topic), post);
 }
 
 /**
@@ -264,9 +278,13 @@ function restoreInto(queryClient: QueryClient, queryKey: QueryKey): void {
   if (isLatestFeedKey(key)) {
     // Oldest first, so the newest ends up on top.
     pendingPosts().reverse().forEach((post) => prependToLatestFeed(queryClient, queryKey, post));
-  } else if (key[0] === 'topic-by-name' && typeof key[1] === 'string') {
-    const topic = key[1].toLowerCase();
-    listPendingTransactions({ kind: 'create_post', match: (transaction) => transaction.meta.topic === topic })
+  } else if (key[0] === 'topic-posts' && typeof key[1] === 'string') {
+    const topic = key[1];
+    listPendingTransactions({
+      kind: 'create_post',
+      match: (transaction) => !!transaction.meta.topic
+        && topicPostsKey(transaction.meta.topic)[1] === topic,
+    })
       .reverse()
       .forEach((transaction) => {
         const post = parsePost(transaction);
@@ -340,7 +358,7 @@ export function refreshAfterPostSettled(
   });
   if (transaction.kind === 'create_post') {
     if (transaction.meta.topic) {
-      queryClient.invalidateQueries({ queryKey: ['topic-by-name', transaction.meta.topic] });
+      queryClient.invalidateQueries({ queryKey: topicPostsKey(transaction.meta.topic) });
     }
     // Its replies, shown from the browser while the backend 404ed them.
     queryClient.invalidateQueries({ predicate: (query) => isInThread(query.queryKey, postId ?? '') });

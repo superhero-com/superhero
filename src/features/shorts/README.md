@@ -106,8 +106,9 @@ Hosted upload sessions advertise `direct-s3-v1`. The browser encrypts each 1 MiB
 chunk using a key scoped to that object, then PUTs it to a short-lived MinIO URL.
 Only metadata goes to the API. Storage receives no Studio bearer token or cookies.
 The API verifies the stored checksum before acknowledging a chunk; workers verify
-and decrypt the complete source. The local loopback demo keeps its original
-transport. Expired permissions can be refreshed without starting a second upload.
+and decrypt the complete source. Studio enables upload when the API advertises
+this transport and the adaptive original-file policy. Expired permissions can be
+refreshed without starting a second upload.
 
 Draft files/details remain in memory while staying in Shorts. After a reload, reselect identical file/details within 24 hours to resume an interrupted transfer. Uploaded private drafts remain in Studio. Changing prepared metadata creates a new draft; unchanged retries reuse the prepared video. Mobile has a collapsible preview and fixed Previous/Next controls.
 
@@ -189,8 +190,29 @@ Inactive MSE players use a short buffer and cap automatic preloading near the
 available 480 tier. Native HLS keeps the same session lifecycle but the browser
 owns its rendition and buffering decisions.
 
-Run `make start` in `superhero-video-streaming` alongside the API and IPFS. Feed records carry IDs and metadata. `shorts-media.ts` requests a short-lived HLS session; `use-short-hls.ts` attaches hls.js/MediaSource (`blob:`) or native HLS on supported Safari versions. Set `VITE_SHORTS_STREAM_URL` to the playback origin (default `http://127.0.0.1:3335`). Public bytes no longer go through the API. A background worker packages registered original-derived tracks into pinned adaptive HLS with two-second segments, without another lossy encode. Legacy sources retain the compatible 540p preparation path until an adaptive delivery is selected. Publication enqueues preparation, and existing videos need no re-upload. A video awaiting preparation shows “Preparing video.” Cache eviction only re-fetches prepared segments. The viewer mounts at most five nearby cards; the active and next eligible item may buffer, while distant players unmount, abort requests and destroy their MediaSource. An authenticated edge shares immutable segment bytes across sessions after validating every request. Sessions renew before expiry while preserving position and explicit pauses. Temporary 429/503 responses on playback sessions, playlists and segments get at most two automatic retries, respecting Retry-After (seconds or HTTP date). Retries must start within 30 seconds; longer server delays and exhausted retries show Try again. Media retries reuse the same signed URL and byte range, preserve the player and its explicit pause, and cancel when it becomes cold or unmounts. Authentication and unavailable-content responses are not retried by this backpressure path; the existing one-time expired-link renewal remains separate. Native HLS uses the same session retry but its media loading is controlled by the browser. Other source failures show retry guidance, with no full-MP4 fallback. The previous `/videos/:id/video.mp4` endpoint returns 410. Upload object-URL previews and authenticated review previews keep their existing flow. HLS and signed URLs discourage direct-file links but are not DRM or download prevention. Run the HLS lifecycle/session tests with `npm test -- --run src/features/shorts/__tests__/shorts-hls.test.tsx`.
+Run the local playback stack with `make start` from `superhero-shorts/streaming/`
+alongside the API and IPFS. Set `VITE_SHORTS_STREAM_URL` to the public playback
+origin (default `http://127.0.0.1:3335`). Ingest prepares adaptive tracks from the
+original. The streaming worker packages them as pinned two-second HLS segments.
+Publication enqueues preparation, and the viewer shows “Preparing video” until the
+package is ready. Cache eviction fetches the prepared assets again.
+[Media deployment guide](https://github.com/superhero-com/superhero-shorts#deploying-to-a-dedicated-media-server)
 
+Feed records carry IDs and metadata. `shorts-media.ts` requests a short-lived
+session and `use-short-hls.ts` attaches hls.js/MediaSource or native Safari HLS.
+At most five nearby cards stay mounted. The active and next eligible card may
+buffer. Distant cards unmount and cancel pending requests. The edge authorizes
+every request before sharing cached segment bytes across sessions.
+
+Session renewal preserves position and explicit pauses. Temporary 429/503
+responses on sessions, playlists and segments get at most two automatic retries.
+The player honors `Retry-After` in seconds or HTTP-date format. If the wait
+would exceed 30 seconds or retries are exhausted, it shows Try again. Media
+retries reuse the signed URL and byte range, preserve pause state and cancel
+when the card becomes inactive. Expired links have their own one-time renewal.
+Native HLS uses the shared session retry logic and lets the browser load media.
+Test session and player behavior with
+`npm test -- --run src/features/shorts/__tests__/shorts-hls.test.tsx`.
 
 ## Live indexing updates
 

@@ -11,7 +11,7 @@ import {
   creatorSessionAtom, openConnectedCreatorSession, revokeCreatorSession, type CreatorLogin,
 } from './shorts-wallet-session';
 import { useShortsPreferences, rankShorts } from './shorts-preferences';
-import { PublicationReviewPending, publishAndWait } from './shorts-publication-session';
+import { PublicationReviewPending, publicationProgress, publishAndWait } from './shorts-publication-session';
 import { ShortsFeedWindow, type FeedSnapshot, type FeedPage } from './shorts-feed-window';
 import { savedFeedPage } from './shorts-saved-feed';
 import { PlaybackDelivery, type PlaybackResult } from './shorts-playback';
@@ -147,7 +147,7 @@ export function useShorts() {
   const [uploadDraft, setUploadDraft] = useState<UploadDraft>();
   const [uploadEpoch, setUploadEpoch] = useState(0);
   const [preparedUpload, setPreparedUpload] = useState<{ video: Short; key: string }>();
-  const [uploadPublication, setUploadPublication] = useState<{ shortId?: string; status: 'uploading' | 'publishing' | 'reviewing' | 'published' | 'error' }>();
+  const [uploadPublication, setUploadPublication] = useState<{ shortId?: string; status: 'uploading' | 'publishing' | 'reviewing' | 'registered' | 'rechecking' | 'published' | 'error' }>();
   const [uploadProgress, setUploadProgress] = useState<number>();
   const [uploadStage, setUploadStage] = useState<'checking' | 'uploading' | 'processing'>();
   const uploadRequest = useRef<AbortController | undefined>(undefined);
@@ -591,21 +591,20 @@ comment,
     }
     if (!resume) {
       if (!pending && file.size > currentUploadCapability.maxBytes) throw new Error(`New uploads are limited to ${uploadSizeLabel(currentUploadCapability.maxBytes)}. To resume a saved file, keep its original upload details.`);
-      if (!pending && config?.uploads?.creation === 'request-key-v1') {
+      if (!pending && currentUploadCapability.creation === 'request-key-v1') {
         pending = {
           key: crypto.randomUUID(),
           fingerprint,
           source: {
-            bytes: metadata.bytes, sha256: metadata.sha256, maxBytes: currentUploadCapability.maxBytes, format: config.uploads.format,
+            bytes: metadata.bytes, sha256: metadata.sha256, maxBytes: currentUploadCapability.maxBytes, format: currentUploadCapability.format,
           },
-          expectedFormat: config.uploads.format,
+          expectedFormat: currentUploadCapability.format,
         };
         saveUploadCreation(storageKey, pending);
       }
-      const expectedFormat = pending?.expectedFormat || (config?.uploads?.format === 'original-file-v1' ? 'original-file-v1' : undefined);
-      const original = expectedFormat === 'original-file-v1';
+      const expectedFormat = currentUploadCapability.format;
       try {
-        resume = await request<UploadSession>('/uploads', { ...metadata, ...(expectedFormat ? { expectedFormat } : {}), ...(pending ? { requestKey: pending.key } : {}) }, uploadAuth(), options);
+        resume = await request<UploadSession>('/uploads', { ...metadata, expectedFormat, ...(pending ? { requestKey: pending.key } : {}) }, uploadAuth(), options);
       } catch (error) {
         uploadAuth();
         if (pending && error instanceof ShortsApiError && error.status === 410) expire();
@@ -613,7 +612,6 @@ comment,
       }
       uploadAuth();
       if (pending) confirmUploadCreation(resume, pending);
-      if (original && resume.source?.format !== 'original-file-v1') throw new Error('The server did not confirm original-file upload support. Reload upload settings.');
     }
     validateUploadSession(resume, metadata);
     try {
@@ -626,15 +624,8 @@ comment,
     for (let i = 0; i < count && !resume.complete; i += 1) {
       if (!resume.parts.includes(i)) {
         const bytes = file.slice(i * resume.partSize, (i + 1) * resume.partSize);
-        if (resume.transport === 'direct-s3-v1') {
-          // eslint-disable-next-line no-await-in-loop
-          await uploadDirectPart(resume.id, i, bytes, { token: uploadAuth, signal: controller.signal });
-        } else {
-          const part = new FormData(); part.set('file', bytes, 'part');
-          // Local loopback demos retain their disk-backed upload transport.
-          // eslint-disable-next-line no-await-in-loop
-          await request(`/uploads/${resume.id}/parts/${i}`, part, uploadAuth(), { ...options, timeout: 120000 });
-        }
+        // eslint-disable-next-line no-await-in-loop
+        await uploadDirectPart(resume.id, i, bytes, { token: uploadAuth, signal: controller.signal });
       }
       setUploadProgress(Math.round(((i + 1) / count) * 100));
     }
@@ -683,8 +674,38 @@ comment,
       });
     } finally { if (uploadRequest.current === controller) uploadRequest.current = undefined; }
   };
+  // Verification of the mined transaction releases the form. Public delivery still follows the journal.
+  const deliveryId = uploadPublication && ['registered', 'rechecking'].includes(uploadPublication.status)
+    ? uploadPublication.shortId : undefined;
+  useEffect(() => {
+    if (!deliveryId || !token) return undefined;
+    const controller = new AbortController();
+    let timer: ReturnType<typeof setTimeout>;
+    const checkDelivery = async () => {
+      try {
+        const video = await request<Short>(`/${deliveryId}/publication`, undefined, token, { signal: controller.signal, timeout: 15000 });
+        if (controller.signal.aborted || currentCreatorScope.current !== creatorScope || video.id !== deliveryId) return;
+        const progress = publicationProgress(video);
+        const status = {
+          published: 'published', registered: 'registered', failed: 'error', waiting: 'rechecking',
+        } as const;
+        setUploadPublication((current) => (current?.shortId === deliveryId ? { ...current, status: status[progress] } : current));
+        if (progress === 'published') return;
+        if (progress === 'failed') {
+          setMessageTone('error'); setMessage('Publication failed. Your draft is saved in Studio.');
+          return;
+        }
+      } catch (error) {
+        // Login renewal starts a fresh observer; an expired session cannot poll for delivery.
+        if (error instanceof ShortsApiError && error.status === 401) return;
+      }
+      if (!controller.signal.aborted) timer = setTimeout(checkDelivery, 5000);
+    };
+    timer = setTimeout(checkDelivery, 5000);
+    return () => { clearTimeout(timer); controller.abort(); };
+  }, [deliveryId, token, creatorScope]);
   const publishUpload = (data: FormData, key: string) => perform(async () => {
-    if (uploadPublication?.status === 'published') return;
+    if (uploadPublication && ['published', 'registered', 'rechecking'].includes(uploadPublication.status)) return;
     let short = preparedUpload?.key === key ? preparedUpload.video : undefined;
     setUploadPublication({ shortId: short?.id, status: short ? 'publishing' : 'uploading' });
     try {
@@ -694,7 +715,7 @@ comment,
       const published = await completePublication(short.id);
       requireLogin();
       setPreparedUpload({ video: published, key });
-      setUploadPublication({ shortId: short.id, status: 'published' });
+      setUploadPublication({ shortId: short.id, status: published.publicationStatus === 'published' ? 'published' : 'registered' });
       try {
         const resumeKey = uploadResumeKey(SHORTS_API, config!.network, config!.contract, actor);
         localStorage.removeItem(resumeKey); localStorage.removeItem(uploadCreationKey(resumeKey));
@@ -703,8 +724,8 @@ comment,
       if (currentAddress.current === actor) setUploadPublication({ shortId: short?.id, status: error instanceof PublicationReviewPending ? 'reviewing' : 'error' });
       throw error;
     } finally { setUploadStage(undefined); setUploadProgress(undefined); }
-  }, 'Your Short is published.', { backgroundRefresh: true, pending: 'Uploading your Short' });
-  const publish = (id: string) => perform(() => completePublication(id), 'Your Short is published.', { pending: 'Publishing your Short' });
+  }, 'Your Short is registered.', { backgroundRefresh: true, pending: 'Uploading your Short' });
+  const publish = (id: string) => perform(() => completePublication(id), 'Your Short is registered.', { backgroundRefresh: true, pending: 'Publishing your Short' });
   const confirmLike = (selected = like) => perform(async () => {
     if (!selected) throw new Error('Choose a Short to Like.');
     setLike(selected); setLikePhase('signing');

@@ -8,6 +8,17 @@ export class PublicationReviewPending extends Error {
   }
 }
 
+export function publicationProgress(video: Short) {
+  if (video.publicationStatus === 'withdrawn' || video.moderation === 'rejected') return 'failed';
+  if (video.publicationRequest === 'cancelled' || video.publicationRequest === 'reverted') return 'failed';
+  if (video.publicationStatus === 'published') return 'published';
+  if (video.publicationRequest === 'signed') {
+    if (video.publicationExecution === 'ok') return 'registered';
+    if (video.publicationExecution === 'error' || video.publicationExecution === 'revert') return 'failed';
+  }
+  return 'waiting';
+}
+
 /** Read the durable request before submitting. Only the first explicit action can enqueue. */
 export async function publishAndWait(id: string, options: {
   read: () => Promise<Short>;
@@ -40,8 +51,9 @@ export async function publishAndWait(id: string, options: {
   let failures = 0;
   for (;;) {
     check();
-    if (video.publicationStatus === 'published') return video;
-    if (['cancelled', 'reverted'].includes(video.publicationRequest || '')) throw new Error('Your Short could not be published. Its draft is saved in Studio.');
+    const progress = publicationProgress(video);
+    if (progress === 'registered' || progress === 'published') return video;
+    if (progress === 'failed') throw new Error('Your Short could not be published. Its draft is saved in Studio.');
     if (Date.now() >= deadline) throw new Error('Your Short is saved and publication is still pending. Return to it in Studio to check progress.');
     options.onWaiting();
     check();

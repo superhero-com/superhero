@@ -20,10 +20,10 @@ const session: UploadSession = {
 const capability = {
   version: 1, transport: 'direct-s3-v1', format: 'original-file-v1', maxBytes: 100000000, partSize: UPLOAD_PART_BYTES, minDuration: 2, maxDuration: 60,
 };
-it('fails closed on malformed capabilities while retaining legacy-server limits', () => {
-  expect(uploadCapability({} as Config)?.maxBytes).toBe(40 * UPLOAD_PART_BYTES);
+it('requires an advertised adaptive-original upload capability', () => {
+  expect(uploadCapability({} as Config)).toBeUndefined();
   expect(uploadCapability({ uploads: capability } as Config)?.maxBytes).toBe(100000000);
-  [{ maxBytes: 100000001 }, { maxBytes: 0 }, { partSize: 100000000 }, { format: 'unknown' }, { transport: 'api-parts-v1' }, { version: 2 }].forEach((patch) => {
+  [{ maxBytes: 100000001 }, { maxBytes: 0 }, { partSize: 100000000 }, { format: 'unknown' }, { format: 'legacy-directory-v1' }, { transport: 'api-parts-v1' }, { version: 2 }].forEach((patch) => {
     expect(uploadCapability({ uploads: { ...capability, ...patch } } as Config)).toBeUndefined();
   });
 });

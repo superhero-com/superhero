@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { getDefaultStore } from 'jotai';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import {
@@ -118,6 +119,22 @@ const pagedFeed = () => {
   return items;
 };
 afterEach(() => vi.unstubAllGlobals());
+const uploadPolicy = {
+  version: 1,
+  transport: 'direct-s3-v1',
+  format: 'original-file-v1',
+  maxBytes: 100000000,
+  partSize: 1048576,
+  minDuration: 2,
+  maxDuration: 60,
+} as const;
+const uploadedVideo = {
+  transport: uploadPolicy.transport,
+  source: {
+    bytes: 5, sha256: createHash('sha256').update('video').digest('hex'), maxBytes: uploadPolicy.maxBytes, format: uploadPolicy.format,
+  },
+};
+
 beforeEach(() => {
   mocks.pathname = '/shorts/studio'; mocks.search = '';
   mocks.followed = []; mocks.graphRevision = 0;
@@ -130,6 +147,7 @@ beforeEach(() => {
       return {
         network: 'ae_uat',
         operator: 'ak_operator',
+        uploads: uploadPolicy,
         aci: [],
         contract: 'ct_test',
         likeMode: 'free',
@@ -710,7 +728,7 @@ describe('Shorts wallet session and recovery', () => {
     mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
       if (path === '/uploads') {
         return {
-          id: 'new-upload', parts: [], partSize: 1048576, expires: Date.now() + 60000, complete: true, status: 'uploading',
+          ...uploadedVideo, id: 'new-upload', parts: [], partSize: 1048576, expires: Date.now() + 60000, complete: true, status: 'uploading',
         };
       }
       if (path === '/uploads/new-upload/finish') {
@@ -741,7 +759,7 @@ describe('Shorts wallet session and recovery', () => {
     await act(async () => { await result.current.signIn(); });
     const original = mocks.request.getMockImplementation()!;
     const job = {
-      id: 'saved', parts: [0], partSize: 1048576, complete: false, status: 'uploading', expires: Date.now() + 60000,
+      ...uploadedVideo, id: 'saved', parts: [0], partSize: 1048576, complete: false, status: 'uploading', expires: Date.now() + 60000,
     };
     const video = { ...clip, id: 'saved', creator: 'ak_creator' };
     let reads = 0;
@@ -779,7 +797,7 @@ describe('Shorts wallet session and recovery', () => {
     await act(async () => { await hook.result.current.signIn(); });
     const original = mocks.request.getMockImplementation()!;
     const job = {
-      id: 'saved', parts: [0], partSize: 1048576, complete: false, status: 'queued', expires: Date.now() + 60000,
+      ...uploadedVideo, id: 'saved', parts: [0], partSize: 1048576, complete: false, status: 'queued', expires: Date.now() + 60000,
     };
     let finishRead: (value: unknown) => void = () => undefined;
     let readSignal: AbortSignal | undefined;
@@ -895,7 +913,7 @@ describe('Shared links remain separate from the discovery feed', () => {
 const enableConnectedStudio = () => {
   const original = mocks.request.getMockImplementation()!;
   mocks.request.mockImplementation(async (path: string, body?: { address?: string }, ...args: unknown[]) => {
-    if (path === '/config') return { ...await original(path), creatorAccess: 'connected-wallet' };
+    if (path === '/config') return { ...await original(path), creatorAccess: 'connected-wallet', uploads: undefined };
     if (path === '/auth/connect') {
       return {
         address: body?.address, token: `connected-${body?.address}`, kind: 'connected-wallet', expiresAt: Date.now() + 1800000,
@@ -938,41 +956,15 @@ describe('Connection-only local Studio', () => {
     expect(mocks.sign).not.toHaveBeenCalled();
   });
 
-  it('uploads with the connected Studio session without an ownership or payment signature', async () => {
+  it('keeps local Studio readable when the API has no adaptive upload service', async () => {
     enableConnectedStudio();
-    vi.stubGlobal('crypto', { subtle: { digest: async () => new Uint8Array(32).buffer } });
-    const original = mocks.request.getMockImplementation()!;
-    mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
-      if (path === '/uploads') {
-        return {
-          id: 'draft', parts: [], partSize: 1048576, complete: true, status: 'uploading', expires: Date.now() + 60000,
-        };
-      }
-      if (path === '/uploads/draft/finish') {
-        return {
-          id: 'draft', status: 'ready', complete: true, video: { ...clip, id: 'draft', creator: 'ak_creator' },
-        };
-      }
-      if (path === '/draft/publication') return { ...clip, id: 'draft', publicationStatus: 'draft' };
-      if (path === '/draft/publish') {
-        return {
-          ...clip, id: 'draft', creator: 'ak_creator', publicationStatus: 'published',
-        };
-      }
-      return original(path, ...args);
-    });
     const hook = renderHook(useShorts);
     await waitFor(() => expect(hook.result.current.authenticated).toBe(true));
-    const file = new File(['video'], 'owned.mp4', { type: 'video/mp4' });
-    Object.defineProperty(file, 'slice', { value: () => ({ arrayBuffer: async () => new TextEncoder().encode('video').buffer }) });
-    const data = new FormData(); data.set('file', file); data.set('title', 'Owned clip');
-    await act(async () => { await hook.result.current.publishUpload(data, 'connected-draft'); });
-    expect(hook.result.current.preparedUpload?.video.id).toBe('draft');
-    expect(hook.result.current.uploadPublication?.status).toBe('published');
-    expect(mocks.request).toHaveBeenCalledWith('/uploads/draft/finish', {}, 'connected-ak_creator', expect.objectContaining({ timeout: 15000 }));
+    expect(hook.result.current.uploadMaxBytes).toBe(0);
+    await act(async () => { await hook.result.current.publishUpload(new FormData(), 'local-draft'); });
+    expect(hook.result.current.message).toContain('Upload settings are unavailable');
+    expect(mocks.request.mock.calls.some(([path]) => path === '/uploads')).toBe(false);
     expect(mocks.sign).not.toHaveBeenCalled();
-    expect(mocks.call).not.toHaveBeenCalled();
-    expect(mocks.request.mock.calls.some(([path]) => path === '/auth/challenge' || path === '/auth/verify')).toBe(false);
   });
 
   it('discards a late connection for a previous account and clears data on disconnect', async () => {
@@ -1133,7 +1125,7 @@ it('verifies the existing wallet once and continues the requested upload without
   mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
     if (path === '/uploads') {
       return {
-        id: 'draft', parts: [], partSize: 1048576, complete: true, status: 'uploading', expires: Date.now() + 60000,
+        ...uploadedVideo, id: 'draft', parts: [], partSize: 1048576, complete: true, status: 'uploading', expires: Date.now() + 60000,
       };
     }
     if (path === '/uploads/draft/finish') {
@@ -1170,14 +1162,13 @@ it('verifies the existing wallet once and continues the requested upload without
 });
 
 it('publishes for free and resumes a confirmed video after a lost response without submitting again', async () => {
-  enableConnectedStudio();
   vi.stubGlobal('crypto', { subtle: { digest: async () => new Uint8Array(32).buffer } });
   const original = mocks.request.getMockImplementation()!;
   let attempts = 0;
   mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
     if (path === '/uploads') {
       return {
-        id: 'free', parts: [], partSize: 1048576, complete: true, status: 'uploading', expires: Date.now() + 60000,
+        ...uploadedVideo, id: 'free', parts: [], partSize: 1048576, complete: true, status: 'uploading', expires: Date.now() + 60000,
       };
     }
     if (path === '/uploads/free/finish') {
@@ -1200,7 +1191,9 @@ it('publishes for free and resumes a confirmed video after a lost response witho
     return original(path, ...args);
   });
   const { result } = renderHook(useShorts);
-  await waitFor(() => expect(result.current.authenticated).toBe(true));
+  await waitFor(() => expect(result.current.config).toBeDefined());
+  await act(async () => { await result.current.signIn(); });
+  mocks.sign.mockClear();
   const file = new File(['video'], 'owned.mp4');
   Object.defineProperty(file, 'slice', { value: () => ({ arrayBuffer: async () => new TextEncoder().encode('video').buffer }) });
   const data = new FormData(); data.set('file', file);
@@ -1212,6 +1205,48 @@ it('publishes for free and resumes a confirmed video after a lost response witho
   expect(attempts).toBe(1);
   expect(mocks.request.mock.calls.filter(([path]) => path === '/uploads')).toHaveLength(1);
   expect(mocks.call).not.toHaveBeenCalled(); expect(mocks.sign).not.toHaveBeenCalled();
+});
+
+it('releases the creator action on a mined registration and enables sharing when delivery becomes public', async () => {
+  vi.stubGlobal('crypto', { subtle: { digest: async () => new Uint8Array(32).buffer } });
+  const original = mocks.request.getMockImplementation()!;
+  let publicDelivery = false;
+  mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
+    if (path === '/uploads') {
+      return {
+        ...uploadedVideo,
+        id: 'mined',
+        parts: [0],
+        partSize: 1048576,
+        complete: true,
+        status: 'ready',
+        expires: 1,
+        video: { ...clip, id: 'mined', creator: mocks.actor },
+      };
+    }
+    if (path === '/mined/publication') {
+      return publicDelivery
+        ? {
+          ...clip, id: 'mined', publicationStatus: 'published', publicationRequest: 'confirmed',
+        }
+        : {
+          ...clip, id: 'mined', publicationStatus: 'draft', publicationRequest: 'signed', publicationExecution: 'ok',
+        };
+    }
+    return original(path, ...args);
+  });
+  const { result } = renderHook(useShorts);
+  await waitFor(() => expect(result.current.config).toBeDefined());
+  await act(async () => { await result.current.signIn(); });
+  const file = new File(['video'], 'original.mp4');
+  Object.defineProperty(file, 'slice', { value: () => ({ arrayBuffer: async () => new TextEncoder().encode('video').buffer }) });
+  const data = new FormData(); data.set('file', file);
+  await act(async () => { await result.current.publishUpload(data, 'original'); });
+  expect(result.current.busy).toBe(false);
+  expect(result.current.uploadPublication?.status).toBe('registered');
+  publicDelivery = true;
+  await waitFor(() => expect(result.current.uploadPublication?.status).toBe('published'), { timeout: 7000 });
+  expect(mocks.request.mock.calls.some(([path]) => path === '/mined/publish')).toBe(false);
 });
 
 describe('Paged Studio integration', () => {
@@ -1297,7 +1332,7 @@ describe('durable upload creation', () => {
     await act(async () => { await first.result.current.publishUpload(data(), 'draft'); });
     expect(first.result.current.uploadPublication?.status).toBe('error'); first.unmount();
     limits = {
-      ...capability, format: 'legacy-directory-v1', maxBytes: 1, creation: undefined as never,
+      ...capability, maxBytes: 1, creation: undefined as never,
     }; lose = false;
     const second = await connect(); expect(second.result.current.uploadMaxBytes).toBe(5);
     await act(async () => { await second.result.current.publishUpload(data(), 'draft'); });

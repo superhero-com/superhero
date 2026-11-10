@@ -87,12 +87,13 @@ export const UploadReview = ({
 export const UploadPublishOverlay = ({ s }: { s: State }) => {
   const publication = s.uploadPublication!;
   const done = publication.status === 'published';
+  const registered = publication.status === 'registered';
   const failed = publication.status === 'error';
   const reviewing = publication.status === 'reviewing';
-  const publishing = publication.status === 'publishing';
+  const publishing = publication.status === 'publishing' || publication.status === 'rechecking';
   let phase = s.uploadStage === 'processing' ? 1 : 0;
   if (publication.status === 'publishing' || publication.shortId) phase = 2;
-  if (done) phase = 3;
+  if (done || registered) phase = 3;
   const heading = useRef<HTMLHeadingElement>(null);
   useLayoutEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
@@ -100,13 +101,15 @@ export const UploadPublishOverlay = ({ s }: { s: State }) => {
     return () => { requestAnimationFrame(() => { if (previous?.isConnected) previous.focus(); }); };
   }, []);
   let StatusIcon = LoaderCircle;
-  if (done) StatusIcon = CheckCircle2;
+  if (done || registered) StatusIcon = CheckCircle2;
   if (failed) StatusIcon = TriangleAlert;
   if (reviewing) StatusIcon = Clock3;
   const titles = ['Uploading your video', 'Preparing your Short', 'Publishing your Short'];
   let title = titles[phase];
   let copy = 'We’re taking care of the rest. Keep this page open.';
   if (publishing) copy = 'Your upload is saved. We’re confirming publication. You can check progress in Studio.';
+  if (registered) { title = 'Your Short is registered.'; copy = 'The publication transaction succeeded. Your share link will appear when public delivery is ready.'; }
+  if (publication.status === 'rechecking') copy = 'Checking the publication again. You can follow its progress in Studio.';
   if (done) { title = 'Your Short is published.'; copy = 'Your link is ready to share. Playback may still be preparing.'; }
   if (failed) { title = 'Let’s try that again'; copy = 'Your details are saved. Retry to continue from where we left off.'; }
   if (reviewing) { title = 'Your Short is awaiting review'; copy = 'Your upload is saved. It will stay private until approved. You can check its status in Studio.'; }
@@ -137,13 +140,13 @@ export const UploadPublishOverlay = ({ s }: { s: State }) => {
             </li>
           ))}
         </ol>
-        {(done || failed || reviewing || (publishing && publication.shortId)) && (
+        {(done || registered || failed || reviewing || (publishing && publication.shortId)) && (
           <div className="su-publish-actions">
             {done && <Link className="ss-button primary" to={`/shorts?short=${publication.shortId}`}>Watch &amp; share</Link>}
             {publication.shortId && <Link className="ss-button" to={`/shorts/studio/video/${publication.shortId}`}>View in Studio</Link>}
             {failed && <button type="button" disabled={s.busy} onClick={s.resetUpload}>Start a new upload</button>}
             {(failed || reviewing) && <button type="button" disabled={s.busy} onClick={s.dismissPublication}>Back to review</button>}
-            {done && <button type="button" disabled={s.busy} onClick={s.resetUpload}>Create another Short</button>}
+            {(done || registered) && <button type="button" disabled={s.busy} onClick={s.resetUpload}>Create another Short</button>}
           </div>
         )}
       </div>

@@ -95,3 +95,20 @@ it('does not retry an authorization failure or a terminal rejection', async () =
   opts.read.mockReset().mockResolvedValue(draft); opts.submit.mockRejectedValue(new ShortsApiError('expired', 401));
   await expect(publishAndWait('owned', opts)).rejects.toThrow('expired'); expect(opts.submit).toHaveBeenCalledOnce();
 });
+
+it('finishes on a verified mined execution before the share link is ready', async () => {
+  const opts = options();
+  const registered = { ...queued, publicationRequest: 'signed' as const, publicationExecution: 'ok' as const };
+  opts.read.mockReset().mockResolvedValue(registered);
+  expect(await publishAndWait('owned', opts)).toEqual(registered);
+  expect(opts.read).toHaveBeenCalledOnce();
+  expect(opts.submit).not.toHaveBeenCalled();
+  expect(opts.onWaiting).not.toHaveBeenCalled();
+});
+
+it.each(['revert', 'error'] as const)('reports a mined %s while the accounting job is still signed', async (result) => {
+  const opts = options();
+  opts.read.mockReset().mockResolvedValue({ ...queued, publicationRequest: 'signed', publicationExecution: result });
+  await expect(publishAndWait('owned', opts)).rejects.toThrow('could not be published');
+  expect(opts.submit).not.toHaveBeenCalled();
+});

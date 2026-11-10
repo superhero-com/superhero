@@ -96,7 +96,7 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
     return () => URL.revokeObjectURL(url);
   }, [file]);
   useEffect(() => {
-    if (!file || s.uploadPublication?.status === 'published') return undefined;
+    if (!file || (s.uploadPublication && ['registered', 'rechecking', 'published'].includes(s.uploadPublication.status))) return undefined;
     const warn = (event: BeforeUnloadEvent) => {
       event.preventDefault(); const unloadEvent = event; unloadEvent.returnValue = '';
     };

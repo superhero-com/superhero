@@ -11,6 +11,7 @@
     "build": "node ./scripts/generate-sitemap.cjs && vite build",
     "preview": "vite preview --port 5174",
     "test": "vitest",
+    "test:e2e:shorts": "node e2e/shorts/run.cjs",
     "test:e2e:host": "playwright test",
     "test:chat:integration": "DM_LOCAL_E2E=1 vitest run src/features/chat/__tests__/dm-local-relay.e2e.test.ts src/features/chat/__tests__/gated-room-local-relay.e2e.test.ts",
     "test:e2e:chat": "playwright test --config playwright.chat.config.ts",

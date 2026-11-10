@@ -36,6 +36,8 @@ export const ProfileImageProvider = ({ children }: { children: ReactNode }) => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const changing = useRef(false);
+  const changeRequest = useRef<AbortController | undefined>(undefined);
+  useEffect(() => () => changeRequest.current?.abort(), [storageKey]);
   useEffect(() => {
     setError(''); setMessage('');
     try {
@@ -72,36 +74,49 @@ export const ProfileImageProvider = ({ children }: { children: ReactNode }) => {
     changing.current = true; setBusy(true); setError(''); setMessage('Waiting for your wallet…');
     let recorded = false;
     const address = wallet.activeAccount;
+    const controller = new AbortController();
+    changeRequest.current = controller;
+    const assertCurrent = () => {
+      controller.signal.throwIfAborted();
+      if (wallet.current.current !== address) throw new Error('Your wallet changed. Please try again.');
+    };
     const payload = { type: TxPayloadType.UpdateProfile, fields: [role] };
     try {
       const auth = await wallet.authenticate();
+      assertCurrent();
       let cid: string | null = null;
       if (file) {
         setMessage('Uploading your image…');
-        cid = await uploadProfileImage(file, role, address!, auth.token, () => {
-          if (wallet.current.current !== address) throw new Error('Your wallet changed. Please try again.');
-        }, setMessage);
+        cid = await uploadProfileImage(file, role, address!, auth.token, assertCurrent, (progress) => {
+          assertCurrent(); setMessage(progress);
+        }, controller.signal);
       }
-      if (wallet.current.current !== address) throw new Error('Your wallet changed. Please try again.');
-      const claim = await imageRequest<{ id: string; message: string; nonce: number }>('/claim', { role, cid }, auth.token);
+      assertCurrent();
+      const claim = await imageRequest<{ id: string; message: string; nonce: number }>('/claim', { role, cid }, auth.token, controller.signal);
+      assertCurrent();
       const expected = cid ? `link:${address}:${role}:${profileImageReference(cid)}:${claim.nonce}` : `unlink:${address}:${role}:${claim.nonce}`;
       if (!Number.isSafeInteger(claim.nonce) || claim.nonce < 0 || claim.message !== expected) throw new Error('Invalid image change request.');
       notifications.notifySubmitted(payload); setMessage('Approve the image change in your wallet…');
       const signature = await signAndVerifyLinkMessage(address!, wallet.signMessage, claim.message);
-      if (wallet.current.current !== address) throw new Error('Your wallet changed. Please try again.');
+      assertCurrent();
       const entry = { id: claim.id, role };
       // Save the non-secret operation ID before sending; a lost response is recoverable.
       localStorage.setItem(storageKey, JSON.stringify(entry)); recorded = true;
       setSavedOperation({ storageKey, entry });
       notifications.notifyPending(payload);
-      const result = await imageRequest<ImageWrite>('/submit', { id: claim.id, signature }, auth.token);
+      const result = await imageRequest<ImageWrite>('/submit', { id: claim.id, signature }, auth.token, controller.signal);
+      assertCurrent();
       client.setQueryData(['profile-image-write', storageKey, claim.id], result);
       setMessage('Your image change is confirming. You can close this window.');
     } catch (cause) {
+      if (controller.signal.aborted || wallet.current.current !== address) throw cause;
       const text = cause instanceof Error ? cause.message : 'The image change failed.';
       if (recorded) { setMessage('Checking whether your image change was submitted…'); notifications.notifyPending(payload); } else { setError(text); setMessage(''); notifications.notifyError(text); }
       throw cause;
-    } finally { changing.current = false; setBusy(false); }
+    } finally {
+      if (changeRequest.current === controller) changeRequest.current = undefined;
+      changing.current = false; setBusy(false);
+    }
   }, [pending, wallet, notifications, client, storageKey]);
   const checking = !!pending && status.isFetching;
   const statusError = pending && status.isError ? 'Could not check your image change. Please try again.' : '';

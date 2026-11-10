@@ -6,6 +6,7 @@ export interface Short {
   contentWarning?: 'feed-excluded' | 'unreviewed';
   publicationStatus?: 'draft' | 'published' | 'withdrawn';
   publicationPending?: boolean;
+  publicationExecution?: 'ok' | 'revert' | 'error';
   publicationRequest?: 'preparing' | 'queued' | 'claimed' | 'signed' | 'confirmed' | 'reconciled' | 'cancelled' | 'reverted';
   guidelines?: { status: 'analyzing' | 'reviewing' | 'eligible' | 'ineligible' | 'unavailable'; reason?: string; approval?: 'demo' };
   id: string;

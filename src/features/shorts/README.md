@@ -89,9 +89,14 @@ Details marks the title, main topic and publishing-rights confirmation with a re
 
 **Publish** starts resumable transfer, media preparation, IPFS verification and operator-funded registration. The review step and preview stay in place beneath a progress overlay. Successful publication offers Watch & share and Studio. Failures preserve the draft and resume the same upload/publication on retry. Publishing an existing private draft uses the same API operation. No creator payment or transaction signature is requested.
 
-The picker displays the server-advertised upload limit. Missing capabilities keep the legacy 40 MiB limit; invalid capabilities disable new uploads. Original-file capability is bounded by the active contract and never exceeds 100,000,000 decimal bytes. Whole-file SHA-256 is computed through 1 MiB slices without materializing the entire file. New original-format uploads require a matching server confirmation before transfer.
+The picker displays the server-advertised upload limit. Studio disables uploads when the API does not advertise adaptive original-file support. Original-file capability is bounded by the active contract and never exceeds 100,000,000 decimal bytes. Whole-file SHA-256 is computed through 1 MiB slices without materializing the entire file. New original-format uploads require a matching server confirmation before transfer.
 
 Local video preview is optional when the browser cannot decode a supported MP4 or MOV file. The picker still checks extension and size, and rejects an invalid duration when the browser can read it. Preparation validates the unchanged original on the server before publication.
+
+A verified successful publication transaction releases the upload form immediately.
+Studio enables the share link once the API confirms public delivery. A reverted
+call shows failure, and a changing chain observation is rechecked using the
+same publication request.
 
 An accepted upload can resume after a limit reduction: local recovery metadata permits selecting the saved source, then authenticated status, the full digest and the metadata fingerprint must match before transferring parts. Local metadata alone never authorizes a larger new upload.
 
@@ -338,3 +343,27 @@ Comments open beside the viewer on wide screens and in a bottom sheet on phones.
 Newest/Oldest sorts loaded comments by block height, with the comment ID breaking ties. While more pages remain, the controls explicitly say “Newest loaded” / “Oldest loaded” and show the loaded count: imported contract order is not necessarily chronological, and the API has no global date-sort endpoint. Pagination errors keep the current list and draft; a stale contract version restarts the list.
 
 The composer expands on focus, enforces both character and UTF-8 limits, and retains unsuccessful or pending drafts until publication is confirmed. The panel stays visible during wallet confirmation, temporarily releasing its native modal focus lock so the wallet remains interactive. Comments remain permanent wallet-signed records. The current contract has no replies, comment reactions, editing or deletion; those controls are not offered.
+
+
+## Cross-service browser tests
+
+The Playwright drivers in `e2e/shorts/` exercise the actual viewer, Studio upload,
+Following feed, wallet switching and live updates. They load the web repository’s
+Vite configuration and dependencies. The API’s assembled suite supplies disposable
+service endpoints and fixture callbacks, including review, publication and
+social-graph changes.
+
+Build `superhero-shorts/ingest-worker` and `superhero-shorts/streaming`, then
+run `npm run test:e2e:shorts` from this web checkout with
+`SHORTS_TEST_API_ROOT` set to the API checkout’s absolute path,
+`SHORTS_TEST_INGEST_ROOT` set to the built ingest-worker directory and
+`SHORTS_TEST_STREAMING_REPO` set to the built streaming directory. The API’s
+Shorts README documents the disposable PostgreSQL, Redis, S3, IPFS and edge
+settings required by that suite. The browser consumes the expected release hash
+from its parent fixture and blocks external traffic.
+
+Set `SHORTS_TEST_SOCIAL_BUILD` to the social contract’s generated `build.json`
+to include wallet switching, both block directions and live Following updates.
+The viewer tests exercise adaptive quality selection, recovery from HTTP
+backpressure and navigation across a 25-item catalog. Use an absolute
+`SHORTS_TEST_BROWSER_OUTPUT` directory to capture optional screenshots.

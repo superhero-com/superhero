@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   describe, expect, it, vi,
 } from 'vitest';
@@ -7,11 +8,17 @@ import type { TokenDto } from '@/api/generated/models/TokenDto';
 import TokenInformation from '../TokenInformation';
 
 vi.mock('@/hooks/useChainName', () => ({ useChainName: () => ({ chainName: 'nova.chain' }) }));
-vi.mock('@/config', () => ({ CONFIG: { EXPLORER_URL: 'https://testnet.aescan.io' } }));
+vi.mock('@/config', () => ({ CONFIG: { EXPLORER_URL: 'https://testnet.aescan.io' }, API_BASE_URL: 'https://api.example.test' }));
 const creator = 'ak_29DbufRiJiyVVZN1VcCLniSvdoTuqnkCaP2aP9fPR6N6idXTjV';
-const mount = (data: Partial<TokenDto>) => render(
-  <MemoryRouter><TokenInformation token={data as TokenDto} /></MemoryRouter>,
-);
+const mount = (data: Partial<TokenDto>) => {
+  const client = new QueryClient();
+  client.setQueryData(['profile-images-config'], { enabled: false });
+  return render(
+    <QueryClientProvider client={client}>
+      <MemoryRouter><TokenInformation token={data as TokenDto} /></MemoryRouter>
+    </QueryClientProvider>,
+  );
+};
 
 describe('Token information', () => {
   it('converts aetto treasury units, shows the full creator address and uses the configured explorer', () => {

@@ -1,5 +1,5 @@
 import {
-  fireEvent, render, screen, waitFor, cleanup,
+  fireEvent, render, screen, waitFor, cleanup, act,
 } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
@@ -146,6 +146,32 @@ describe('recoverable profile changes', () => {
     expect(localStorage.getItem(aliceKey)).not.toBeNull();
     expect(localStorage.getItem(bobKey)).not.toBeNull();
     expect(mocks.notifications.notifyConfirmed).not.toHaveBeenCalled();
+  });
+  it.each(['/claim', '/submit'])('discards a delayed %s response after the active wallet changes', async (stage) => {
+    let finish!: (value: unknown) => void;
+    const original = mocks.request.getMockImplementation()!;
+    mocks.request.mockImplementation((path: string) => (path === stage
+      ? new Promise((resolve) => { finish = resolve; })
+      : original(path)));
+    const { client, rerender } = mount();
+    fireEvent.click(screen.getByText('Save'));
+    await waitFor(() => expect(finish).toBeTypeOf('function'));
+    mocks.wallet.activeAccount = 'ak_bob';
+    mocks.wallet.current.current = 'ak_bob';
+    rerender(<QueryClientProvider client={client}><ProfileImageProvider><Controls /></ProfileImageProvider></QueryClientProvider>);
+    const signatureCount = mocks.sign.mock.calls.length;
+    const pendingCount = mocks.notifications.notifyPending.mock.calls.length;
+    await act(async () => {
+      finish(await original(stage));
+    });
+    expect(mocks.sign).toHaveBeenCalledTimes(signatureCount);
+    expect(mocks.notifications.notifyPending).toHaveBeenCalledTimes(pendingCount);
+    expect(mocks.notifications.notifyError).not.toHaveBeenCalled();
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
+    expect(screen.getByRole('alert')).toBeEmptyDOMElement();
+    expect(screen.getByTestId('pending')).toBeEmptyDOMElement();
+    expect(localStorage.getItem('profile-image-write:ae_uat:ak_bob')).toBeNull();
+    expect(!!localStorage.getItem('profile-image-write:ae_uat:ak_alice')).toBe(stage === '/submit');
   });
   it('refuses a mismatched claim before asking the wallet to sign', async () => {
     const base = mocks.request.getMockImplementation()!;

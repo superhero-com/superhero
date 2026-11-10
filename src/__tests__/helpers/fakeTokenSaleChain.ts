@@ -13,7 +13,8 @@ type FakeSale = Record<string, (...args: any[]) => Promise<unknown>>;
  * through the contract model, and the SDK's slippage handling is kept as it is: a buy
  * sends the dry-run price plus the margin (the contract keeps what it charges), a sell
  * demands the dry-run return minus the margin. Both dry-run before the wallet signs and
- * execute after it.
+ * execute after it, so `othersTrade` inside `holdNextSignature` moves the market the way
+ * another block would.
  */
 export interface FakeTokenSaleChain {
   account: string;
@@ -24,9 +25,16 @@ export interface FakeTokenSaleChain {
   tokens: bigint;
   /** Entrypoints the wallet was asked to sign, in order. */
   signed: string[];
-  /** The account's SDK. */
+  rejectSignatures: (message: string) => void;
+  /** Pauses the next signature: `requested` settles once asked, `release` signs it. */
+  holdNextSignature: () => { requested: Promise<void>; release: () => void };
+  othersTrade: (supplyChange: bigint) => void;
+  /** The account's SDK; a visitor's is the same with no account selected. */
   sdk: FakeAeSdk;
-  /** The sale as bctsl-sdk's init hands it to `sdk`. */
+  /**
+   * The sale as bctsl-sdk's init hands it to `sdk`. Like the AeSdk, it refuses an SDK
+   * without a selected account, even though quoting only dry-runs.
+   */
   saleFor: (sdk: FakeAeSdk) => FakeSale;
 }
 
@@ -45,6 +53,8 @@ export function createFakeTokenSaleChain({
   account: string; token: string; sale: string; supply: bigint; ae: bigint; tokens?: bigint;
 }): FakeTokenSaleChain {
   let allowance = 0n;
+  let rejection: string | undefined;
+  let hold: { onRequest: () => void; released: Promise<void> } | undefined;
   let txCount = 0;
 
   const chain: Omit<FakeTokenSaleChain, 'saleFor'> = {
@@ -54,6 +64,15 @@ export function createFakeTokenSaleChain({
     ae,
     tokens,
     signed: [],
+    rejectSignatures: (message) => { rejection = message; },
+    holdNextSignature: () => {
+      let onRequest!: () => void;
+      let release!: () => void;
+      const requested = new Promise<void>((resolve) => { onRequest = resolve; });
+      hold = { onRequest, released: new Promise<void>((resolve) => { release = resolve; }) };
+      return { requested, release };
+    },
+    othersTrade: (supplyChange) => { chain.supply += supplyChange; },
     sdk: {
       getBalance: async (address) => (address === account ? chain.ae : 0n).toString(),
       _accounts: { current: { [account]: {} } },
@@ -62,6 +81,13 @@ export function createFakeTokenSaleChain({
 
   async function sign(entrypoint: string) {
     chain.signed.push(entrypoint);
+    if (hold) {
+      const current = hold;
+      hold = undefined;
+      current.onRequest();
+      await current.released;
+    }
+    if (rejection) throw new Error(rejection);
     txCount += 1;
     return `th_${entrypoint}${txCount}`;
   }
@@ -122,5 +148,15 @@ export function createFakeTokenSaleChain({
     },
   };
 
-  return Object.assign(chain, { saleFor: () => saleContract });
+  return Object.assign(chain, {
+    saleFor: (sdk: FakeAeSdk) => {
+      // eslint-disable-next-line no-underscore-dangle
+      if (!Object.keys(sdk._accounts.current).length) {
+        throw new TypeError(
+          'Account should be an address (ak-prefixed string), or instance of AccountBase, got undefined instead',
+        );
+      }
+      return saleContract;
+    },
+  });
 }

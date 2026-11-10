@@ -10,6 +10,7 @@ import {
 } from 'vitest';
 import type { TokenDto } from '@/api/generated/models/TokenDto';
 import { activeAccountAtom } from '@/atoms/accountAtoms';
+import { openedModalsAtom } from '@/atoms/modalAtoms';
 import { CONFIG } from '@/config';
 import { AeSdkContext } from '@/context/AeSdkProvider';
 import {
@@ -53,14 +54,15 @@ function market({ ae = aettos(100), tokens = 0n } = {}) {
   return chain;
 }
 
-function openTradeCard(chain: FakeTokenSaleChain) {
+function openTradeCard(chain: FakeTokenSaleChain, { signedIn = true } = {}) {
   const store = createStore();
-  store.set(activeAccountAtom, chain.account);
+  if (signedIn) store.set(activeAccountAtom, chain.account);
+  const sdk = signedIn ? chain.sdk : { ...chain.sdk, _accounts: { current: {} } };
   const sdkContext = {
-    aeSdk: chain.sdk,
-    staticAeSdk: chain.sdk,
+    aeSdk: sdk,
+    staticAeSdk: sdk,
     sdkInitialized: true,
-    activeAccount: chain.account,
+    activeAccount: signedIn ? chain.account : '',
     addStaticAccount: () => {},
   } as unknown as ContextType<typeof AeSdkContext>;
   const unitPrice = amountOf(buyPrice(chain.supply, aettos(1)));
@@ -87,6 +89,7 @@ function openTradeCard(chain: FakeTokenSaleChain) {
       </JotaiProvider>
     </QueryClientProvider>,
   );
+  return store;
 }
 
 const payField = () => screen.getByRole('textbox', { name: 'You pay' });
@@ -136,6 +139,20 @@ describe('trading a token from its trade card', () => {
     expect(spent >= aettos(9.9999)).toBe(true);
   });
 
+  it('charges what it quoted for a number of tokens', async () => {
+    const chain = market();
+    openTradeCard(chain);
+
+    enter(receiveField(), '100000');
+    const cost = await quoteIn(payField);
+    fireEvent.click(screen.getByRole('button', { name: 'Buy #TEST' }));
+    await confirmed();
+
+    expect(chain.tokens).toBe(aettos(100000));
+    expectSettledAsShown(aettos(100) - chain.ae, cost);
+    expect(screen.getByText(`-${Decimal.from(cost).prettify()} AE`)).toBeInTheDocument();
+  });
+
   it('pays out what it quoted for selling a number of tokens, after an allowance', async () => {
     const chain = market({ tokens: aettos(2_000_000) });
     openTradeCard(chain);
@@ -166,5 +183,124 @@ describe('trading a token from its trade card', () => {
     expect(aettos(2_000_000) - chain.tokens).toBe(aettos(tokens));
     expect(received >= aettos(5)).toBe(true);
     expect(received <= aettos(5.0001)).toBe(true);
+  });
+
+  it('shows each step of a sell while the wallet is open', async () => {
+    const chain = market({ tokens: aettos(2_000_000) });
+    openTradeCard(chain);
+    fireEvent.click(screen.getByRole('button', { name: 'Sell' }));
+    enter(payField(), '1000');
+    await quoteIn(receiveField);
+
+    const allowance = chain.holdNextSignature();
+    fireEvent.click(screen.getByRole('button', { name: 'Sell #TEST' }));
+    await allowance.requested;
+    await screen.findByText('Approve token spending');
+    expect(screen.getByRole('button', { name: /Confirm in your wallet.*1\/2/ })).toBeDisabled();
+    expect(payField()).toBeDisabled();
+
+    const sale = chain.holdNextSignature();
+    allowance.release();
+    await sale.requested;
+    await waitFor(() => expect(screen.getByRole('button', { name: /Confirm in your wallet.*2\/2/ })).toBeDisabled());
+
+    sale.release();
+    await confirmed();
+    expect(screen.getByRole('button', { name: 'Enter an amount' })).toBeDisabled();
+  });
+
+  it('keeps a slippage reserve, so a Max buy never needs more than the balance', async () => {
+    const chain = market({ ae: aettos(5) });
+    openTradeCard(chain);
+
+    enter(payField(), '10');
+    await quoteIn(receiveField);
+    expect(screen.getByRole('button', { name: 'Insufficient available balance' })).toBeDisabled();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Max' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Buy #TEST' })).toBeEnabled());
+    fireEvent.click(screen.getByRole('button', { name: 'Buy #TEST' }));
+    await confirmed();
+
+    // The reserve is all Max holds back.
+    const spent = aettos(5) - chain.ae;
+    expect(spent > aettos(4.5)).toBe(true);
+  });
+
+  it('refreshes the token balance once a buy settles', async () => {
+    const chain = market();
+    openTradeCard(chain);
+
+    enter(receiveField(), '250000');
+    await quoteIn(payField);
+    fireEvent.click(screen.getByRole('button', { name: 'Buy #TEST' }));
+    await confirmed();
+    fireEvent.click(screen.getByRole('button', { name: 'Sell' }));
+
+    expect(await screen.findByText(`${Decimal.from(250000).prettify()} #TEST`)).toBeInTheDocument();
+  });
+
+  it('leaves the market untouched when the wallet declines, and the form usable', async () => {
+    const chain = market();
+    chain.rejectSignatures('Rejected by user');
+    openTradeCard(chain);
+
+    enter(payField(), '10');
+    await quoteIn(receiveField);
+    fireEvent.click(screen.getByRole('button', { name: 'Buy #TEST' }));
+
+    expect(await screen.findByText('Transaction failed')).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent('Rejected by user');
+    expect([chain.ae, chain.tokens, chain.supply]).toEqual([aettos(100), 0n, SUPPLY]);
+    await waitFor(() => expect(payField()).toBeEnabled());
+    expect(payField()).toHaveValue('');
+  });
+
+  describe('when other trades land while the wallet is open', () => {
+    it('reverts a buy the market moved past the allowed slippage', async () => {
+      const chain = market();
+      openTradeCard(chain);
+      enter(payField(), '10');
+      await quoteIn(receiveField);
+
+      const signature = chain.holdNextSignature();
+      fireEvent.click(screen.getByRole('button', { name: 'Buy #TEST' }));
+      await signature.requested;
+      chain.othersTrade(aettos(2_000_000));
+      signature.release();
+
+      expect(await screen.findByText('Transaction failed')).toBeInTheDocument();
+      expect(screen.getByRole('alert')).toHaveTextContent('AE_AMOUNT_NOT_SUFFICIENT');
+      expect([chain.ae, chain.tokens]).toEqual([aettos(100), 0n]);
+    });
+
+    it('lets a buy through within the allowed slippage, at the moved price', async () => {
+      const chain = market();
+      openTradeCard(chain);
+      enter(payField(), '10');
+      const tokens = await quoteIn(receiveField);
+
+      const signature = chain.holdNextSignature();
+      fireEvent.click(screen.getByRole('button', { name: 'Buy #TEST' }));
+      await signature.requested;
+      chain.othersTrade(aettos(1000));
+      signature.release();
+      await confirmed();
+
+      const spent = aettos(100) - chain.ae;
+      expect(chain.tokens).toBe(aettos(tokens));
+      expect(spent > aettos(10) && spent <= aettos(10.1)).toBe(true);
+    });
+  });
+
+  it('asks a visitor to connect a wallet to trade', async () => {
+    const chain = market();
+    const store = openTradeCard(chain, { signedIn: false });
+
+    enter(payField(), '10');
+    fireEvent.click(screen.getByRole('button', { name: 'Connect wallet' }));
+
+    expect(store.get(openedModalsAtom)).toEqual([expect.objectContaining({ name: 'connect-wallet' })]);
+    expect(chain.signed).toEqual([]);
   });
 });

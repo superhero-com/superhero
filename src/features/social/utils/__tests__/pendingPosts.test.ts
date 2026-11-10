@@ -76,20 +76,24 @@ describe('pending posts', () => {
     expect(queryClient.getQueryData<any>(LATEST).pages[0].items.map((p: any) => p.id))
       .toEqual(['42_v3', 'older_v3']);
 
-    await queryClient.fetchQuery({
-      queryKey: ['topic-by-name', '#nancy'],
-      queryFn: async () => ({ posts: [{ id: 'older_v3' }], post_count: 1 }),
+    const topicPage = (items: unknown[]) => ({
+      pages: [{ items, meta: { currentPage: 1, totalPages: 1, totalItems: items.length } }],
+      pageParams: [1],
     });
-    expect(queryClient.getQueryData<any>(['topic-by-name', '#nancy'])).toEqual({
-      posts: [expect.objectContaining({ id: '42_v3' }), { id: 'older_v3' }],
-      post_count: 2,
+    await queryClient.fetchQuery({
+      queryKey: ['topic-posts', 'nancy'],
+      queryFn: async () => topicPage([{ id: 'older_v3' }]),
+    });
+    expect(queryClient.getQueryData<any>(['topic-posts', 'nancy']).pages[0]).toEqual({
+      items: [expect.objectContaining({ id: '42_v3' }), { id: 'older_v3' }],
+      meta: { currentPage: 1, totalPages: 1, totalItems: 2 },
     });
     // Other hashtags are left alone.
     await queryClient.fetchQuery({
-      queryKey: ['topic-by-name', '#other'],
-      queryFn: async () => ({ posts: [], post_count: 0 }),
+      queryKey: ['topic-posts', 'other'],
+      queryFn: async () => topicPage([]),
     });
-    expect(queryClient.getQueryData<any>(['topic-by-name', '#other']).posts).toEqual([]);
+    expect(queryClient.getQueryData<any>(['topic-posts', 'other']).pages[0].items).toEqual([]);
   });
 
   it('adds nothing once the backend serves the post itself', async () => {
@@ -219,7 +223,7 @@ describe('pending posts', () => {
     });
     refreshAfterPostSettled(queryClient, post);
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ['posts'], exact: false });
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['topic-by-name', '#nancy'] });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['topic-posts', 'nancy'] });
     expect(queryClient.getQueryState(['post', '42'])?.isInvalidated).toBe(true);
     // And its replies, shown from the browser meanwhile.
     queryClient.setQueryData(['comment-replies', '42_v3'], []);

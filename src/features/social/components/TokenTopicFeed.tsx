@@ -8,9 +8,9 @@ import ReplyToFeedItem from './ReplyToFeedItem';
 import PostSkeleton from './PostSkeleton';
 import { PostsService } from '../../../api/generated';
 import AeButton from '../../../components/AeButton';
-import { SuperheroApi } from '../../../api/backend';
 import { TokensService } from '../../../api/generated/services/TokensService';
 import type { TokenHolderDto } from '../../../api/generated/models/TokenHolderDto';
+import { useTopicPosts } from '../hooks/useTopicPosts';
 
 type TokenTopicFeedProps = {
   topicName: string;
@@ -67,26 +67,23 @@ const TokenTopicFeed = ({
   const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const baseName = useMemo(() => String(topicName || '').replace(/^#/, ''), [topicName]);
   const lookup = useMemo(() => `#${baseName.toLowerCase()}`, [baseName]);
-  const lookupOriginal = useMemo(() => `#${baseName}`, [baseName]);
   const displayTag = useMemo(() => {
     const base = String(displayTokenName || topicName || '').replace(/^#/, '');
     return `#${base ? base.toUpperCase() : ''}`;
   }, [displayTokenName, topicName]);
 
   const {
-    data, isLoading, error, refetch, isFetching,
-  } = useQuery({
-    queryKey: ['topic-by-name', lookup],
-    queryFn: () => SuperheroApi.getTopicByName(baseName.toLowerCase()) as Promise<any>,
-    enabled: Boolean(baseName),
-    refetchInterval: 120 * 1000,
-  });
-
-  const posts: any[] = useMemo(
-    () => (Array.isArray((data as any)?.posts) ? (data as any).posts : []),
-    [data],
-  );
-  const postCount: number | undefined = typeof (data as any)?.post_count === 'number' ? (data as any).post_count : undefined;
+    items: posts,
+    totalItems: postCount,
+    isLoading,
+    error,
+    refetch,
+    isFetching,
+    pageCount,
+    hasNextPage,
+    isFetchNextPageError,
+    fetchNextPage,
+  } = useTopicPosts(baseName);
 
   // Build a unified hashtag regex early to check if posts match the filter
   // Exclude matches where the hashtag is followed by a hyphen and more characters
@@ -184,22 +181,6 @@ const TokenTopicFeed = ({
   // failure leaves it false, so we never hide posts against a broken map.
   const holdersComplete = holdersLoaded && Boolean((holdersResponse as any)?.complete);
 
-  // Check if any posts match the hashtag filter (not just if posts exist)
-  const hasFilteredPosts = useMemo(() => posts.some((p: any) => hashtagRegex.test(String(p?.content || p?.text || p?.title || ''))), [posts, hashtagRegex]);
-
-  // Alternate casing fallback: try original-cased topic if lowercase is empty
-  const { data: dataOriginal, isFetching: isFetchingOriginal, refetch: refetchOriginal } = useQuery({
-    queryKey: ['topic-by-name-original', lookupOriginal],
-    enabled: !hasFilteredPosts && Boolean(baseName),
-    queryFn: () => SuperheroApi.getTopicByName(baseName) as Promise<any>,
-    refetchInterval: 120 * 1000,
-  });
-
-  const altPosts: any[] = useMemo(() => {
-    const items: any[] = Array.isArray((dataOriginal as any)?.posts) ? (dataOriginal as any).posts : [];
-    return items.slice().sort((a: any, b: any) => new Date(b?.created_at || 0).getTime() - new Date(a?.created_at || 0).getTime());
-  }, [dataOriginal]);
-
   // Include replies that reference the hashtag in their content or topics
   const { data: repliesSearch, isFetching: isFetchingReplies, refetch: refetchReplies } = useQuery({
     // Include baseName in queryKey to ensure different case variations get different cache entries
@@ -217,12 +198,25 @@ const TokenTopicFeed = ({
   }, [repliesSearch, hashtagRegex]);
 
   const MAX_POSTS = 200;
+  const MAX_TOPIC_PAGES = 5;
+
+  const postsFiltered: any[] = useMemo(
+    () => posts.filter((p: any) => hashtagRegex.test(String(p?.content || p?.text || p?.title || ''))),
+    [posts, hashtagRegex],
+  );
+
+  // Load pages until we hold the MAX_POSTS newest hashtag matches the whole
+  // topic used to yield. The page cap bounds an API that ignores `topic`.
+  const topicPagesDone = !hasNextPage || isFetchNextPageError
+    || postsFiltered.length >= MAX_POSTS || pageCount >= MAX_TOPIC_PAGES;
+  // `pageCount` re-runs this for a page that landed without a render showing `isFetching`.
+  useEffect(() => {
+    if (!topicPagesDone && !isFetching) fetchNextPage();
+  }, [topicPagesDone, isFetching, pageCount, fetchNextPage]);
 
   // Merge all sources, ensure uniq (by id/slug) and newest-first sorting
   const allPosts: any[] = useMemo(() => {
-    const postsFiltered = posts.filter((p: any) => hashtagRegex.test(String(p?.content || p?.text || p?.title || '')));
-    const altPostsFiltered = altPosts.filter((p: any) => hashtagRegex.test(String(p?.content || p?.text || p?.title || '')));
-    const merged = [...postsFiltered, ...altPostsFiltered, ...replyMatches];
+    const merged = [...postsFiltered, ...replyMatches];
     const byKey = new Map<string, any>();
     merged.forEach((p: any) => {
       const key = String((p as any)?.id ?? (p as any)?.slug ?? '');
@@ -234,7 +228,7 @@ const TokenTopicFeed = ({
       const bt = new Date(b?.created_at || 0).getTime();
       return bt - at;
     }).slice(0, MAX_POSTS);
-  }, [posts, altPosts, replyMatches, hashtagRegex]);
+  }, [postsFiltered, replyMatches]);
 
   // Subset of posts authored by token holders with a positive balance
   const holderPosts: any[] = useMemo(() => {
@@ -297,9 +291,9 @@ const TokenTopicFeed = ({
   // switch to "all posts" and surface a small info banner.
   useEffect(() => {
     if (!holdersOnly || !tokenSaleAddress || autoSwitchedFromHolders) return;
-    // Wait until holders have been fetched at least once so we don't
-    // prematurely switch to "All posts" before we know if holders exist.
-    if (isFetchingHolders) return;
+    // Wait for the holders and for every topic page we load, so we don't
+    // switch to "All posts" while holder posts may still arrive.
+    if (isFetchingHolders || !topicPagesDone) return;
     // Switch only once we can conclude there are no usable holder posts: either
     // the holder set is complete and authoritative, or the fetch failed outright
     // so we have no map to filter with. A partial (incomplete) set is excluded —
@@ -311,7 +305,7 @@ const TokenTopicFeed = ({
     }
   }, [
     holdersOnly, tokenSaleAddress, allPosts, holderPosts, onAutoDisableHoldersOnly,
-    autoSwitchedFromHolders, isFetchingHolders, holdersComplete, holdersFailed,
+    autoSwitchedFromHolders, isFetchingHolders, holdersComplete, holdersFailed, topicPagesDone,
   ]);
 
   // Reset auto-switch banner state when topic or token context changes
@@ -342,18 +336,13 @@ const TokenTopicFeed = ({
   }
 
   if (error) {
-    const msg = ((error as any)?.message || '').toString();
-    const isNotFound = /404|not found/i.test(msg);
-    if (!isNotFound) {
-      return (
-        <div className="text-white/80">
-          {t('tokenTopicFeed.failedToLoadPostsFor', { tag: lookup.toUpperCase() })}
-          {' '}
-          <AeButton size="small" variant="ghost" onClick={() => refetch()} className="inline-flex ml-2">{t('retry')}</AeButton>
-        </div>
-      );
-    }
-    // If topic not found yet → treat as empty state
+    return (
+      <div className="text-white/80">
+        {t('tokenTopicFeed.failedToLoadPostsFor', { tag: lookup.toUpperCase() })}
+        {' '}
+        <AeButton size="small" variant="ghost" onClick={() => refetch()} className="inline-flex ml-2">{t('retry')}</AeButton>
+      </div>
+    );
   }
 
   return (
@@ -372,9 +361,11 @@ const TokenTopicFeed = ({
       )}
 
       {/* Info banner when user explicitly selects "Holders only" but there are no holder posts.
-          Only when the holder set is complete/authoritative — for a partial or failed fetch we
-          fall back to showing all posts, so claiming "no holder posts" would contradict the feed. */}
-      {holdersOnly && tokenSaleAddress && holdersComplete && allPosts.length > 0 && holderPosts.length === 0 && (
+          Only once every topic page is in and the holder set is complete/authoritative — for a
+          partial or failed fetch we fall back to showing all posts, so claiming "no holder posts"
+          would contradict the feed. */}
+      {holdersOnly && tokenSaleAddress && holdersComplete && topicPagesDone
+        && allPosts.length > 0 && holderPosts.length === 0 && (
         <div className="mt-1.5 mb-1 mx-1 md:mx-0 rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-3 md:px-4 py-2.5 text-xs text-emerald-100 flex items-start gap-2">
           <span className="text-[14px] pt-0.5" aria-hidden="true">🏅</span>
           <div className="text-left">
@@ -496,17 +487,14 @@ const TokenTopicFeed = ({
           onClick={() => {
             refetch();
             refetchReplies();
-            if (displayPosts.length === 0) {
-              refetchOriginal();
-            }
           }}
-          disabled={isFetching || isFetchingOriginal || isFetchingReplies}
-          loading={isFetching || isFetchingOriginal || isFetchingReplies}
+          disabled={isFetching || isFetchingReplies}
+          loading={isFetching || isFetchingReplies}
           variant="ghost"
           size="medium"
           className="min-w-24"
         >
-          {(isFetching || isFetchingOriginal || isFetchingReplies) ? t('loading') : t('tokenTopicFeed.refresh')}
+          {(isFetching || isFetchingReplies) ? t('loading') : t('tokenTopicFeed.refresh')}
         </AeButton>
       </div>
     </div>

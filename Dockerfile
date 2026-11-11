@@ -1,5 +1,5 @@
 # Dependency and build images share an immutable Node/Alpine base.
-FROM node:22.23.3-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402 AS base
+FROM node:22.23.4-alpine@sha256:0e1754758c2df4cfa3e68d59e2e1b7374bb7fd9ea6328eaaacf15cc934af8202 AS base
 
 # Only Express and its locked dependency tree are needed by the HTTP server.
 FROM base AS server-dependencies
@@ -75,7 +75,8 @@ RUN NODE_OPTIONS="$BUILD_NODE_OPTIONS" npm run build
 
 # The runtime contains no frontend tooling, compilers, Git or package manager.
 FROM media-config AS runtime
-RUN apk add --no-cache zlib=1.3.2-r1 \
+RUN --mount=type=bind,source=docker/web-build-apk.lock,target=/tmp/web-build-apk.lock \
+    apk add --no-cache "$(grep '^zlib=' /tmp/web-build-apk.lock)" \
     && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn-v* \
     && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg
 WORKDIR /app

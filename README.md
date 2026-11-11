@@ -196,7 +196,8 @@ docker run --rm --read-only --cap-drop=ALL \
 For Shorts, also pass `ENABLE_SHORTS=true`, `VITE_SHORTS_API_URL`,
 `VITE_SHORTS_STREAM_URL` and the matching `VITE_SHORTS_RELEASE_HASH` as build
 arguments. `VITE_SUPERHERO_API_URL` and `VITE_SUPERHERO_WS_URL` select the client
-API endpoints. The SEO server uses the **runtime** `SUPERHERO_API_URL`. These are
+API endpoints. The SEO server uses `SUPERHERO_API_URL` at runtime and falls back
+to the image’s `VITE_SUPERHERO_API_URL`. These are
 public configuration values, so never place credentials in them. Shorts remains
 disabled unless explicitly enabled at build time.
 

@@ -38,6 +38,7 @@ function wait(ms: number, signal: AbortSignal) {
 
 /** Follow an accepted server job; status reads never resubmit preparation or publication. */
 export async function waitForPreparedShort(initial: UploadSession, options: {
+  uploadId: string;
   read: () => Promise<UploadSession>;
   assertCurrent: () => void;
   onStatus: (status: UploadSession['status']) => void;
@@ -51,7 +52,7 @@ export async function waitForPreparedShort(initial: UploadSession, options: {
   for (;;) {
     options.signal.throwIfAborted();
     options.assertCurrent();
-    if (session.id !== initial.id) throw new Error('Upload status did not match your video. Please refresh Studio.');
+    if (session.id !== options.uploadId) throw new Error('Upload status did not match your video. Please refresh Studio.');
     if (session.status === 'ready' && session.complete && session.video?.id === initial.id) return session.video;
     if (session.status === 'failed') throw new Error(session.error || 'We could not prepare this video. Please try again.');
     if (!['queued', 'processing'].includes(session.status)) throw new Error('Your upload has not finished. Please try again.');

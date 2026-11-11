@@ -66,6 +66,7 @@ export function useShortsWalletTransactions(options: Options) {
     notificationActive?: boolean;
   }>({ scope: '' });
   const [revision, setRevision] = useState(0);
+  const [blockedId, setBlockedId] = useState('');
   const check = useCallback(() => setRevision((value) => value + 1), []);
   const scopes: WalletScope[] = actor && network && contract
     ? [...new Set([contract, previousContract, ...(options.rewardContracts || [])].filter((s): s is string => !!s))].map(
@@ -188,6 +189,8 @@ export function useShortsWalletTransactions(options: Options) {
       assertCurrent();
       if (pending) {
         if (!pending.tx || pending.submission === 'prepared') {
+          setBlockedId(pending.id);
+          check();
           throw new WalletActionPending(
             'A wallet request is already waiting. Finish or cancel it before trying again.',
           );
@@ -195,6 +198,8 @@ export function useShortsWalletTransactions(options: Options) {
         const observation = await observeWalletAction(pending);
         assertCurrent();
         if (!walletActionComplete(observation)) {
+          setBlockedId(pending.id);
+          check();
           throw new WalletActionPending(
             'Your earlier transaction is still pending. Check its status instead of sending it again.',
           );
@@ -381,6 +386,8 @@ export function useShortsWalletTransactions(options: Options) {
   };
   return {
     action,
+    blocked: !!action && action.id === blockedId && !(state.observation && walletActionComplete(state.observation)),
+    dismissBlocked: () => setBlockedId(''),
     notificationActive: !action || state.notificationActive === true,
     observation: state.scope === scopeKey ? state.observation : undefined,
     error: state.scope === scopeKey ? state.error : undefined,

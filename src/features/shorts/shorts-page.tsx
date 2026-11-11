@@ -11,6 +11,12 @@ import './shorts-viewer.css';
 
 export const ShortsPage = () => {
   const s = useShorts();
+  const { walletRecovery } = s;
+  const pending = walletRecovery.action;
+  const unsent = pending && (!pending.tx || pending.submission === 'prepared');
+  const retryLike = pending?.submission === 'attempted' && pending.sponsorship && pending.rawInner
+    && walletRecovery.observation?.status === 'unknown'
+    && !walletRecovery.observation.sponsorshipStatus;
   return (
     <div className={`shorts-app ${s.tab === 'feed' ? 'shorts-watching' : 'shorts-studio-page'}`}>
       <ShortsWalletRecovery recovery={s.walletRecovery} message={s.message} messageTone={s.messageTone} scope={s.notificationScope} />
@@ -31,10 +37,10 @@ export const ShortsPage = () => {
           measurementSession={s.measurementSession}
           onStudio={() => s.setTab('studio')}
           onUpload={() => s.setTab('publish')}
-          message=""
-          onDismissMessage={s.clearMessage}
+          loadError={s.feedError}
+          onRetry={s.retryFeed}
           busy={s.busy}
-          suspended={!!s.like || !!s.commentShort || s.busy}
+          suspended={!!s.like || !!s.commentShort || walletRecovery.blocked || s.busy}
           ready={s.feedReady}
           shared={s.shared}
           pagination={s.config?.catalogPaging && !s.shared ? {
@@ -53,7 +59,6 @@ export const ShortsPage = () => {
         walletPending={s.walletPending}
         revision={s.commentRevision}
         publishedComment={s.publishedComment}
-        message=""
         onClose={() => s.setCommentShort(undefined)}
         onConnect={s.connectForComments}
         onAdd={s.addComment}
@@ -83,6 +88,20 @@ export const ShortsPage = () => {
           phase={s.likePhase}
           onClose={() => s.setLike(undefined)}
         />
+      )}
+      {walletRecovery.blocked && (
+        <ShortsDialog label="Previous wallet request" busy={false} onClose={walletRecovery.dismissBlocked}>
+          <section className="sh-modal">
+            <h2>Previous wallet request</h2>
+            <p>
+              {unsent ? 'An earlier request is waiting for approval. You can finish it in the original tab or cancel it here.'
+                : 'Your previous transaction is awaiting confirmation. Shorts will keep checking its status.'}
+            </p>
+            {unsent && <button type="button" onClick={walletRecovery.release}>Cancel unsent request</button>}
+            {retryLike && <button type="button" onClick={walletRecovery.retrySponsorship}>Resend the signed Like</button>}
+            <button type="button" onClick={walletRecovery.dismissBlocked}>Close</button>
+          </section>
+        </ShortsDialog>
       )}
     </div>
   );

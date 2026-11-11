@@ -41,11 +41,11 @@ const CommentBody = ({ text }: { text: string }) => {
 
 export const ShortsComments = ({
   id, creator, actor, policy, busy, walletPending,
-  revision, publishedComment, message, onClose, onConnect, onAdd,
+  revision, publishedComment, onClose, onConnect, onAdd,
 }: {
   id: string; creator?: string; actor: string; policy: ShortsContractPolicy;
   busy: boolean; walletPending: boolean; revision: number;
-  publishedComment?: PublishedComment; message: string;
+  publishedComment?: PublishedComment;
   onClose: () => void; onConnect: () => unknown;
   onAdd: (text: string) => Promise<boolean>;
 }) => {
@@ -327,7 +327,6 @@ export const ShortsComments = ({
             </div>
           )}
           {submitError && <p className="sh-comment-submit-error" role="alert">{submitError}</p>}
-          {message && <p className="sh-comment-status" role="status">{message}</p>}
         </footer>
       </section>
     </ShortsDialog>

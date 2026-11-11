@@ -13,7 +13,7 @@ const ready = {
 function options(read = vi.fn<() => Promise<UploadSession>>().mockResolvedValue(ready)) {
   const abort = new AbortController();
   return {
-    read, assertCurrent: vi.fn(), onStatus: vi.fn(), signal: abort.signal, abort,
+    uploadId: queued.id, read, assertCurrent: vi.fn(), onStatus: vi.fn(), signal: abort.signal, abort,
   };
 }
 afterEach(() => vi.useRealTimers());
@@ -58,6 +58,7 @@ it('stops polling on account change, abort and authentication expiry', async () 
 });
 
 it('does not accept mismatched results, failed preparation or endless waiting as a publishable video', async () => {
+  await expect(waitForPreparedShort(ready, { ...options(), uploadId: 'different-upload' })).rejects.toThrow('did not match');
   await expect(waitForPreparedShort({ ...ready, video: { id: 'another' } as UploadSession['video'] }, options())).rejects.toThrow('has not finished');
   await expect(waitForPreparedShort({ ...queued, status: 'failed', error: 'Choose a valid file' }, options())).rejects.toThrow('Choose a valid file');
   vi.useFakeTimers();

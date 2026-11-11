@@ -217,6 +217,11 @@ RAM for the build worker. Vite defaults to a 1,152 MiB JavaScript heap; a dedica
 CI worker can raise it with `--build-arg BUILD_NODE_OPTIONS=--max-old-space-size=2048`.
 This setting affects the build only, not the running server.
 
+For profile and post images, Docker accepts `VITE_PROFILE_MEDIA_API_URL` and
+`VITE_PROFILE_MEDIA_PUBLIC_URL` as public build arguments. The delivery URL
+defaults to `/profile-images` on the API origin. The Express and Netlify
+share previews also accept the runtime override `PROFILE_MEDIA_PUBLIC_URL`.
+
 ## Contributing
 
 1. Create a feature branch from `main`

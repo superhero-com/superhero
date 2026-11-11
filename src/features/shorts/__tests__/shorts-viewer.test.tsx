@@ -78,8 +78,7 @@ const makeProps = () => ({
   onReport: vi.fn(),
   onStudio: vi.fn(),
   onUpload: vi.fn(),
-  message: '',
-  onDismissMessage: vi.fn(),
+  onRetry: vi.fn(),
   busy: false,
   suspended: false,
   ready: true,
@@ -142,6 +141,9 @@ describe('Shorts playback lifecycle', () => {
     );
     expect(screen.queryByRole('status', { name: 'Loading Shorts' })).not.toBeInTheDocument();
     expect(screen.getByText('Couldn’t load Shorts')).toBeVisible();
+    view.rerender(<MemoryRouter><ShortsViewer {...props} loadError="Check your connection" /></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    expect(props.onRetry).toHaveBeenCalledOnce();
   });
   it('waits for a decoded frame and keeps it visible during buffering', () => {
     const { videos } = mount({ ...makeProps(), feed: [clips[0]] });
@@ -218,20 +220,20 @@ describe('Shorts playback lifecycle', () => {
     const { videos } = mount(props);
     videos[0].currentTime = 10;
     fireEvent.seeking(videos[0]); fireEvent.timeUpdate(videos[0]);
-    expect(props.onPlayback.mock.calls.every((call) => call[2] === 0)).toBe(true);
+    expect(props.onPlayback.mock.calls.every((call) => call[1] === 0)).toBe(true);
     let now = performance.now();
     vi.spyOn(performance, 'now').mockImplementation(() => now);
     [10.5, 11, 11.5, 12].forEach((position) => {
       now += 500;
       videos[0].currentTime = position; fireEvent.timeUpdate(videos[0]);
     });
-    expect(props.onPlayback).toHaveBeenCalledWith('one', expect.any(String), 2, 'measured-token');
+    expect(props.onPlayback).toHaveBeenCalledWith('one', 2, 'measured-token');
   });
   it('measures the playing video automatically and flushes a partial heartbeat on pause', () => {
     const props = makeProps();
     const { videos, rerender } = mount(props);
     expect(screen.getAllByText('3 views')).toHaveLength(2);
-    expect(props.onPlayback).toHaveBeenCalledWith('one', expect.any(String), 0, 'measured-token');
+    expect(props.onPlayback).toHaveBeenCalledWith('one', 0, 'measured-token');
     expect(props.onPlayback.mock.calls.every((call) => call[0] === 'one')).toBe(true);
     let now = performance.now();
     vi.spyOn(performance, 'now').mockImplementation(() => now);
@@ -239,11 +241,11 @@ describe('Shorts playback lifecycle', () => {
       now += 500; videos[0].currentTime = position; fireEvent.timeUpdate(videos[0]);
     });
     fireEvent.click(screen.getAllByRole('button', { name: 'Pause video' })[0]);
-    expect(props.onPlayback).toHaveBeenLastCalledWith('one', expect.any(String), 2.5, 'measured-token');
+    expect(props.onPlayback).toHaveBeenLastCalledWith('one', 2.5, 'measured-token');
     const callback = vi.fn();
     rerender(<MemoryRouter><ShortsViewer {...props} onPlayback={callback} /></MemoryRouter>);
     fireEvent.play(videos[0]);
-    expect(callback).not.toHaveBeenCalledWith('one', expect.any(String), 0, 'measured-token');
+    expect(callback).not.toHaveBeenCalledWith('one', 0, 'measured-token');
   });
   it('counts the final segment of a two-second Short before looping, without adding another completion', () => {
     const props = { ...makeProps(), feed: [{ ...clips[0], duration: 2 }] };
@@ -254,12 +256,12 @@ describe('Shorts playback lifecycle', () => {
       now += 500; videos[0].currentTime = position; fireEvent.timeUpdate(videos[0]);
     });
     now += 500; videos[0].currentTime = 2; fireEvent.ended(videos[0]);
-    expect(props.onPlayback).toHaveBeenLastCalledWith('one', expect.any(String), 2, 'measured-token');
+    expect(props.onPlayback).toHaveBeenLastCalledWith('one', 2, 'measured-token');
     expect(videos[0].currentTime).toBe(0);
     [0.5, 1, 1.5, 2].forEach((position) => {
       now += 500; videos[0].currentTime = position; fireEvent.timeUpdate(videos[0]);
     });
-    expect(props.onPlayback.mock.calls.filter((call) => call[2] === 2)).toHaveLength(1);
+    expect(props.onPlayback.mock.calls.filter((call) => call[1] === 2)).toHaveLength(1);
   });
   it('uses the same loop for a confirmed HLS EOF stall without counting the unplayed tail', () => {
     const props = { ...makeProps(), feed: [{ ...clips[0], duration: 2 }] };
@@ -273,11 +275,11 @@ describe('Shorts playback lifecycle', () => {
     act(() => hlsCallbacks.get('one')?.());
     expect(videos[0].currentTime).toBe(0);
     expect(videos[0].paused).toBe(false);
-    expect(props.onPlayback).toHaveBeenLastCalledWith('one', expect.any(String), 1.973, 'measured-token');
+    expect(props.onPlayback).toHaveBeenLastCalledWith('one', 1.973, 'measured-token');
     fireEvent.playing(videos[0]);
     expect(screen.queryByText('Loading video…')).not.toBeInTheDocument();
     now += 500; videos[0].currentTime = 0.5; fireEvent.timeUpdate(videos[0]);
-    expect(props.onPlayback.mock.calls.filter((call) => call[2] === 1.973)).toHaveLength(1);
+    expect(props.onPlayback.mock.calls.filter((call) => call[1] === 1.973)).toHaveLength(1);
   });
 });
 

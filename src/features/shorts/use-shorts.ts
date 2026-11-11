@@ -8,7 +8,7 @@ import { useAeSdk } from '@/hooks/useAeSdk';
 import { useWalletConnect } from '@/hooks/useWalletConnect';
 import { CONFIG } from '@/config';
 import {
-  creatorSessionAtom, openConnectedCreatorSession, revokeCreatorSession, type CreatorLogin,
+  creatorSessionAtom, openConnectedCreatorSession, revokeCreatorSession, verifyCreatorChallenge, type CreatorChallenge, type CreatorLogin,
 } from './shorts-wallet-session';
 import { useShortsPreferences, rankShorts } from './shorts-preferences';
 import { PublicationReviewPending, publicationProgress, publishAndWait } from './shorts-publication-session';
@@ -23,7 +23,7 @@ import type { WalletMethod } from './shorts-wallet-journal';
 import { likeFailurePhase, type LikePhase } from './shorts-like-feedback';
 import type { PublishedComment } from './shorts-comment-page';
 import { request, SHORTS_API, ShortsApiError } from './api';
-import { hashUploadFile, uploadDirectPart } from './shorts-direct-upload';
+import { hashUploadFile, uploadDirectPart, uploadHash } from './shorts-direct-upload';
 import {
   ORIGINAL_UPLOAD_MAX_BYTES, readSavedUpload, uploadCapability, uploadSelectionLimit, uploadSizeLabel, uploadSourceSnapshot, validateUploadSession,
 } from './shorts-upload-policy';
@@ -93,6 +93,7 @@ export function useShorts() {
   const currentLogin = useRef(login);
   currentLogin.current = login;
   const [feed, setFeed] = useState<Short[]>([]);
+  const [feedError, setFeedError] = useState('');
   const [feedWindow, setFeedWindow] = useState<FeedSnapshot>();
   const feedPager = useRef<{ key: string; window: ShortsFeedWindow } | undefined>(undefined);
   const sharedId = tab === 'feed' ? new URLSearchParams(location.search).get('short') : null;
@@ -249,7 +250,10 @@ export function useShorts() {
       const [f, shared] = await Promise.all([
         c.catalogPaging ? feedPager.current?.window.refresh().then(() => undefined)
           : request<Short[]>(`?address=${encodeURIComponent(actor)}&topic=${encodeURIComponent(topic)}`),
-        sharedId ? request<Short>(`/shared/${encodeURIComponent(sharedId)}?address=${encodeURIComponent(actor)}`).catch(() => undefined) : undefined,
+        sharedId ? request<Short>(`/shared/${encodeURIComponent(sharedId)}?address=${encodeURIComponent(actor)}`).catch((error) => {
+          if (error instanceof ShortsApiError && [403, 404, 410].includes(error.status)) return undefined;
+          throw error;
+        }) : undefined,
       ]);
       let d: Dashboard | undefined;
       let r: Review[] = [];
@@ -265,6 +269,7 @@ export function useShorts() {
         throw error;
       }
       if (gen !== generation.current) return;
+      setFeedError('');
       setConfig(c);
       setPaymentRelease(payment?.freeLikes && c.likeSponsorship?.enabled === true ? { ...payment.release, likeFeeAetto: payment.policy.likeFeeAetto, treasuryBps: payment.policy.treasuryBps } : undefined);
       if (f) setFeed(f.map(withConfirmedLike));
@@ -272,6 +277,10 @@ export function useShorts() {
       setDashboard(d); setDashboardScope(JSON.stringify([actor, c.network, c.contract, c.bytecodeHash, token]));
       setReview(r); setDashboardError('');
     } catch (error) {
+      if (gen === generation.current && tab === 'feed') {
+        setFeedError('Check your connection and try again.');
+        if (sharedId) setSharedResult(undefined);
+      }
       if (gen === generation.current && currentAddress.current === actor && token) {
         setDashboardError('Your account couldn’t be updated. Check your connection and try again.');
       }
@@ -283,7 +292,10 @@ export function useShorts() {
     const queued = createShortsRefresh(async () => {
       if (document.visibilityState === 'hidden') return;
       try { await refresh(); } catch (error) {
-        if (!disposed) setMessage(error instanceof Error ? error.message : 'Shorts could not be updated.');
+        if (!disposed && tab !== 'feed') {
+          setMessageTone('error');
+          setMessage(error instanceof Error ? error.message : 'Shorts could not be updated.');
+        }
       }
       if (!disposed) setPerformanceRevision((value) => value + 1);
     });
@@ -301,7 +313,7 @@ export function useShorts() {
       document.removeEventListener('visibilitychange', resume);
       generation.current += 1;
     };
-  }, [refresh, config?.realtime, config?.network, config?.contract, followingRevision]);
+  }, [refresh, config?.realtime, config?.network, config?.contract, followingRevision, tab]);
   useEffect(() => {
     let cancelled = false;
     const scope = JSON.stringify([days, token, tab, videoId]);
@@ -309,16 +321,10 @@ export function useShorts() {
       setPerformance(undefined); setPerformanceError('');
     }
     performanceScope.current = scope;
-    let requestId = 0;
     if (!token || tab === 'feed') return undefined;
-    const load = () => {
-      requestId += 1;
-      const id = requestId;
-      return request<Performance>(`/performance?days=${days}${videoId ? `&short=${encodeURIComponent(videoId)}` : ''}`, undefined, token)
-        .then((value) => { if (!cancelled && id === requestId) { setPerformance(value); setPerformanceError(''); } })
-        .catch((error) => { if (!cancelled && id === requestId) setPerformanceError(error.message); });
-    };
-    load();
+    request<Performance>(`/performance?days=${days}${videoId ? `&short=${encodeURIComponent(videoId)}` : ''}`, undefined, token)
+      .then((value) => { if (!cancelled) { setPerformance(value); setPerformanceError(''); } })
+      .catch((error) => { if (!cancelled) setPerformanceError(error.message); });
     return () => { cancelled = true; };
   }, [days, token, tab, videoId, performanceRevision]);
   const walletRecovery = useShortsWalletTransactions({
@@ -396,13 +402,15 @@ export function useShorts() {
       window.removeEventListener('pagehide', flush); window.removeEventListener('online', online);
     };
   }, []);
-  const playback = useCallback((id: string, _event: string, seconds: number, playbackToken: string) => {
-    if (!_event || !playbackToken || seconds < 2) return;
+  const playback = useCallback((id: string, seconds: number, playbackToken: string) => {
+    if (!measurementSession || !playbackToken || seconds < 2) return;
     getDelivery().enqueue(id, {
       id: `${measurementSession.slice(0, 20)}-${id}-${new Date().toISOString().slice(0, 10)}`, seconds: Math.min(60, seconds), session: measurementSession, token: playbackToken, source: new URLSearchParams(location.search).has('short') ? 'shared' : personal.preferences.mode,
     });
   }, [personal.preferences.mode, location.search, getDelivery, measurementSession]);
-  const perform = async (fn: () => Promise<unknown>, success: string, { backgroundRefresh = false, transactionNotification = false, pending = 'Updating…' } = {}) => {
+  const perform = async (fn: () => Promise<unknown>, success: string, {
+    backgroundRefresh = false, refreshAfter = true, transactionNotification = false, pending = 'Updating…',
+  } = {}) => {
     if (actionLock.current) return false;
     actionLock.current = true; setBusy(true); setMessage(transactionNotification ? '' : pending); setMessageTone('info');
     try {
@@ -412,6 +420,7 @@ export function useShorts() {
       setMessage(transactionNotification ? '' : success);
       // A refresh failure must not turn a confirmed payment into a retry prompt.
       setPerformanceRevision((value) => value + 1);
+      if (!refreshAfter) return true;
       const updating = refresh().catch(() => {
         if (currentAddress.current === actor) setMessage(`${success} Refresh to see the latest state.`);
       });
@@ -447,7 +456,7 @@ export function useShorts() {
     method: WalletMethod,
     args: string[],
     amount = '0',
-    previous: boolean | string = false,
+    target = config!.contract,
     comment?: { text?: string; sequence?: string },
   ) => {
     setWalletPending(true);
@@ -461,9 +470,9 @@ export function useShorts() {
         args[0],
         amount,
         config!,
-(typeof previous === 'string' ? previous : [config!.contract, config!.previousContract][Number(previous)])!,
-() => { setLike(undefined); setClaimReview(false); setWalletPending(false); },
-comment,
+        target,
+        () => { setLike(undefined); setClaimReview(false); setWalletPending(false); },
+        comment,
       );
     } finally { setWalletPending(false); }
   };
@@ -491,12 +500,12 @@ comment,
     setWalletPending(true);
     try {
       await checkNetwork();
-      const c = await request<{ id: string; message: string }>('/auth/challenge', { address: actor });
-      if (currentAddress.current !== actor) throw new Error('Wallet changed during verification.');
-      const signature = await signMessage(c.message);
-      if (currentAddress.current !== actor) throw new Error('Wallet changed during verification.');
+      const c = await request<CreatorChallenge>('/auth/challenge', { address: actor });
+      if (currentCreatorScope.current !== creatorScope) throw new Error('Wallet changed during verification.');
+      const signature = await signMessage(verifyCreatorChallenge(c, actor, config!.contract));
+      if (currentCreatorScope.current !== creatorScope) throw new Error('Wallet changed during verification.');
       const next = await request<CreatorLogin>('/auth/verify', { id: c.id, signature });
-      if (currentAddress.current !== actor || next.address !== actor) {
+      if (currentCreatorScope.current !== creatorScope || next.address !== actor) {
         revokeCreatorSession({ ...next, api: SHORTS_API });
         throw new Error('Wallet changed during verification.');
       }
@@ -555,7 +564,6 @@ comment,
     };
     const options = { signal: controller.signal, timeout: 15000 };
     uploadAuth();
-    const hash = async (bytes: ArrayBuffer) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map((v) => v.toString(16).padStart(2, '0')).join('');
     setUploadProgress(0); setUploadStage('checking');
     const details = {
       description: String(data.get('description') || ''), language: String(data.get('language') || 'und'), captions: String(data.get('captions') || ''), synthetic: data.get('synthetic') === 'true', sponsored: data.get('sponsored') === 'true',
@@ -563,7 +571,7 @@ comment,
     const metadata = {
       title: String(data.get('title')), topic: String(data.get('topic')), rights: data.get('rights') === 'true', bytes: file.size, sha256: await hashUploadFile(file, uploadAuth), details,
     };
-    const fingerprint = await hash(new TextEncoder().encode(JSON.stringify(metadata)).buffer);
+    const fingerprint = await uploadHash(new TextEncoder().encode(JSON.stringify(metadata)).buffer);
     const storageKey = uploadResumeKey(SHORTS_API, config!.network, config!.contract, actor);
     let resume: UploadSession | undefined;
     const saved = readSavedUpload(storageKey);
@@ -621,7 +629,7 @@ comment,
     } catch { /* Uploading still works without persisted resume. */ }
     const count = Math.ceil(file.size / resume.partSize);
     setUploadStage('uploading');
-    for (let i = 0; i < count && !resume.complete; i += 1) {
+    for (let i = 0; i < count && resume.status === 'uploading' && !resume.complete; i += 1) {
       if (!resume.parts.includes(i)) {
         const bytes = file.slice(i * resume.partSize, (i + 1) * resume.partSize);
         // eslint-disable-next-line no-await-in-loop
@@ -633,7 +641,7 @@ comment,
     setMessage('Upload received. Preparing your video for playback…');
     const readStatus = () => request<UploadSession>(`/uploads/${resume!.id}`, undefined, uploadAuth(), options);
     let job = resume;
-    if (!['queued', 'processing', 'ready'].includes(job.status)) {
+    if (job.status === 'uploading') {
       try {
         job = await request<UploadSession>(`/uploads/${resume.id}/finish`, {}, uploadAuth(), options);
       } catch (error) {
@@ -645,6 +653,7 @@ comment,
       }
     }
     const prepared = await waitForPreparedShort(job, {
+      uploadId: resume.id,
       read: readStatus,
       assertCurrent: uploadAuth,
       signal: controller.signal,
@@ -769,7 +778,7 @@ comment,
     addComment: (text: string) => perform(async () => {
       if (!commentShort || !actor) throw new Error('Connect your wallet to comment.');
       const author = await request<{ nextSequence: string }>(`/comments/authors/${encodeURIComponent(actor)}`);
-      await transact('add_comment', [commentShort.id], '0', false, { text, sequence: author.nextSequence });
+      await transact('add_comment', [commentShort.id], '0', undefined, { text, sequence: author.nextSequence });
     }, 'Comment published.', { backgroundRefresh: true, transactionNotification: true }),
     paymentRelease,
     measurementSession,
@@ -801,6 +810,8 @@ comment,
     setTopic,
     config,
     feed: visibleFeed,
+    feedError,
+    retryFeed: () => refresh().catch(() => undefined),
     feedReady: !!config && (sharedId ? sharedResult?.id === sharedId : !config.catalogPaging || !!feedWindow?.ready),
     feedWindow: config?.catalogPaging && !sharedId ? feedWindow : undefined,
     loadMoreFeed: (automatic = false) => feedPager.current?.window.more(automatic),
@@ -844,10 +855,9 @@ comment,
     walletPending,
     message,
     messageTone,
-    refreshNow: () => {
-      setPerformanceRevision((value) => value + 1);
-      return perform(refresh, 'Account updated. Performance refresh requested.', { pending: 'Refreshing your Studio' });
-    },
+    refreshNow: () => perform(refresh, 'Account updated. Performance refresh requested.', {
+      pending: 'Refreshing your Studio', refreshAfter: false,
+    }),
     clearMessage: () => setMessage(''),
     like,
     likePhase,
@@ -855,7 +865,10 @@ comment,
     setLike: (value?: Short) => { setLike(value); if (value) setMessage(''); },
     confirmLike,
     claim: () => perform(async () => { await transact('claim', []); setClaimReview(false); }, 'Rewards claimed to your wallet.', { transactionNotification: true }),
-    claimPrevious: () => perform(() => transact('claim', [], '0', true), 'Earlier rewards claimed to your wallet.', { transactionNotification: true }),
+    claimPrevious: () => perform(() => {
+      if (!config?.previousContract) throw new Error('No earlier reward contract is configured.');
+      return transact('claim', [], '0', config.previousContract);
+    }, 'Earlier rewards claimed to your wallet.', { transactionNotification: true }),
     claimReward: (contract: string) => perform(() => transact('claim', [], '0', contract), 'Earlier rewards claimed to your wallet.', { transactionNotification: true }),
     rescan: (id: string) => perform(() => request(`/${id}/scan`, {}, requireLogin()), 'Community-guidelines status updated.', { pending: 'Checking community guidelines' }),
     moderate: (id: string, approved: boolean, reason: string, reviewedTopic: string, visualConfirmed = false) => perform(

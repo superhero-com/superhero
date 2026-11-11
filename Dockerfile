@@ -8,7 +8,20 @@ COPY server/package.json server/package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts --no-audit --no-fund \
     && npm cache clean --force
 
-FROM base AS builder
+# Public media origins are used by Vite and the HTTP server (CSP and link previews).
+FROM base AS media-config
+ARG VITE_SUPERHERO_API_URL
+ARG VITE_SHORTS_API_URL
+ARG VITE_SHORTS_STREAM_URL
+ARG VITE_PROFILE_MEDIA_API_URL
+ARG VITE_PROFILE_MEDIA_PUBLIC_URL
+ENV VITE_SUPERHERO_API_URL=$VITE_SUPERHERO_API_URL \
+    VITE_SHORTS_API_URL=$VITE_SHORTS_API_URL \
+    VITE_SHORTS_STREAM_URL=$VITE_SHORTS_STREAM_URL \
+    VITE_PROFILE_MEDIA_API_URL=$VITE_PROFILE_MEDIA_API_URL \
+    VITE_PROFILE_MEDIA_PUBLIC_URL=$VITE_PROFILE_MEDIA_PUBLIC_URL
+
+FROM media-config AS builder
 WORKDIR /app
 
 # Git-backed packages and node-gyp are build-time dependencies only.
@@ -27,8 +40,6 @@ ENV VITE_WEBAUTHN_RP_ID=$VITE_WEBAUTHN_RP_ID
 ARG VITE_JOURNEY_ANALYTICS
 ENV VITE_JOURNEY_ANALYTICS=$VITE_JOURNEY_ANALYTICS
 
-ARG VITE_SUPERHERO_API_URL
-ENV VITE_SUPERHERO_API_URL=$VITE_SUPERHERO_API_URL
 ARG VITE_SUPERHERO_WS_URL
 ENV VITE_SUPERHERO_WS_URL=$VITE_SUPERHERO_WS_URL
 
@@ -36,12 +47,8 @@ ARG VITE_NETWORK=ae_mainnet
 ENV VITE_NETWORK=$VITE_NETWORK
 ARG ENABLE_SHORTS=false
 ENV ENABLE_SHORTS=$ENABLE_SHORTS
-ARG VITE_SHORTS_API_URL
-ENV VITE_SHORTS_API_URL=$VITE_SHORTS_API_URL
 ARG VITE_SHORTS_RELEASE_HASH
 ENV VITE_SHORTS_RELEASE_HASH=$VITE_SHORTS_RELEASE_HASH
-ARG VITE_SHORTS_STREAM_URL
-ENV VITE_SHORTS_STREAM_URL=$VITE_SHORTS_STREAM_URL
 
 COPY package.json package-lock.json ./
 COPY scripts ./scripts
@@ -67,7 +74,7 @@ ARG BUILD_NODE_OPTIONS=--max-old-space-size=1152
 RUN NODE_OPTIONS="$BUILD_NODE_OPTIONS" npm run build
 
 # The runtime contains no frontend tooling, compilers, Git or package manager.
-FROM base AS runtime
+FROM media-config AS runtime
 RUN apk add --no-cache zlib=1.3.2-r1 \
     && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn-v* \
     && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg

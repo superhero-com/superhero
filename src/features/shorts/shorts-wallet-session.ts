@@ -15,6 +15,26 @@ export const revokeCreatorSession = async (session: Pick<CreatorSession, 'api' |
     return true;
   } catch { return false; }
 };
+export interface CreatorChallenge { id: string; message: string; expiresAt: number }
+
+export function verifyCreatorChallenge(challenge: CreatorChallenge, address: string, contract: string) {
+  if (!/^[a-f0-9]{48}$/.test(challenge.id) || !Number.isSafeInteger(challenge.expiresAt)
+    || challenge.expiresAt <= Date.now() || challenge.expiresAt > Date.now() + 360000) {
+    throw new Error('Invalid Studio sign-in request.');
+  }
+  const expected = [
+    'Superhero Shorts sign-in',
+    `Origin: ${window.location.origin}`,
+    `Network: ${CONFIG.NETWORK}`,
+    `Contract: ${contract}`,
+    `Address: ${address}`,
+    `Nonce: ${challenge.id}`,
+    `Expires: ${new Date(challenge.expiresAt).toISOString()}`,
+    'This authenticates uploads and creator actions. It does not transfer tokens.',
+  ].join('\n');
+  if (challenge.message !== expected) throw new Error('Invalid Studio sign-in request.');
+  return expected;
+}
 const pendingConnections = new Map<string, Promise<CreatorSession>>();
 export const openConnectedCreatorSession = (address: string, network: string, contract: string) => {
   if (!address || network !== 'ae_uat' || network !== CONFIG.NETWORK || !contract) {

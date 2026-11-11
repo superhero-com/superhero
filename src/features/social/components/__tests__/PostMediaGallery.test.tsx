@@ -24,11 +24,19 @@ it('uses previews for previously published catalog URLs while keeping legacy GIF
   expect([...container.querySelectorAll('img')].map((img) => img.src)).toEqual([imageUrl(imageReference(cid), 'preview'), gif]);
 });
 
+it('plays a legacy video with a signed URL alongside a reply image', () => {
+  const clip = 'https://media.example/video.mp4?signature=example#t=2';
+  const { container } = render(<PostMediaGallery media={['comment:42_v3', clip, 'https://media.example/photo.webp']} />);
+  expect(container.querySelector('video')?.src).toBe(clip);
+  expect(container.querySelectorAll('img')).toHaveLength(1);
+});
+
 it('opens the full image without navigating the feed and supports keyboard browsing and closing', async () => {
   const navigate = vi.fn();
   const urls = ['https://images.example/1.webp', 'https://images.example/2.webp', 'https://images.example/3.webp'];
   render(<div role="presentation" onClick={navigate}><PostMediaGallery media={urls} /></div>);
-  fireEvent.click(screen.getByRole('button', { name: 'social.images.open1' }));
+  const opener = screen.getByRole('button', { name: 'social.images.open1' });
+  fireEvent.click(opener);
   expect(navigate).not.toHaveBeenCalled();
   const dialog = screen.getByRole('dialog');
   expect(dialog.querySelector('img')?.src).toBe(urls[0]);
@@ -38,5 +46,6 @@ it('opens the full image without navigating the feed and supports keyboard brows
   expect(dialog.querySelector('img')?.src).toBe(urls[0]);
   fireEvent.keyDown(dialog, { key: 'Escape' });
   await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  await waitFor(() => expect(opener).toHaveFocus());
   expect(navigate).not.toHaveBeenCalled();
 });

@@ -59,8 +59,8 @@ repository variable (default false), with `DEV_ENABLE_SHORTS` for preview builds
 The existing prefixed build-argument collection accepts `VITE_SHORTS_RELEASE_HASH`
 and the preview override `DEV_VITE_SHORTS_RELEASE_HASH`; both values are public
 even when stored through that workflow’s secret collection.
-For the Express server, also supply `VITE_SHORTS_API_URL` and `VITE_SHORTS_STREAM_URL`
-at runtime so the CSP allows those origins. Other hosting providers must add their
+The Docker image carries these public origins into the Express CSP. Standalone
+Express deployments must supply them at runtime. Other hosting providers must add their
 exact origins to `connect-src` (HLS fetch) and keep `blob:` in `media-src`.
 
 For hosted direct uploads, also set `SHORTS_UPLOAD_ORIGIN` on the Express server

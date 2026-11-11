@@ -31,7 +31,17 @@ const action: WalletAction = {
 };
 type Recovery = ReturnType<typeof useShortsWalletTransactions>;
 const recovery = (overrides: Partial<Recovery> = {}): Recovery => ({
-  action, notificationActive: true, observation: undefined, error: undefined, check: vi.fn(), release: vi.fn(), retrySponsorship: vi.fn(), run: vi.fn(), ...overrides,
+  blocked: false,
+  dismissBlocked: vi.fn(),
+  action,
+  notificationActive: true,
+  observation: undefined,
+  error: undefined,
+  check: vi.fn(),
+  release: vi.fn(),
+  retrySponsorship: vi.fn(),
+  run: vi.fn(),
+  ...overrides,
 });
 const observation = (status: WalletObservation['status'], confirmations = 0): WalletObservation => ({
   ...action,

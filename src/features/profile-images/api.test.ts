@@ -32,6 +32,19 @@ it('can change delivery domain and prefix without changing stored references', a
   } finally { vi.unstubAllEnvs(); vi.resetModules(); }
 });
 
+it('converts catalog URLs to previews at the root of a delivery domain with a relative API', async () => {
+  vi.stubEnv('VITE_PROFILE_MEDIA_API_URL', '/backend');
+  vi.stubEnv('VITE_PROFILE_MEDIA_PUBLIC_URL', 'https://images.example/');
+  vi.resetModules();
+  try {
+    const resolver = await import('./api');
+    const cid = `bafy${'b'.repeat(55)}`;
+    const route = `https://images.example/images/${cid}`;
+    expect(resolver.imageUrl(imageReference(cid))).toBe(`${route}/image.webp`);
+    expect(resolver.imageUrl(`${route}/image.webp`, 'preview')).toBe(`${route}/thumb.webp`);
+  } finally { vi.unstubAllEnvs(); vi.resetModules(); }
+});
+
 afterEach(() => vi.unstubAllGlobals());
 it('allows only catalog WebP URLs from the dedicated image route', () => {
   const valid = `${API_BASE_URL}/profile-images/images/bafy${'a'.repeat(55)}/image.webp`;

@@ -1,32 +1,31 @@
 import { imageUrl } from '@/features/profile-images/api';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { AspectMedia } from '@/components/AspectMedia';
+import { AspectMedia, isVideoUrl } from '@/components/AspectMedia';
 import {
   Dialog, DialogContent, DialogDescription, DialogTitle,
 } from '@/components/ui/dialog';
+import { postMediaUrls, MAX_POST_IMAGES } from '../utils/postImages';
 
 export const PostMediaGallery = ({ media }: { media: string[] }) => {
   const { t } = useTranslation();
   const [selected, setSelected] = useState<number | null>(null);
-  const urls = [...new Set(media.map((value) => imageUrl(value, 'full')
-    || (typeof value === 'string' && /^https?:\/\//i.test(value) ? value : undefined))
-    .filter((value): value is string => !!value))].slice(0, 4);
-  const isVideo = (url: string) => /\.(mp4|webm|mov)(?:[?#]|$)/i.test(url);
-  const images = urls.filter((url) => !isVideo(url));
+  const opener = useRef<HTMLButtonElement>(null);
+  const urls = postMediaUrls(media).slice(0, MAX_POST_IMAGES);
+  const images = urls.filter((url) => !isVideoUrl(url));
   const move = (step: number) => setSelected((index) => ((index ?? 0) + step + images.length) % images.length);
   if (!urls.length) return null;
   return (
     <div className="feed-post__media mt-3" role="presentation" onClick={(event) => event.stopPropagation()}>
       <div className={`grid gap-1 overflow-hidden rounded-xl border border-white/10 ${urls.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-        {urls.map((url, index) => (isVideo(url) ? (
+        {urls.map((url, index) => (isVideoUrl(url) ? (
           <AspectMedia key={url} src={url} maxHeight={320} />
         ) : (
           <button
             key={url}
             type="button"
-            onClick={(event) => { event.stopPropagation(); setSelected(images.indexOf(url)); }}
+            onClick={(event) => { opener.current = event.currentTarget; setSelected(images.indexOf(url)); }}
             aria-label={t('social.images.open', { number: index + 1 })}
             className={`block min-w-0 overflow-hidden bg-black/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-400 ${urls.length === 3 && index === 0 ? 'row-span-2' : ''}`}
           >
@@ -45,6 +44,10 @@ export const PostMediaGallery = ({ media }: { media: string[] }) => {
         <DialogContent
           className="max-w-5xl border-white/10 bg-black/95 p-3 pt-12 text-white sm:p-6 sm:pt-12"
           onClick={(event) => event.stopPropagation()}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            opener.current?.focus();
+          }}
           onKeyDown={(event) => {
             event.stopPropagation();
             if (images.length > 1 && event.key === 'ArrowLeft') { event.preventDefault(); move(-1); }

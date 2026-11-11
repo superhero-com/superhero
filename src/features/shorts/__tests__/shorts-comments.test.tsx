@@ -15,7 +15,7 @@ const policy = {
   maxCommentChars: 5, maxCommentBytes: 8, commentsEnabled: true,
 } as ShortsContractPolicy;
 const props = () => ({
-  id: 'video', actor: 'ak_owner', policy, busy: false, walletPending: false, revision: 0, message: '', onClose: vi.fn(), onConnect: vi.fn(), onAdd: vi.fn().mockResolvedValue(false),
+  id: 'video', actor: 'ak_owner', policy, busy: false, walletPending: false, revision: 0, onClose: vi.fn(), onConnect: vi.fn(), onAdd: vi.fn().mockResolvedValue(false),
 });
 const empty = {
   items: [], next: null, total: '0', version: '0',

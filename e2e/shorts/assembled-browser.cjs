@@ -33,7 +33,7 @@ import '/src/features/shorts/shorts-viewer.css';
 const root=createRoot(document.getElementById('root'));
 const short={id:${JSON.stringify(id)},title:'Browser playback fixture',creator:'Owned test creator',topic:'Art',duration:2.2,status:'active',cid:'owned',bytes:1,publicationStatus:'published',likes:0,views:0,liked:false,mine:false,moderation:'approved'};
 const noop=()=>{};
-window.fixture={render(patch={}){root.render(React.createElement(MemoryRouter,null,React.createElement('div',{className:'shorts-app shorts-watching',style:{left:0}},React.createElement(ShortsViewer,{feed:[short],topics:['All','Art'],topic:'All',onTopic:noop,onLike:noop,onReport:noop,onStudio:noop,onUpload:noop,message:'',onDismissMessage:noop,busy:false,suspended:false,ready:true,...patch}))));}};
+window.fixture={render(patch={}){root.render(React.createElement(MemoryRouter,null,React.createElement('div',{className:'shorts-app shorts-watching',style:{left:0}},React.createElement(ShortsViewer,{feed:[short],topics:['All','Art'],topic:'All',onTopic:noop,onLike:noop,onReport:noop,onStudio:noop,onUpload:noop,busy:false,suspended:false,ready:true,...patch}))));}};
 window.fixture.render();
 `;
   let browser, page, edgeOrigin, closed = false;

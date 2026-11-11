@@ -220,9 +220,15 @@ it('cancels an unsigned request and fences its late wallet response before SDK b
   });
   await waitFor(() => expect(mocks.sign).toHaveBeenCalledOnce());
   await waitFor(() => expect(hook.result.current.action).toBeDefined());
+  const restored = renderHook(() => useShortsWalletTransactions(options()));
   await act(async () => {
-    await hook.result.current.release();
+    await expect(execute(restored)).rejects.toThrow(/already waiting/);
   });
+  await waitFor(() => expect(restored.result.current.blocked).toBe(true));
+  await act(async () => {
+    await restored.result.current.release();
+  });
+  await waitFor(() => expect(restored.result.current.blocked).toBe(false));
   expect(saved()).toBeUndefined();
   await act(async () => {
     finish!(await account.signTransaction(unsigned!, { networkId: 'ae_uat' }));
@@ -351,6 +357,8 @@ it('shows pending outcomes without offering another payment or cancellation afte
         recovery={{
           action,
           notificationActive: true,
+          blocked: false,
+          dismissBlocked: vi.fn(),
           observation: undefined,
           error: undefined,
           check,

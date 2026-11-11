@@ -93,7 +93,7 @@
 .shorts-app button.sh-comment-submit { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; }
 .shorts-app .sh-comment-notice { display: flex; align-items: flex-start; gap: 7px; margin: 12px 0 0; color: #9ba9bf; font-size: 11px; line-height: 1.5; }
 .sh-comment-notice svg { flex-shrink: 0; margin-top: 2px; }
-.sh-comment-paused, .sh-comment-status, .sh-comment-submit-error { margin: 12px 0 0; font-size: 12px; overflow-wrap: anywhere; }
+.sh-comment-paused, .sh-comment-submit-error { margin: 12px 0 0; font-size: 12px; overflow-wrap: anywhere; }
 .shorts-app .sh-comment-submit-error { color: #ffb3b3; }
 .sh-comments-connect > div { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
 .sh-comments-connect strong, .sh-comments-connect small { display: block; }

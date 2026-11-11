@@ -7,6 +7,7 @@ import {
 import { creatorSessionAtom, revokeCreatorSession, useSyncShortsWalletSession } from '../shorts-wallet-session';
 import { useShorts } from '../use-shorts';
 import { WalletActionPending } from '../use-shorts-wallet-transactions';
+import { ShortsApiError } from '../api';
 import type { Short } from '../types';
 
 const mocks = vi.hoisted(() => ({
@@ -156,11 +157,32 @@ beforeEach(() => {
       };
     }
     if (path.startsWith('?')) return [];
-    if (path === '/auth/challenge') return { id: 'challenge', message: 'Local sign-in' };
+    if (path === '/auth/challenge') {
+      const id = 'a'.repeat(48);
+      const expiresAt = Date.now() + 300000;
+      const message = ['Superhero Shorts sign-in', `Origin: ${window.location.origin}`, 'Network: ae_uat',
+        'Contract: ct_test', `Address: ${mocks.actor}`, `Nonce: ${id}`, `Expires: ${new Date(expiresAt).toISOString()}`,
+        'This authenticates uploads and creator actions. It does not transfer tokens.'].join('\n');
+      return { id, expiresAt, message };
+    }
     if (path === '/auth/verify') return { address: mocks.actor, token: 'session', expiresAt: Date.now() + 1800000 };
     if (path === '/dashboard') return { ...dashboard, account: { ...dashboard.account, address: mocks.actor } };
     return {};
   });
+});
+
+it('rejects a substituted creator challenge before opening the wallet', async () => {
+  const original = mocks.request.getMockImplementation()!;
+  mocks.request.mockImplementation(async (path, ...args) => {
+    const response = await original(path, ...args);
+    return path === '/auth/challenge' ? { ...response, message: 'Authorize a different operation' } : response;
+  });
+  const hook = renderHook(useShorts);
+  await waitFor(() => expect(hook.result.current.config).toBeDefined());
+  await act(async () => { await hook.result.current.signIn(); });
+  expect(mocks.sign).not.toHaveBeenCalled();
+  expect(mocks.request.mock.calls.some(([path]) => path === '/auth/verify')).toBe(false);
+  expect(hook.result.current.message).toContain('Invalid Studio sign-in');
 });
 
 describe('paginated feed integration', () => {
@@ -415,11 +437,11 @@ describe('Shorts wallet session and recovery', () => {
     await waitFor(() => expect(result.current.feed).toHaveLength(1));
     expect(result.current.authenticated).toBe(false);
     expect(result.current.personal.preferences).not.toHaveProperty('measured');
-    await act(async () => { result.current.playback('video', 'event', 0, 'measured-token'); });
+    await act(async () => { result.current.playback('video', 0, 'measured-token'); });
     expect(result.current.feed[0].views).toBe(0);
-    await act(async () => { result.current.playback('video', 'event', 1.9, 'measured-token'); });
+    await act(async () => { result.current.playback('video', 1.9, 'measured-token'); });
     expect(mocks.request.mock.calls.some(([path]) => path.endsWith('/playback'))).toBe(false);
-    await act(async () => { result.current.playback('video', 'event', 2.5, 'measured-token'); });
+    await act(async () => { result.current.playback('video', 2.5, 'measured-token'); });
     expect(result.current.feed[0].views).toBe(1);
     expect(mocks.request).toHaveBeenCalledWith('/video/playback', expect.objectContaining({ seconds: 2.5, source: 'for-you' }), undefined, { keepalive: true, timeout: 10000 });
     const event = mocks.request.mock.calls.find(([path]) => path.endsWith('/playback'))![1];
@@ -427,7 +449,7 @@ describe('Shorts wallet session and recovery', () => {
     expect(event).not.toHaveProperty('token');
     expect(event.proof).toBe('signed-proof');
     act(() => result.current.personal.update({ topics: ['Art'] }));
-    await act(async () => { result.current.playback('video', 'event', 4, 'measured-token'); });
+    await act(async () => { result.current.playback('video', 4, 'measured-token'); });
     expect(result.current.feed[0].views).toBe(1);
     expect(mocks.request).toHaveBeenLastCalledWith('/video/playback', expect.objectContaining({ id: event.id, session: event.session, seconds: 4 }), undefined, { keepalive: true, timeout: 10000 });
   });
@@ -901,7 +923,7 @@ describe('Shared links remain separate from the discovery feed', () => {
     mocks.pathname = '/shorts'; mocks.search = '?short=expired';
     const original = mocks.request.getMockImplementation()!;
     mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
-      if (path.startsWith('/shared/')) throw new Error('Video is not available');
+      if (path.startsWith('/shared/')) throw new ShortsApiError('Video is not available', 404);
       return original(path, ...args);
     });
     const hook = renderHook(useShorts);
@@ -1087,7 +1109,6 @@ describe('Creator access follows the main wallet', () => {
 
   it('invalidates a revoked server session without disconnecting the main wallet', async () => {
     const first = await startLike(); first.unmount();
-    const { ShortsApiError } = await import('../api');
     const original = mocks.request.getMockImplementation()!;
     mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
       if (path === '/dashboard') throw new ShortsApiError('Session expired', 401);
@@ -1111,7 +1132,7 @@ describe('Creator access follows the main wallet', () => {
     await waitFor(() => expect(hook.result.current.config).toBeDefined());
     let operation: Promise<unknown>;
     act(() => { operation = hook.result.current.signIn(); });
-    await waitFor(() => expect(mocks.request).toHaveBeenCalledWith('/auth/verify', { id: 'challenge', signature: 'signature' }));
+    await waitFor(() => expect(mocks.request).toHaveBeenCalledWith('/auth/verify', { id: 'a'.repeat(48), signature: 'signature' }));
     mocks.actor = 'ak_other'; hook.rerender();
     await act(async () => { finish({ address: 'ak_creator', token: 'old', expiresAt: Date.now() + 60000 }); await operation; });
     expect(getDefaultStore().get(creatorSessionAtom)).toBeUndefined();
@@ -1360,7 +1381,6 @@ describe('durable upload creation', () => {
   });
   it('does not automatically replace an expired keyed request', async () => {
     vi.stubGlobal('crypto', (await import('node:crypto')).webcrypto);
-    const { ShortsApiError } = await import('../api');
     const original = mocks.request.getMockImplementation()!;
     const keys: unknown[] = [];
     mocks.request.mockImplementation(async (path: string, body?: Record<string, unknown>, ...args: unknown[]) => {

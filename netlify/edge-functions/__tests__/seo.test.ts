@@ -11,7 +11,8 @@
  * which the HTML tokenizer never recognizes as tag syntax), so the payload renders as inert
  * text and the JSON-LD block remains valid, parseable JSON. */
 
-import { injectHead, jsonLdSafe, stripTokenTagEnvelopes } from '../seo';
+import { vi } from 'vitest';
+import seo, { injectHead, jsonLdSafe, stripTokenTagEnvelopes } from '../seo';
 
 const BASE_HTML = '<!doctype html><html><head><meta charset="utf-8"></head><body></body></html>';
 const BREAKOUT_PAYLOAD = '</script><script>alert(1)</script>';
@@ -25,6 +26,21 @@ const PARA_SEP = String.fromCharCode(0x2029);
 function parseHtml(html: string): Document {
   return new DOMParser().parseFromString(html, 'text/html');
 }
+
+it('shares a reply using its first deliverable attachment and the API image origin', async () => {
+  const cid = `bafy${'a'.repeat(55)}`;
+  vi.stubGlobal('Netlify', { env: { get: () => undefined } });
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json({ media: ['comment:42_v3', null, `ipfs:superhero:images:${cid}`] })));
+  try {
+    const next = () => new Response(BASE_HTML, { headers: { 'content-type': 'text/html' } });
+    const response = await seo(new Request('https://superhero.com/post/43'), { next });
+    const doc = parseHtml(await response.text());
+    const url = `https://api.superhero.com/profile-images/images/${cid}/image.webp`;
+    expect(doc.querySelector('meta[property="og:image"]')?.getAttribute('content')).toBe(url);
+    const schema = JSON.parse(doc.querySelector('script[type="application/ld+json"]')!.textContent!);
+    expect(schema.image).toEqual([url]);
+  } finally { vi.unstubAllGlobals(); }
+});
 
 describe('jsonLdSafe', () => {
   it('escapes <, >, and / so `</script>` never appears literally in the output', () => {

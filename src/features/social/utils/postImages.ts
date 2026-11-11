@@ -1,3 +1,12 @@
+import { imageUrl } from '@/features/profile-images/api';
+
+export function postMediaUrls(media?: unknown): string[] {
+  if (!Array.isArray(media)) return [];
+  return [...new Set(media.map((value) => imageUrl(value, 'full')
+    || (typeof value === 'string' && /^https?:\/\//i.test(value) ? value : undefined))
+    .filter((value): value is string => !!value))];
+}
+
 export const MAX_POST_IMAGES = 4;
 export const POST_IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp';
 

@@ -74,10 +74,11 @@ export function usePostImages() {
         cids.push(cid);
       }
       check();
-      const result = await imageRequest<{ media: string[] }>('/attachments', { cids: [...new Set(cids)] }, session.token, controller.signal);
+      const unique = [...new Set(cids)];
+      const result = await imageRequest<{ media: string[] }>('/attachments', { cids: unique }, session.token, controller.signal);
       check();
-      if (!Array.isArray(result.media) || result.media.length !== new Set(cids).size
-        || result.media.some((reference, index) => reference !== imageReference([...new Set(cids)][index]))) throw new Error('Invalid image attachment response.');
+      if (!Array.isArray(result.media) || result.media.length !== unique.length
+        || result.media.some((reference, index) => reference !== imageReference(unique[index]))) throw new Error('Invalid image attachment response.');
       return result.media;
     } finally {
       if (operation.current === controller) { operation.current = null; setProgress(''); }

@@ -29,6 +29,14 @@ const fixture = () => {
 };
 
 describe('bounded Shorts feed window', () => {
+  it('discovers the first published Short when an empty public feed refreshes', async () => {
+    const f = fixture();
+    f.page.mockResolvedValueOnce({ items: [], next: null });
+    await f.feed.refresh();
+    await f.feed.refresh();
+    expect(f.snapshot.items).toEqual(batch(0));
+  });
+
   it('recovers a temporarily busy refresh without partially committing batches or losing its cursor', async () => {
     const f = fixture(); await f.feed.refresh(); await f.feed.more();
     vi.useFakeTimers();

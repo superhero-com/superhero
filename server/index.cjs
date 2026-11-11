@@ -19,7 +19,7 @@ const APPLE_APP_SITE_ASSOCIATION = path.join(
   '.well-known',
   'apple-app-site-association',
 );
-const API_BASE = process.env.SUPERHERO_API_URL || 'https://api.superhero.com';
+const API_BASE = process.env.SUPERHERO_API_URL || process.env.VITE_SUPERHERO_API_URL || 'https://api.superhero.com';
 
 // Load template once
 let indexHtml = fs.readFileSync(INDEX_HTML, 'utf8');
@@ -55,7 +55,25 @@ function envInject(html) {
 
 function truncate(s, n){ const t=(s||'').trim(); return t.length<=n?t:t.slice(0,Math.max(0,n-1))+'…'; }
 
-function absolutize(url, origin){ if(!url) return undefined; const image = /^ipfs:superhero:images:(bafy[a-z2-7]{55})(-preview)?$/.exec(url); if(image) return `${(process.env.PROFILE_MEDIA_PUBLIC_URL || `${API_BASE}/profile-images`).replace(/\/$/, '')}/images/${image[1]}/${image[2] ? 'thumb' : 'image'}.webp`; if(/^https?:\/\//i.test(url)) return url; if(url.startsWith('//')) return `https:${url}`; if(url.startsWith('/')) return `${origin}${url}`; return `${origin}/${url}`; }
+function absolutize(value, origin) {
+  if (typeof value !== 'string' || !value) return undefined;
+  try {
+    const image = /^ipfs:superhero:images:(bafy[a-z2-7]{55})(-preview)?$/.exec(value);
+    if (image) {
+      const configured = process.env.PROFILE_MEDIA_PUBLIC_URL || process.env.VITE_PROFILE_MEDIA_PUBLIC_URL;
+      const api = new URL(process.env.VITE_PROFILE_MEDIA_API_URL || API_BASE, origin);
+      const base = configured ? new URL(configured, origin) : new URL('/profile-images', api);
+      if (!['http:', 'https:'].includes(base.protocol) || base.search || base.hash || base.username || base.password) return undefined;
+      return `${base.href.replace(/\/$/, '')}/images/${image[1]}/${image[2] ? 'thumb' : 'image'}.webp`;
+    }
+    const url = new URL(value, origin);
+    return ['http:', 'https:'].includes(url.protocol) ? url.href : undefined;
+  } catch { return undefined; }
+}
+
+function postImages(media, origin) {
+  return Array.isArray(media) ? media.map(value => absolutize(value, origin)).filter(Boolean) : [];
+}
 
 const BASE_API = API_BASE.replace(/\/$/, '');
 
@@ -131,12 +149,12 @@ async function buildMeta(pathname, origin){
     if (data) {
       const raw = stripTokenTagEnvelopes(String(data?.content || ''));
       const content = raw.replace(/\s+/g,' ').trim();
-      const media = Array.isArray(data?.media) ? data.media : [];
+      const images = postImages(data.media, origin);
       return {
         title: `${truncate(content,80) || 'Post'} – Superhero`,
         description: truncate(content,200) || 'View post on Superhero, the crypto social network.',
         canonical: `${origin}/post/${data?.slug || segment}`,
-        ogImage: absolutize(media[0], origin) || `${origin}/og-default.png`,
+        ogImage: images[0] || `${origin}/og-default.png`,
         ogType: 'article',
         jsonLd: {
           '@context': 'https://schema.org',
@@ -145,7 +163,7 @@ async function buildMeta(pathname, origin){
           datePublished: data?.created_at,
           dateModified: data?.updated_at || data?.created_at,
           author: { '@type': 'Person', name: data?.sender_address, identifier: data?.sender_address },
-          image: media.map(url => absolutize(url, origin)),
+          image: images,
           interactionStatistic: [
             {
               '@type': 'InteractionCounter',
@@ -331,7 +349,7 @@ function postMarkdown(data, segment, origin){
   const sender = data?.sender || {};
   const address = sender.address || data?.sender_address || '';
   const author = sender.public_name || address || 'Unknown';
-  const media = Array.isArray(data?.media) ? data.media.filter(Boolean) : [];
+  const media = postImages(data.media, origin);
   const stats = mdStatLines([
     ['Author', address && author !== address ? `${author} (${address})` : (author || address)],
     ['Comments', data?.total_comments],
@@ -339,7 +357,7 @@ function postMarkdown(data, segment, origin){
     ['URL', `${origin}/post/${data?.slug || segment}`],
   ]);
   const parts = [`# Post by ${author}`, content || '_No text content._'];
-  if (media.length) parts.push(media.map((m, i) => `![media ${i + 1}](${absolutize(m, origin)})`).join('\n'));
+  if (media.length) parts.push(media.map((m, i) => `![media ${i + 1}](${m})`).join('\n'));
   parts.push(stats);
   return parts.join('\n\n') + '\n';
 }

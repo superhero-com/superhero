@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Heart } from 'lucide-react';
-import { shortsPricing, type ShortsPricing } from './shorts-pricing';
+import { freeLikeNetworkLabel, type ShortsPricing } from './shorts-pricing';
 
 export const ShortsLikeButton = ({
   count, liked, disabled, onLike, pricing,
@@ -8,7 +8,7 @@ export const ShortsLikeButton = ({
   count: number; liked: boolean; disabled: boolean; onLike: () => void;
   pricing?: ShortsPricing;
 }) => {
-  const payment = shortsPricing(pricing);
+  const payment = freeLikeNetworkLabel(pricing);
   const availableLabel = payment ? 'Like' : 'Likes temporarily unavailable';
   const previous = useRef({ count, liked });
   const [motion, setMotion] = useState({ from: count, to: count, celebrate: false });

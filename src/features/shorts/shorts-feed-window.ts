@@ -111,7 +111,10 @@ export class ShortsFeedWindow {
 
   refresh() {
     return this.run(async () => {
-      if (!this.ready) { await this.readPage(undefined, true); return; }
+      if (!this.ready || (!this.io.revisioned && !this.items.length && !this.next)) {
+        await this.readPage(undefined, true);
+        return;
+      }
       const updated: Short[] = [];
       for (let i = 0; i < Math.max(this.items.length, this.io.revisioned ? 1 : 0); i += PAGE_SIZE) {
         const ids = this.items.slice(i, i + PAGE_SIZE).map((s) => s.id);

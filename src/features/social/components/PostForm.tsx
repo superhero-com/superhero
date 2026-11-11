@@ -411,7 +411,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
     // Do not auto-append the required hashtag; the Post button is disabled until present
     const trimmed = text.trim();
     if ((!trimmed && !postImages.images.length) || submitting.current) return;
-    if (!activeAccount) return;
+    if (!activeAccount || (!isPost && !postId)) return;
     // Expand display runs to their `[account:{address}]` storage form for the wire.
     const serialized = serializeMentions(text, mentions).trim();
 
@@ -424,23 +424,15 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
       : { type: TxPayloadType.CreateComment, postId: postId! } as const;
 
     try {
-      const imageUrls = await postImages.prepare();
+      const attachedMedia = await postImages.prepare();
       if (accountRef.current !== author) throw new Error('Your wallet changed. Please try again.');
-      const attachedMedia = imageUrls;
       if (attachedMedia.length > MAX_POST_IMAGES) throw new Error('Attach up to four images per post.');
       const contract = await initializeContractTyped<TippingV3ContractApi>(
         sdk,
         { aci: TIPPING_V3_ACI as any, address: CONFIG.CONTRACT_V3_ADDRESS },
       );
 
-      let postMedia: string[] = [];
-
-      if (isPost) {
-        // For posts, include media URLs
-        postMedia = attachedMedia;
-      } else if (postId) {
-        postMedia = [`comment:${postId}`, ...attachedMedia];
-      }
+      const postMedia = isPost ? attachedMedia : [`comment:${postId}`, ...attachedMedia];
 
       if (accountRef.current !== author) throw new Error('Your wallet changed. Please try again.');
       notifySubmitted(txPayload);

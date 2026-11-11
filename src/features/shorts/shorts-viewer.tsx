@@ -24,7 +24,7 @@ import { ShortsFollow } from './shorts-follow';
 import type { useShortsSocial } from './use-shorts-social';
 import type { useShortsPreferences } from './shorts-preferences';
 import type { Short } from './types';
-import { shortsPricing, type ShortsPricing } from './shorts-pricing';
+import { freeLikeNetworkLabel, type ShortsPricing } from './shorts-pricing';
 
 type Props = {
   feed: Short[];
@@ -38,12 +38,12 @@ type Props = {
   personal?: ReturnType<typeof useShortsPreferences>;
   social?: ReturnType<typeof useShortsSocial>;
   onConnect?: () => unknown;
-  onPlayback?: (id: string, event: string, seconds: number, token: string) => void;
+  onPlayback?: (id: string, seconds: number, token: string) => void;
   measurementSession?: string;
   onStudio: () => void;
   onUpload: () => void;
-  message: string;
-  onDismissMessage: () => void;
+  loadError?: string;
+  onRetry?: () => void;
   busy: boolean;
   suspended: boolean;
   ready: boolean;
@@ -76,7 +76,7 @@ const ShortPlayer = ({
   const manuallyPaused = useRef(false);
   const playbackStarted = useRef(false);
   const progress = useRef(new PlaybackProgress(short.duration));
-  const measurement = useRef({ id: crypto.randomUUID(), sent: -1, day: new Date().toISOString().slice(0, 10) });
+  const measurement = useRef({ sent: -1, day: '' });
   const playbackRef = useRef(onPlayback);
   playbackRef.current = onPlayback;
   const [captions, setCaptions] = useState(false);
@@ -97,14 +97,14 @@ const ShortPlayer = ({
     if (!playbackRef.current || !playbackStarted.current || !measurementToken.current) return;
     const day = new Date().toISOString().slice(0, 10);
     if (measurement.current.day !== day) {
-      measurement.current = { id: crypto.randomUUID(), sent: -1, day };
+      measurement.current = { sent: -1, day };
       progress.current = new PlaybackProgress(short.duration);
       progress.current.resetPosition(video.current?.currentTime || 0);
     }
     const { seconds } = progress.current;
     if (measurement.current.sent < 0 || seconds - measurement.current.sent >= 2 || (final && seconds > measurement.current.sent) || seconds >= short.duration * 0.95) {
       if (measurement.current.sent === seconds) return;
-      playbackRef.current(short.id, measurement.current.id, seconds, measurementToken.current);
+      playbackRef.current(short.id, seconds, measurementToken.current);
       measurement.current.sent = seconds;
     }
   }, [short.duration, short.id]);
@@ -132,7 +132,7 @@ const ShortPlayer = ({
   const loading = waiting || (warm && !hasFailed && (!hasFrame || hls.status !== 'ready'));
   const measured = !!onPlayback;
   useEffect(() => {
-    measurement.current = { id: crypto.randomUUID(), sent: -1, day: new Date().toISOString().slice(0, 10) };
+    measurement.current = { sent: -1, day: new Date().toISOString().slice(0, 10) };
     progress.current = new PlaybackProgress(short.duration);
     progress.current.resetPosition(video.current?.currentTime || 0);
     playbackStarted.current = !!video.current && !video.current.paused && active && !covered && !document.hidden;
@@ -344,9 +344,9 @@ const ShortPlayer = ({
 
 export const ShortsViewer = ({
   feed, topics, topic, onTopic, onLike, onComments, onReport, onStudio, onUpload,
-  message, onDismissMessage, busy, suspended, ready, personal, social, onConnect, onPlayback, measurementSession, shared = false, pagination, pricing,
+  loadError, onRetry, busy, suspended, ready, personal, social, onConnect, onPlayback, measurementSession, shared = false, pagination, pricing,
 }: Props) => {
-  const payment = shortsPricing(pricing);
+  const networkLabel = freeLikeNetworkLabel(pricing);
   const scroller = useRef<HTMLDivElement>(null);
   const [activeId, setActiveId] = useState('');
   const [muted, setMuted] = useState(true);
@@ -377,6 +377,7 @@ export const ShortsViewer = ({
   }
   if (unavailable) { emptyTitle = 'This Short is unavailable'; emptyMessage = 'It may have been withdrawn or is not published yet.'; }
   if (pagination?.error && !feed.length) { emptyTitle = 'Couldn’t load Shorts'; emptyMessage = pagination.error; }
+  if (loadError) { emptyTitle = 'Couldn’t load Shorts'; emptyMessage = loadError; }
   let pageAction = pagination?.error ? 'Try again' : 'More Shorts';
   if (pagination?.loading) pageAction = 'Loading more Shorts…';
   let why = details && prefs?.topics.includes(details.topic) ? `It matches your interest in ${details.topic}.` : 'Selected using recent watch time, completion, freshness and creator variety. Payments never affect selection.';
@@ -451,7 +452,7 @@ export const ShortsViewer = ({
           <Link to="/" aria-label="Back to Superhero" className="sv-back"><ArrowLeft size={21} /></Link>
           <Clapperboard size={23} />
           <h1>Shorts</h1>
-          {payment && <span className="sv-testnet">{payment.networkLabel}</span>}
+          {networkLabel && <span className="sv-testnet">{networkLabel}</span>}
         </div>
         {shared ? <Link className="sv-discover" to="/shorts">Back to feed</Link> : (
           <button type="button" className="sv-discover" onClick={() => setFilters(true)}>
@@ -515,11 +516,12 @@ export const ShortsViewer = ({
             );
           })}
           {!unavailable && windowEnd < feed.length && <div aria-hidden="true" style={{ height: `${(feed.length - windowEnd) * 100}%` }} />}
-          {!feed.length && !ready && !pagination?.error && !message ? <ShortsPlayerSkeleton /> : (!feed.length || unavailable) && (
+          {!feed.length && !ready && !pagination?.error && !loadError ? <ShortsPlayerSkeleton /> : (!feed.length || unavailable) && (
             <div className="sv-empty">
               <Clapperboard size={38} />
               <h2>{emptyTitle}</h2>
               <p>{emptyMessage}</p>
+              {loadError && <button type="button" onClick={onRetry}>Try again</button>}
               {ready && prefs?.mode === 'following' && social?.status === 'disconnected' && <button type="button" onClick={onConnect}>Connect wallet</button>}
               {ready && prefs?.mode === 'following' && social?.status === 'error' && <button type="button" onClick={social.retry}>Try again</button>}
               {ready && <button type="button" onClick={() => setFilters(true)}>Adjust my feed</button>}
@@ -556,10 +558,10 @@ export const ShortsViewer = ({
         </div>
         )}
       </div>
-      {(notice || message) && (
+      {notice && (
       <div className="sv-toast" role="status">
-        <span>{notice || message}</span>
-        <button type="button" aria-label="Dismiss notification" onClick={() => { setNotice(''); onDismissMessage(); }}><X size={17} /></button>
+        <span>{notice}</span>
+        <button type="button" aria-label="Dismiss notification" onClick={() => setNotice('')}><X size={17} /></button>
       </div>
       )}
       {filters && (
@@ -629,7 +631,7 @@ export const ShortsViewer = ({
               <dt>Views (preview)</dt>
               <dd>{details.views}</dd>
             </dl>
-            <p>{payment ? 'Likes are free. Superhero covers the network fee.' : 'Likes are temporarily unavailable.'}</p>
+            <p>{networkLabel ? 'Likes are free. Superhero covers the network fee.' : 'Likes are temporarily unavailable.'}</p>
             <details>
               <summary>IPFS content identifier</summary>
               <code>{details.cid}</code>
@@ -659,7 +661,6 @@ export const ShortsViewer = ({
       <ShortsDialog label="Report Short" busy={busy} onClose={() => setReporting(undefined)}>
         <form className="sh-modal sv-details" onSubmit={async (e) => { e.preventDefault(); const sent = await onReport(reporting.short.id, reporting.id, reason, detail); if (sent) setReporting(undefined); }}>
           <h2>Report this Short</h2>
-          {message && <p role="status">{message}</p>}
           <p>{reporting.short.title}</p>
           <label htmlFor="short-report-reason">
             Reason

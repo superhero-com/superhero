@@ -45,27 +45,29 @@ export function parseImageReference(value: unknown) {
 }
 
 // The delivery location is deployment configuration, never part of an image identity.
-const deliveryBase = (import.meta.env.VITE_PROFILE_MEDIA_PUBLIC_URL || new URL('/profile-images', base).href).replace(/\/$/, '');
 export function imageUrl(value?: string, variant?: 'full' | 'preview'): string | undefined {
   if (!value) return undefined;
   try {
-    const expected = new URL(deliveryBase);
+    const api = new URL(base, window.location.origin);
+    const configured = import.meta.env.VITE_PROFILE_MEDIA_PUBLIC_URL;
+    const expected = configured ? new URL(configured, window.location.origin) : new URL('/profile-images', api);
+    const prefix = expected.pathname.replace(/\/$/, '');
     if (!['http:', 'https:'].includes(expected.protocol) || expected.username || expected.password || expected.search || expected.hash) return undefined;
     let reference = parseImageReference(value);
     if (!reference) {
       const url = new URL(value);
       if (url.username || url.password || url.search || url.hash) return undefined;
-      const current = url.origin === expected.origin && url.pathname.startsWith(`${expected.pathname}/images/`);
+      const current = url.origin === expected.origin && url.pathname.startsWith(`${prefix}/images/`);
       // Previously published URLs remain readable even after changing hosts/prefixes.
-      const legacy = ['https://superhero.stream', new URL(base).origin].includes(url.origin)
+      const legacy = ['https://superhero.stream', api.origin].includes(url.origin)
         && url.pathname.startsWith('/profile-images/images/');
       if (!current && !legacy) return undefined;
-      const match = /^\/(bafy[a-z2-7]{55})\/(image|thumb)\.webp$/.exec(url.pathname.slice((current ? expected.pathname : '/profile-images').length + 7));
+      const match = /^\/(bafy[a-z2-7]{55})\/(image|thumb)\.webp$/.exec(url.pathname.slice((current ? prefix : '/profile-images').length + 7));
       if (!match) return undefined;
       reference = { cid: match[1], preview: match[2] === 'thumb' };
     }
     const preview = variant ? variant === 'preview' : reference.preview;
-    return `${deliveryBase}/images/${reference.cid}/${preview ? 'thumb' : 'image'}.webp`;
+    return `${expected.origin}${prefix}/images/${reference.cid}/${preview ? 'thumb' : 'image'}.webp`;
   } catch { return undefined; }
 }
 

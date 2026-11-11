@@ -38,12 +38,18 @@ const LIBRARY_NOISE = new Set([
   'https://react.i18next.com', 'https://reactrouter.com', 'https://redux-toolkit.js.org',
   'https://redux.js.org', 'https://schema.org', 'https://socket.io',
   'https://www.tradingview.com', 'https://yoursite.com', 'wss://relay.example.com',
+  // hls.js compares MP4 event scheme IDs against https://aomedia.org/emsg/ID3.
+  'https://aomedia.org',
   // Azure SDK token scope, not an HTTP destination.
   'https://disk.azure.com',
 ]);
 
 // Legacy image identities are rewritten to the configured delivery origin before loading.
-const REFERENCE_ONLY = new Set(['https://superhero.stream']);
+const REFERENCE_ONLY = new Set([
+  'https://superhero.stream',
+  // The configured catalog serves <img> sources under img-src.
+  originOf(process.env.VITE_PROFILE_MEDIA_PUBLIC_URL),
+]);
 
 const URL_RE = /(https|wss):\/\/[a-zA-Z0-9][a-zA-Z0-9._-]*\.[a-zA-Z]{2,}/g;
 

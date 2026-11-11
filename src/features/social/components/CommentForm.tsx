@@ -24,8 +24,6 @@ const CommentForm: React.FC<CommentFormProps> = ({
       onCommentAdded={onCommentAdded}
       placeholder={placeholder ?? t('writeReply')}
       showMediaFeatures
-      showEmojiPicker
-      showGifInput
       characterLimit={280}
       className={appearance === 'integrated' ? '' : 'mt-4'}
     />

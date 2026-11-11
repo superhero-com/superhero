@@ -1,0 +1,36 @@
+# Release builds accept only application inputs. The E2E Dockerfile keeps its
+# own broader context, governed by .dockerignore.
+**
+!Dockerfile
+!Dockerfile.dockerignore
+!package.json
+!package-lock.json
+!index.html
+!vite.config.ts
+!tsconfig*.json
+!postcss.config.cjs
+!tailwind.config.js
+!scripts/
+!scripts/**
+!docker/
+!docker/web-build-apk.lock
+!src/
+!src/**
+!public/
+!public/**
+!server/
+!server/index.cjs
+!server/package.json
+!server/package-lock.json
+!server/lib/
+!server/lib/*.cjs
+**/node_modules
+**/.env
+**/.env.*
+**/.npmrc
+**/*.pem
+**/*.key
+**/*.log
+**/__tests__
+**/*.test.*
+**/*.spec.*

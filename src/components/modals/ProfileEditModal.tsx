@@ -19,6 +19,7 @@ import {
   type ChainNameSponsorshipResponse,
   SuperheroApi,
 } from '@/api/backend';
+import { ProfileImageEditor } from '@/features/profile-images/ProfileImageEditor';
 import { CONFIG } from '@/config';
 import { chainNamesAtom, preferredChainNamesAtom } from '@/atoms/walletAtoms';
 import { useApplyPendingChainName } from '@/hooks/usePreferredChainName';
@@ -1267,7 +1268,10 @@ const ProfileEditModal = ({
               </HelpPanel>
             ) : null}
 
-            {targetAddress ? (
+            {targetAddress && canEdit ? (
+              <ProfileImageEditor key={targetAddress} address={targetAddress} />
+            ) : null}
+            {targetAddress && !canEdit ? (
               <div className="flex items-center justify-center gap-3 p-3">
 
                 <AddressAvatarWithChainName

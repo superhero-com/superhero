@@ -9,7 +9,7 @@ type Meta = {
   ogType?: string;
 };
 
-const API_BASE = 'https://api.superhero.com';
+const apiBase = () => Netlify.env.get('SUPERHERO_API_URL') || Netlify.env.get('VITE_SUPERHERO_API_URL') || 'https://api.superhero.com';
 
 function truncate(s: string, n: number): string {
   const str = (s || '').trim();
@@ -70,12 +70,20 @@ export function jsonLdSafe(schema: Record<string, unknown>): string {
     .replace(PARAGRAPH_SEPARATOR_RE, `${BACKSLASH}u2029`);
 }
 
-function absolutize(url?: string, origin?: string): string | undefined {
-  if (!url) return undefined;
-  if (/^https?:\/\//i.test(url)) return url;
-  if (url.startsWith('//')) return `https:${url}`;
-  if (url.startsWith('/')) return `${origin || ''}${url}`;
-  return `${origin || ''}/${url}`;
+function absolutize(value?: string, origin?: string): string | undefined {
+  if (typeof value !== 'string' || !value) return undefined;
+  try {
+    const image = /^ipfs:superhero:images:(bafy[a-z2-7]{55})(-preview)?$/.exec(value);
+    if (image) {
+      const configured = Netlify.env.get('PROFILE_MEDIA_PUBLIC_URL') || Netlify.env.get('VITE_PROFILE_MEDIA_PUBLIC_URL');
+      const api = new URL(Netlify.env.get('VITE_PROFILE_MEDIA_API_URL') || apiBase(), origin);
+      const base = configured ? new URL(configured, origin) : new URL('/profile-images', api);
+      if (!['http:', 'https:'].includes(base.protocol) || base.search || base.hash || base.username || base.password) return undefined;
+      return `${base.href.replace(/\/$/, '')}/images/${image[1]}/${image[2] ? 'thumb' : 'image'}.webp`;
+    }
+    const url = new URL(value, origin);
+    return ['http:', 'https:'].includes(url.protocol) ? url.href : undefined;
+  } catch { return undefined; }
 }
 
 async function fetchPostBySegment(baseApi: string, seg: string): Promise<any | null> {
@@ -171,7 +179,7 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
   const postMatch = pathname.match(/^\/post\/([^/]+)/);
   if (postMatch) {
     const segment = postMatch[1];
-    const baseApi = API_BASE.replace(/\/$/, '');
+    const baseApi = apiBase().replace(/\/$/, '');
     try {
       // Try direct by segment (works for slug or id)
       let data: any | null = await fetchPostBySegment(baseApi, segment);
@@ -195,11 +203,12 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
         const raw: string = stripTokenTagEnvelopes((data?.content || '').toString());
         const content: string = raw.replace(/\s+/g, ' ').trim();
         const media: string[] = Array.isArray(data?.media) ? data.media : [];
+        const images = media.map((value) => absolutize(value, fullUrl.origin)).filter(Boolean);
         return {
           title: `${truncate(content, 80) || 'Post'} – Superhero`,
           description: truncate(content, 200) || 'View post on Superhero, the crypto social network.',
           canonical: `${fullUrl.origin}/post/${data?.slug || segment}`,
-          ogImage: absolutize(media[0], fullUrl.origin),
+          ogImage: images[0],
           ogType: 'article',
           jsonLd: {
             '@context': 'https://schema.org',
@@ -208,7 +217,7 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
             datePublished: data?.created_at,
             dateModified: data?.updated_at || data?.created_at,
             author: { '@type': 'Person', name: data?.sender_address, identifier: data?.sender_address },
-            image: media,
+            image: images,
             interactionStatistic: [
               {
                 '@type': 'InteractionCounter',
@@ -233,7 +242,7 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
   const userMatch = pathname.match(/^\/users\/([^/]+)/);
   if (userMatch) {
     const address = userMatch[1];
-    const apiUrl = `${API_BASE.replace(/\/$/, '')}/api/accounts/${encodeURIComponent(address)}`;
+    const apiUrl = `${apiBase().replace(/\/$/, '')}/api/accounts/${encodeURIComponent(address)}`;
     try {
       const r = await fetch(apiUrl, { headers: { accept: 'application/json' } });
       if (r.ok) {
@@ -272,7 +281,7 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
   if (tokenMatch) {
     const tokenName = tokenMatch[1];
     const address = tokenName.toUpperCase();
-    const apiUrl = `${API_BASE.replace(/\/$/, '')}/api/tokens/${encodeURIComponent(address)}`;
+    const apiUrl = `${apiBase().replace(/\/$/, '')}/api/tokens/${encodeURIComponent(address)}`;
     try {
       const r = await fetch(apiUrl, { headers: { accept: 'application/json' } });
       if (r.ok) {

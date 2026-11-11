@@ -10,6 +10,8 @@ interface AspectMediaProps {
   maxHeight?: string | number; // e.g. "50vh" or 500
 }
 
+export const isVideoUrl = (src: string) => /\.(mp4|webm|mov)$/i.test(src.split(/[?#]/, 1)[0]);
+
 // Renders media preserving its intrinsic aspect ratio.
 // - Parses optional w/h from URL hash (e.g. #w=480&h=270)
 // - Falls back to natural dimensions on load
@@ -20,7 +22,7 @@ export const AspectMedia = ({
   const altText = alt ?? t('common.aria.media');
   const [dims, setDims] = useState<{ w: number; h: number } | null>(null);
 
-  const isVideo = /\.(mp4|webm|mov)$/i.test(src);
+  const isVideo = isVideoUrl(src);
   const ratioStyle = useMemo(() => {
     if (!dims) return { maxHeight } as React.CSSProperties;
     return { aspectRatio: `${dims.w} / ${dims.h}`, maxHeight } as React.CSSProperties;

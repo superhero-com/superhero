@@ -1,0 +1,100 @@
+import { fireEvent, render, screen } from '@testing-library/react';
+import {
+  beforeEach, describe, expect, it, vi,
+} from 'vitest';
+import {
+  TransactionNotificationBanner, TransactionNotificationProvider, TxPayloadType, useTransactionNotification,
+} from '@/features/transaction-notification';
+import { ShortsDialog } from '../shorts-dialog';
+
+beforeEach(() => {
+  HTMLDialogElement.prototype.showModal = vi.fn(function showModal(this: HTMLDialogElement) { this.open = true; });
+  HTMLDialogElement.prototype.show = vi.fn(function show(this: HTMLDialogElement) { this.open = true; });
+  HTMLDialogElement.prototype.close = function close() { this.open = false; };
+});
+
+describe('Shorts wallet handoff', () => {
+  it('keeps comments visible without a modal lock during signing, preserving the draft and scroll', () => {
+    const onClose = vi.fn();
+    const comments = (suspended: boolean) => (
+      <ShortsDialog label="Video comments" suspended={suspended} keepVisibleWhenSuspended busy={suspended} onClose={onClose}>
+        <div data-testid="comment-list"><p>Existing comment</p></div>
+        <textarea aria-label="Draft" defaultValue="My new comment" />
+      </ShortsDialog>
+    );
+    const view = render(comments(false));
+    const dialog = screen.getByRole('dialog');
+    const list = screen.getByTestId('comment-list');
+    list.scrollTop = 80;
+    view.rerender(comments(true));
+    expect(dialog).toHaveAttribute('open');
+    expect(HTMLDialogElement.prototype.show).toHaveBeenCalledOnce();
+    expect(HTMLDialogElement.prototype.showModal).toHaveBeenCalledOnce();
+    expect(list.scrollTop).toBe(80);
+    expect(screen.getByLabelText('Draft')).toHaveValue('My new comment');
+    fireEvent(dialog, new Event('cancel', { cancelable: true }));
+    expect(onClose).not.toHaveBeenCalled();
+    view.rerender(comments(false));
+    expect(dialog).toHaveAttribute('open');
+    expect(HTMLDialogElement.prototype.showModal).toHaveBeenCalledTimes(2);
+    expect(list.scrollTop).toBe(80);
+  });
+
+  it('releases the native top layer for wallet confirmation and restores the review after rejection', () => {
+    const onClose = vi.fn();
+    const review = (suspended: boolean, busy: boolean) => (
+      <ShortsDialog label="Hosting purchase" suspended={suspended} busy={busy} onClose={onClose}>
+        <input aria-label="Budget" defaultValue="0.1" />
+      </ShortsDialog>
+    );
+    const { container, rerender } = render(review(false, false));
+    const dialog = container.querySelector('dialog')!;
+    fireEvent.change(screen.getByLabelText('Budget'), { target: { value: '0.2' } });
+    expect(dialog.open).toBe(true);
+    rerender(review(true, true));
+    expect(dialog.open).toBe(false);
+    expect(onClose).not.toHaveBeenCalled();
+    rerender(review(false, false));
+    expect(dialog.open).toBe(true);
+    expect((screen.getByLabelText('Budget') as HTMLInputElement).value).toBe('0.2');
+    fireEvent(dialog, new Event('cancel', { cancelable: true }));
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+});
+
+const Notify = () => {
+  const { notifyPending } = useTransactionNotification();
+  return (
+    <button
+      type="button"
+      onClick={() => notifyPending({
+        type: TxPayloadType.ShortsAction, id: 'comment', wallet: true, pendingTitle: 'Confirming on blockchain', pendingMessage: 'Your comment is being confirmed.', confirmedTitle: 'Comment published',
+      })}
+    >
+      Notify
+    </button>
+  );
+};
+
+it('keeps the shared banner in the active dialog top layer and restores it during wallet handoff', () => {
+  const app = (open: boolean, suspended = false) => (
+    <TransactionNotificationProvider>
+      <TransactionNotificationBanner />
+      <Notify />
+      {open && <ShortsDialog label="Comments" busy={false} suspended={suspended} keepVisibleWhenSuspended onClose={vi.fn()}><textarea aria-label="Comment draft" defaultValue="Keep my draft" /></ShortsDialog>}
+    </TransactionNotificationProvider>
+  );
+  const view = render(app(true));
+  fireEvent.click(screen.getByRole('button', { name: 'Notify' }));
+  expect(screen.getByRole('dialog')).toContainElement(screen.getByRole('button', { name: 'Dismiss notification' }));
+  view.rerender(app(true, true));
+  expect(screen.getByRole('dialog')).toHaveAttribute('open');
+  expect(view.container.querySelector('dialog')).not.toContainElement(screen.getByRole('button', { name: 'Dismiss notification' }));
+  view.rerender(app(true));
+  expect(screen.getByRole('dialog')).toContainElement(screen.getByRole('button', { name: 'Dismiss notification' }));
+  expect(screen.getByLabelText('Comment draft')).toHaveValue('Keep my draft');
+  view.rerender(app(false));
+  expect(screen.getByText('Your comment is being confirmed.')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Dismiss notification' }));
+  expect(screen.queryByText('Your comment is being confirmed.')).toBeNull();
+});

@@ -1,0 +1,113 @@
+import { useEffect } from 'react';
+import { atom, useAtom } from 'jotai';
+import { CONFIG } from '@/config';
+import { request, SHORTS_API } from './api';
+
+export type CreatorLogin = { address: string; token: string; expiresAt: number; kind?: 'connected-wallet' | 'wallet-signature' };
+export type CreatorSession = CreatorLogin & { api: string; network: string; contract: string };
+// Clear browser access immediately; ask the configured API to invalidate its token.
+// If offline, the server's short session lifetime still applies. Never send an old
+// environment's credential to a different API or persist a logout retry token.
+export const revokeCreatorSession = async (session: Pick<CreatorSession, 'api' | 'token'>) => {
+  if (session.api !== SHORTS_API) return false;
+  try {
+    await request('/auth/logout', {}, session.token, { keepalive: true, timeout: 10000 });
+    return true;
+  } catch { return false; }
+};
+export interface CreatorChallenge { id: string; message: string; expiresAt: number }
+
+export function verifyCreatorChallenge(challenge: CreatorChallenge, address: string, contract: string) {
+  if (!/^[a-f0-9]{48}$/.test(challenge.id) || !Number.isSafeInteger(challenge.expiresAt)
+    || challenge.expiresAt <= Date.now() || challenge.expiresAt > Date.now() + 360000) {
+    throw new Error('Invalid Studio sign-in request.');
+  }
+  const expected = [
+    'Superhero Shorts sign-in',
+    `Origin: ${window.location.origin}`,
+    `Network: ${CONFIG.NETWORK}`,
+    `Contract: ${contract}`,
+    `Address: ${address}`,
+    `Nonce: ${challenge.id}`,
+    `Expires: ${new Date(challenge.expiresAt).toISOString()}`,
+    'This authenticates uploads and creator actions. It does not transfer tokens.',
+  ].join('\n');
+  if (challenge.message !== expected) throw new Error('Invalid Studio sign-in request.');
+  return expected;
+}
+const pendingConnections = new Map<string, { session: Promise<CreatorSession>; owners: number }>();
+export async function openConnectedCreatorSession(
+  address: string,
+  network: string,
+  contract: string,
+  accept: (session: CreatorSession) => boolean,
+) {
+  if (!address || network !== 'ae_uat' || network !== CONFIG.NETWORK || !contract) {
+    throw new Error('Connect your wallet on æternity testnet to open Studio.');
+  }
+  const scope = JSON.stringify([SHORTS_API, address, network, contract]);
+  let pending = pendingConnections.get(scope);
+  if (!pending) {
+    const session = request<CreatorLogin>('/auth/connect', { address }).then((next) => {
+      if (next.address !== address || next.kind !== 'connected-wallet' || next.expiresAt <= Date.now()) {
+        throw new Error('Studio could not connect to this account. Please try again.');
+      }
+      return {
+        ...next, api: SHORTS_API, network, contract,
+      };
+    }).finally(() => pendingConnections.delete(scope));
+    pending = { session, owners: 0 };
+    pendingConnections.set(scope, pending);
+  }
+  pending.owners += 1;
+  const session = await pending.session;
+  if (accept(session)) return session.token;
+  // A remounted Studio can still adopt the same in-flight request.
+  pending.owners -= 1;
+  if (pending.owners === 0) await revokeCreatorSession(session);
+  throw new Error('Wallet changed while opening Studio.');
+}
+const storageKey = 'shorts:creator-session';
+const readSession = (): CreatorSession | undefined => {
+  try {
+    const value = JSON.parse(sessionStorage.getItem(storageKey) || 'null');
+    if (value && typeof value.address === 'string' && typeof value.token === 'string'
+      && typeof value.contract === 'string' && value.api === SHORTS_API
+      && value.network === CONFIG.NETWORK && Number.isFinite(value.expiresAt)
+      && value.expiresAt > Date.now()) return value;
+  } catch { /* Storage may be unavailable; the in-memory session still works. */ }
+  return undefined;
+};
+const currentSessionAtom = atom<CreatorSession | undefined>(readSession());
+// Shared with the app wallet lifecycle, so leaving Shorts does not sign out.
+// Tab storage preserves an unexpired session on reload; no localStorage credential is used.
+export const creatorSessionAtom = atom(
+  (get) => get(currentSessionAtom),
+  (get, set, update: CreatorSession | undefined | ((current: CreatorSession | undefined) => CreatorSession | undefined)) => {
+    const current = get(currentSessionAtom);
+    const next = typeof update === 'function' ? update(current) : update;
+    set(currentSessionAtom, next);
+    try {
+      if (next) sessionStorage.setItem(storageKey, JSON.stringify(next));
+      else sessionStorage.removeItem(storageKey);
+    } catch { /* An unavailable tab store must not break wallet actions. */ }
+    if (current && current.token !== next?.token) revokeCreatorSession(current);
+  },
+);
+
+// Runs in App, including while the user is outside Shorts. Disconnecting or
+// changing the main account invalidates creator access immediately.
+export const useSyncShortsWalletSession = (address?: string) => {
+  const [session, setSession] = useAtom(creatorSessionAtom);
+  useEffect(() => {
+    if (!session) return undefined;
+    const clear = () => setSession((current) => (current === session ? undefined : current));
+    if (session.address !== address || session.api !== SHORTS_API
+      || session.network !== CONFIG.NETWORK || session.expiresAt <= Date.now()) {
+      clear();
+      return undefined;
+    }
+    const timer = setTimeout(clear, session.expiresAt - Date.now());
+    return () => clearTimeout(timer);
+  }, [address, session, setSession]);
+};

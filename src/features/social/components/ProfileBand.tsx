@@ -1,11 +1,13 @@
+import { useState } from 'react';
+import { imageUrl } from '@/features/profile-images/api';
+import { useProfileImages } from '@/features/profile-images/useProfileImages';
+
 interface ProfileBandProps {
   address?: string;
   className?: string;
 }
 
-// Deterministic banner derived from the address. There is no banner/cover field
-// in the API, so the gradient is computed from the address alone and stays inside
-// the teal -> green -> blue family the product already uses; no new colour token.
+// Address-derived fallback while a cover is unavailable.
 function hashAddress(address: string): number {
   let hash = 0;
   for (let i = 0; i < address.length; i += 1) {
@@ -23,13 +25,20 @@ export function addressGradient(address: string): string {
 }
 
 /** Block 1 — the address-derived header band. Height is set by the parent. */
-const ProfileBand = ({ address = '', className = '' }: ProfileBandProps) => (
-  <div
-    aria-hidden
-    data-testid="profile-band"
-    className={`w-full ${className}`}
-    style={{ background: addressGradient(address) }}
-  />
-);
+const ProfileBand = ({ address = '', className = '' }: ProfileBandProps) => {
+  const images = useProfileImages(address);
+  const url = imageUrl(images.data?.cover_ref || images.data?.coverurl);
+  const [failed, setFailed] = useState<string>();
+  return (
+    <div
+      aria-hidden
+      data-testid="profile-band"
+      className={`w-full overflow-hidden ${className}`}
+      style={{ background: addressGradient(address) }}
+    >
+      {url && failed !== url && <img src={url} alt="" className="h-full w-full object-cover" onError={() => setFailed(url)} />}
+    </div>
+  );
+};
 
 export default ProfileBand;

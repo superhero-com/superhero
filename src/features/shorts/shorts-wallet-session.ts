@@ -35,15 +35,20 @@ export function verifyCreatorChallenge(challenge: CreatorChallenge, address: str
   if (challenge.message !== expected) throw new Error('Invalid Studio sign-in request.');
   return expected;
 }
-const pendingConnections = new Map<string, Promise<CreatorSession>>();
-export const openConnectedCreatorSession = (address: string, network: string, contract: string) => {
+const pendingConnections = new Map<string, { session: Promise<CreatorSession>; owners: number }>();
+export async function openConnectedCreatorSession(
+  address: string,
+  network: string,
+  contract: string,
+  accept: (session: CreatorSession) => boolean,
+) {
   if (!address || network !== 'ae_uat' || network !== CONFIG.NETWORK || !contract) {
-    return Promise.reject(new Error('Connect your wallet on æternity testnet to open Studio.'));
+    throw new Error('Connect your wallet on æternity testnet to open Studio.');
   }
   const scope = JSON.stringify([SHORTS_API, address, network, contract]);
   let pending = pendingConnections.get(scope);
   if (!pending) {
-    pending = request<CreatorLogin>('/auth/connect', { address }).then((next) => {
+    const session = request<CreatorLogin>('/auth/connect', { address }).then((next) => {
       if (next.address !== address || next.kind !== 'connected-wallet' || next.expiresAt <= Date.now()) {
         throw new Error('Studio could not connect to this account. Please try again.');
       }
@@ -51,10 +56,17 @@ export const openConnectedCreatorSession = (address: string, network: string, co
         ...next, api: SHORTS_API, network, contract,
       };
     }).finally(() => pendingConnections.delete(scope));
+    pending = { session, owners: 0 };
     pendingConnections.set(scope, pending);
   }
-  return pending;
-};
+  pending.owners += 1;
+  const session = await pending.session;
+  if (accept(session)) return session.token;
+  // A remounted Studio can still adopt the same in-flight request.
+  pending.owners -= 1;
+  if (pending.owners === 0) await revokeCreatorSession(session);
+  throw new Error('Wallet changed while opening Studio.');
+}
 const storageKey = 'shorts:creator-session';
 const readSession = (): CreatorSession | undefined => {
   try {

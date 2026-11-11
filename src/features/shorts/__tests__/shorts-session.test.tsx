@@ -945,6 +945,20 @@ const enableConnectedStudio = () => {
   });
 };
 
+function delayConnectedStudioSession() {
+  enableConnectedStudio();
+  const original = mocks.request.getMockImplementation()!;
+  let finish: (value: unknown) => void = () => undefined;
+  const pending = new Promise((resolve) => { finish = resolve; });
+  mocks.request.mockImplementation((path, body, ...args) => {
+    if (path === '/auth/connect' && body?.address === 'ak_creator') return pending;
+    return original(path, body, ...args);
+  });
+  return () => finish({
+    address: 'ak_creator', token: 'late', kind: 'connected-wallet', expiresAt: Date.now() + 60000,
+  });
+}
+
 describe('Connection-only local Studio', () => {
   it('opens all creator data from the main connection and requests only the claim transaction', async () => {
     enableConnectedStudio();
@@ -989,28 +1003,45 @@ describe('Connection-only local Studio', () => {
     expect(mocks.sign).not.toHaveBeenCalled();
   });
 
-  it('discards a late connection for a previous account and clears data on disconnect', async () => {
-    enableConnectedStudio();
-    const original = mocks.request.getMockImplementation()!;
-    let finish: (value: unknown) => void = () => undefined;
-    mocks.request.mockImplementation(async (path: string, body?: { address?: string }, ...args: unknown[]) => {
-      if (path === '/auth/connect' && body?.address === 'ak_creator') return new Promise((resolve) => { finish = resolve; });
-      return original(path, body, ...args);
-    });
+  it('revokes a late connection for a previous account and clears data on disconnect', async () => {
+    const finish = delayConnectedStudioSession();
     const hook = renderHook(useShorts);
     await waitFor(() => expect(mocks.request).toHaveBeenCalledWith('/auth/connect', { address: 'ak_creator' }));
     mocks.actor = 'ak_other'; hook.rerender();
     await waitFor(() => expect(hook.result.current.authenticated).toBe(true));
-    await act(async () => {
-      finish({
-        address: 'ak_creator', token: 'late', kind: 'connected-wallet', expiresAt: Date.now() + 60000,
-      });
-    });
+    await act(async () => { finish(); });
+    expect(mocks.request.mock.calls.filter(([path]) => path === '/auth/logout')).toEqual([
+      ['/auth/logout', {}, 'late', { keepalive: true, timeout: 10000 }],
+    ]);
     expect(getDefaultStore().get(creatorSessionAtom)?.address).toBe('ak_other');
     mocks.actor = ''; hook.rerender();
     expect(hook.result.current.dashboard).toBeUndefined();
     expect(getDefaultStore().get(creatorSessionAtom)).toBeUndefined();
     expect(mocks.sign).not.toHaveBeenCalled();
+  });
+
+  it('revokes a connection that completes after leaving Studio', async () => {
+    const finish = delayConnectedStudioSession();
+    const hook = renderHook(useShorts);
+    await waitFor(() => expect(mocks.request).toHaveBeenCalledWith('/auth/connect', { address: 'ak_creator' }));
+    hook.unmount();
+    await act(async () => { finish(); });
+    expect(mocks.request).toHaveBeenCalledWith('/auth/logout', {}, 'late', { keepalive: true, timeout: 10000 });
+    expect(getDefaultStore().get(creatorSessionAtom)).toBeUndefined();
+  });
+
+  it('keeps a shared connection adopted by a remounted Studio', async () => {
+    const finish = delayConnectedStudioSession();
+    const previous = renderHook(useShorts);
+    await waitFor(() => expect(mocks.request).toHaveBeenCalledWith('/auth/connect', { address: 'ak_creator' }));
+    previous.unmount();
+    const current = renderHook(useShorts);
+    await waitFor(() => expect(current.result.current.config?.creatorAccess).toBe('connected-wallet'));
+    await act(async () => { finish(); });
+    await waitFor(() => expect(current.result.current.authenticated).toBe(true));
+    expect(getDefaultStore().get(creatorSessionAtom)?.token).toBe('late');
+    expect(mocks.request.mock.calls.filter(([path]) => path === '/auth/connect')).toHaveLength(1);
+    expect(mocks.request.mock.calls.filter(([path]) => path === '/auth/logout')).toHaveLength(0);
   });
 
   it('shows a recoverable API connection error instead of opening the wallet or retrying in a loop', async () => {

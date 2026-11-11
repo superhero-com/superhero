@@ -480,11 +480,12 @@ export function useShorts() {
     const scope = creatorScope;
     setCreatorConnecting(true); setCreatorConnectionError('');
     try {
-      const next = await openConnectedCreatorSession(actor, config?.network || '', config?.contract || '');
-      if (currentCreatorScope.current !== scope) throw new Error('Wallet changed while opening Studio.');
-      currentLogin.current = next;
-      setLogin(next);
-      return next.token;
+      return await openConnectedCreatorSession(actor, config?.network || '', config?.contract || '', (session) => {
+        if (currentCreatorScope.current !== scope) return false;
+        currentLogin.current = session;
+        setLogin(session);
+        return true;
+      });
     } catch (error) {
       if (currentCreatorScope.current === scope) setCreatorConnectionError(error instanceof Error ? error.message : 'Studio could not connect. Please try again.');
       throw error;

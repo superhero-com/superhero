@@ -1,7 +1,7 @@
 import {
   afterEach, expect, it, vi,
 } from 'vitest';
-import { ShortsApiError } from '../api';
+import { request, ShortsApiError } from '../api';
 import { uploadResumeKey, waitForPreparedShort, type UploadSession } from '../shorts-upload-session';
 
 const queued: UploadSession = {
@@ -36,6 +36,32 @@ it('recovers from temporary status-read failures without replaying any mutation'
   await vi.runAllTimersAsync();
   expect(await result).toEqual(ready.video);
   expect(opts.read).toHaveBeenCalledTimes(3);
+});
+
+it('resumes status reads after HTML and empty gateway errors', async () => {
+  const fetchStatus = vi.fn()
+    .mockResolvedValueOnce(new Response('<html>Unavailable</html>', { status: 503 }))
+    .mockResolvedValueOnce(new Response(null, { status: 429 }))
+    .mockResolvedValueOnce(Response.json(ready));
+  vi.stubGlobal('fetch', fetchStatus);
+  const opts = options(vi.fn(() => request<UploadSession>('/uploads/owned')));
+  const prepared = waitForPreparedShort(queued, { ...opts, intervalMs: 1 });
+  await expect(prepared).resolves.toEqual(ready.video);
+  expect(fetchStatus).toHaveBeenCalledTimes(3);
+  fetchStatus.mock.calls.forEach(([url, init]) => {
+    expect(url).toMatch(/\/uploads\/owned$/);
+    expect(init.method).toBe('GET');
+  });
+});
+
+it('preserves a gateway retry hint and keeps successful responses strictly JSON', async () => {
+  vi.stubGlobal('fetch', vi.fn()
+    .mockResolvedValueOnce(new Response(null, { status: 429, headers: { 'Retry-After': '5' } }))
+    .mockResolvedValueOnce(new Response('invalid JSON')));
+  await expect(request('/uploads/owned')).rejects.toMatchObject({
+    name: 'ShortsApiError', status: 429, message: 'Request failed (429)', retryAfter: '5',
+  });
+  await expect(request('/uploads/owned')).rejects.toBeInstanceOf(SyntaxError);
 });
 
 it('stops polling on account change, abort and authentication expiry', async () => {

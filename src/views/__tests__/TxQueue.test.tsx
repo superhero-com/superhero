@@ -14,8 +14,20 @@ import {
 } from '@/atoms/txQueueAtoms';
 import { verifyLinkMessageSignature } from '@/utils/signLinkMessage';
 import TxQueue from '@/views/TxQueue';
+import { clearSignRequestPending, markSignRequestPending } from '@/utils/txQueueRelay';
 
-const { VALID_SIGNATURE } = vi.hoisted(() => ({ VALID_SIGNATURE: 'ab'.repeat(64) }));
+const { VALID_SIGNATURE, postTransaction } = vi.hoisted(() => ({
+  VALID_SIGNATURE: 'ab'.repeat(64),
+  postTransaction: vi.fn(),
+}));
+
+// The callback page posts to the node only when it is cut off from the requesting tab.
+vi.mock('@aeternity/aepp-sdk', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@aeternity/aepp-sdk')>(),
+  Node: vi.fn(function FakeNode(this: { postTransaction: typeof postTransaction }) {
+    this.postTransaction = postTransaction;
+  }),
+}));
 
 // aepp-sdk's hashing rejects jsdom's typed arrays, so the curve check is stood in for: what this
 // page owns is submitting only what the verifier accepts.
@@ -71,6 +83,7 @@ describe('TxQueue wallet callback page', () => {
     vi.stubGlobal('BroadcastChannel', FakeBroadcastChannel);
     // jsdom tears the whole window down on close(); a real tab the script did not open stays.
     vi.spyOn(window, 'close').mockImplementation(() => {});
+    postTransaction.mockReset().mockResolvedValue({ txHash: 'th_1' });
   });
 
   it.each([
@@ -110,6 +123,43 @@ describe('TxQueue wallet callback page', () => {
 
     await advance(1);
     expect(screen.getByText('left for /')).toBeInTheDocument();
+  });
+
+  describe('when the requesting tab cannot be reached (iOS Safari Private Browsing)', () => {
+    const search = `transaction=${SIGNED_TX}&status=completed&broadcast=1`
+      + `&returnUrl=${encodeURIComponent('/defi/swap')}`;
+
+    it('posts the signed transaction itself and goes back to the page it came from', async () => {
+      renderCallback(search);
+
+      await advance(RELAY_ACK_TIMEOUT_MS);
+
+      expect(postTransaction).toHaveBeenCalledWith({ tx: SIGNED_TX });
+      expect(window.close).toHaveBeenCalled();
+      expect(screen.getByText('left for /defi/swap')).toBeInTheDocument();
+      expect(storedResult()).toBeNull();
+    });
+
+    it('does not post it when this tab can see the requesting tab, even after it stopped waiting', async () => {
+      markSignRequestPending(ID);
+      clearSignRequestPending(ID);
+      renderCallback(search);
+
+      await advance(RELAY_ACK_TIMEOUT_MS);
+
+      expect(postTransaction).not.toHaveBeenCalled();
+      expect(screen.getByText('left for /defi/swap')).toBeInTheDocument();
+    });
+
+    it('stays and says why when the node rejects the transaction', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      postTransaction.mockRejectedValue(new Error('Invalid tx'));
+      renderCallback(search);
+
+      await advance(RELAY_ACK_TIMEOUT_MS);
+
+      expect(screen.getByText(/Invalid tx/)).toBeInTheDocument();
+    });
   });
 
   describe('with a stored message-signing request nobody acknowledges', () => {

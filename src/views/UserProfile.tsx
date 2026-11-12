@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowDownLeft, ArrowUpRight } from 'lucide-react';
+import { Encoding, isAddressValid } from '@aeternity/aepp-sdk';
 import AccountCreatedToken from '@/components/Account/AccountCreatedToken';
 import AccountFeed from '@/components/Account/AccountFeed';
 import AccountOwnedTokens from '@/components/Account/AccountOwnedTokens';
@@ -17,6 +18,7 @@ import AccountTrades from '@/components/Account/AccountTrades';
 import Head from '../seo/Head';
 import RightRail from '../components/layout/RightRail';
 import Shell from '../components/layout/Shell';
+import NotFound from './NotFound';
 
 import { PostsService } from '../api/generated';
 import type { PostDto } from '../api/generated';
@@ -52,20 +54,17 @@ import { useSocialGraphCounts } from '../hooks/useSocialGraph';
 import { isMobileDevice, isStandalone } from '../utils/displayMode';
 
 type TabType = 'feed' | 'owned' | 'created' | 'transactions';
-export default function UserProfile({
-  standalone = true,
-}: { standalone?: boolean } = {}) {
+
+type ProfileViewProps = {
+  standalone: boolean;
+  address: string;
+  effectiveAddress: string;
+};
+
+function ProfileView({ standalone, address, effectiveAddress }: ProfileViewProps) {
   const { t } = useTranslation('common');
   const navigate = useNavigate();
-  const { address } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-
-  // Support AENS chain name route: /users/<name.chain>
-  const isChainName = address?.endsWith('.chain');
-  const { address: resolvedAddress } = useAddressByChainName(
-    isChainName ? address : undefined,
-  );
-  const effectiveAddress = isChainName && resolvedAddress ? resolvedAddress : (address as string);
   const { data: graphCounts, countsStatus } = useSocialGraphCounts(effectiveAddress);
   const { chainName } = useChainName(effectiveAddress);
   const pendingChainName = usePreferredChainName(effectiveAddress);
@@ -570,5 +569,30 @@ export default function UserProfile({
       {content}
       {profileModals}
     </>
+  );
+}
+
+export default function UserProfile({
+  standalone = true,
+}: { standalone?: boolean } = {}) {
+  const { address = '' } = useParams();
+
+  // Support AENS chain name route: /users/<name.chain>
+  const isChainName = address.endsWith('.chain');
+  const { address: resolvedAddress, notFound: unknownName } = useAddressByChainName(
+    isChainName ? address : undefined,
+  );
+  const unknownUser = isChainName
+    ? unknownName
+    : !isAddressValid(address, Encoding.AccountAddress);
+  if (unknownUser) return <NotFound />;
+
+  const effectiveAddress = isChainName && resolvedAddress ? resolvedAddress : address;
+  return (
+    <ProfileView
+      standalone={standalone}
+      address={address}
+      effectiveAddress={effectiveAddress}
+    />
   );
 }

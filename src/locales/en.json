@@ -2681,25 +2681,6 @@
         "somethingWentWrong": "Oops, something went wrong. \n{{message}}"
       }
     },
-    "tokenChat": {
-      "noMessages": "No public chat messages yet",
-      "beFirst": "Be the first to share your thoughts!",
-      "chatForHolders": "Chat for #{{name}} holders",
-      "thisToken": "this token",
-      "buyToJoin": "Buy this token to join the exclusive chat rooms. Your wallet proves ownership; access is token‑gated.",
-      "openPublicChatTitle": "Open the public chat on Quali.chat",
-      "publicChat": "Public chat",
-      "publicChatDesc": "Read for all • Write only for holders",
-      "openPrivateChatTitle": "Open the private chat on Quali.chat (holders only)",
-      "privateChat": "Private chat",
-      "privateChatDesc": "Read and write only for holders",
-      "serviceProvidedBy": "Service provided by",
-      "failedAfterAttempts": "Failed to load comments after multiple attempts. Please try again later.",
-      "retryingInSeconds": "Failed to load messages. Retrying in 5 seconds... ({{current}}/{{max}})",
-      "unableAfterAttempts": "Unable to load messages after multiple attempts. Please try again later.",
-      "loading": "Loading…",
-      "loadMore": "Load more"
-    },
     "tokenTrades": {
       "justNow": "just now",
       "buy": "Buy",

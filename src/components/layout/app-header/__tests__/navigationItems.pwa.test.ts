@@ -9,7 +9,7 @@ import {
 } from '../navigationItems';
 
 /**
- * Chat is PWA-only, on purpose.
+ * The mobile footer only offers Chat in the installed PWA.
  *
  * Chat derives a Nostr identity from the wallet seed and persists key material
  * in client storage. An installed PWA has a durable, origin-scoped store; a
@@ -17,16 +17,16 @@ import {
  * "clear browsing data" both destroy it, which for a chat identity means
  * silently losing the ability to decrypt your own history.
  *
- * So the entry point is gated on standalone display mode. These tests pin that
- * gate, both directions, because the failure is invisible: nothing errors when
- * chat is offered in a browser tab — the key just evaporates later.
+ * So the mobile footer entry point is gated on standalone display mode. These
+ * tests pin that gate, both directions. The desktop sidebar lists Chat for
+ * everyone.
  *
  * NOTE this is about the *entry point*. `/chat` remains routable, so an existing
  * deep link still works; we are not blocking the route, only declining to
  * advertise it where key custody is unsafe.
  */
 
-describe('chat navigation is PWA-gated', () => {
+describe('chat navigation', () => {
   const ids = (items: { id: string }[]) => items.map((i) => i.id);
 
   it('shows Chat in the mobile footer when running as an installed PWA', () => {
@@ -57,11 +57,14 @@ describe('chat navigation is PWA-gated', () => {
     expect(browser).toContain('account');
   });
 
-  it('does not expose Chat through the desktop or "More" menus', () => {
-    // Other menus have no pwaMode parameter, so a Chat item added to any of them
-    // would bypass the gate entirely. This is the regression guard for that.
-    expect(ids(getNavigationItems())).not.toContain('chat');
-    expect(ids(getAppNavigationItems('ak_test'))).not.toContain('chat');
+  it('shows Chat in the desktop sidebar, linking to the in-app chat', () => {
+    const chat = getAppNavigationItems('ak_test').find((item) => item.id === 'chat');
+    expect(ids(getNavigationItems())).toContain('chat');
+    expect(chat?.path).toBe('/chat');
+    expect(chat?.isExternal).toBeFalsy();
+  });
+
+  it('keeps Chat out of the mobile "More" menu', () => {
     expect(ids(getMobileMoreNavigationItems())).not.toContain('chat');
   });
 });

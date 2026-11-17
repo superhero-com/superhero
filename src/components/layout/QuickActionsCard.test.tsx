@@ -13,7 +13,7 @@ describe('QuickActionsCard', () => {
       '/defi/swap',
       '/defi/pool',
       '/defi/wrap',
-      'https://quali.chat',
+      '/chat',
     ]);
   });
 

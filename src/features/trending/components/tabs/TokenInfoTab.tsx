@@ -1,6 +1,5 @@
 import React from 'react';
 import type { TokenDto } from '@/api/generated/models/TokenDto';
-import TokenChat from '@/components/Trendminer/TokenChat';
 import TokenCommunityChatButton from '@/features/chat/components/TokenCommunityChatButton';
 import { TokenSummary } from '@/features/bcl/components';
 import TokenRanking from '../TokenRanking/TokenRanking';
@@ -15,13 +14,6 @@ export const TokenInfoTab = ({ token }: { token: TokenDto }) => {
       />
       <TokenRanking token={token} />
       <TokenCommunityChatButton saleAddress={saleAddress} symbol={token.symbol} />
-      <TokenChat
-        token={{
-          name: String(token.name || token.symbol || ''),
-          address: saleAddress,
-        }}
-        mode="ctaOnly"
-      />
     </div>
   );
 };

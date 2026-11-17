@@ -25,7 +25,6 @@ import { useOwnedTokens } from '../../../hooks/useOwnedTokens';
 import { Head } from '../../../seo/Head';
 
 import LatestTransactionsCarousel from '../../../components/Trendminer/LatestTransactionsCarousel';
-import TokenChat from '../../../components/Trendminer/TokenChat';
 import TokenCommunityChatButton from '../../chat/components/TokenCommunityChatButton';
 import { Button } from '../../../components/ui/button';
 import {
@@ -736,18 +735,9 @@ const TokenSaleDetails = () => {
                     token={token}
                   />
                   <TokenRanking token={token} />
-                  {/* Communities (Nostr) — beside the Matrix feed, not replacing it. */}
                   <TokenCommunityChatButton
                     saleAddress={token.sale_address}
                     symbol={token.symbol}
-                  />
-                  {/* Quali.chat CTA - old design cards */}
-                  <TokenChat
-                    token={{
-                      name: String(token.name || token.symbol || ''),
-                      address: String((token as any).sale_address || (token as any).address || (token as any).token_address || ''),
-                    }}
-                    mode="ctaOnly"
                   />
                 </>
               );

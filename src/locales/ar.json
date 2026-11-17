@@ -3273,6 +3273,7 @@
         "needsYes": "لم يُقرّ بعد: يحتاج مزيدًا من أصوات نعم."
       },
       "subject": {
+        "event": "تمويل {{name}}: إرسال {{amount}} AE إلى",
         "payout": "إرسال {{amount}} AE من الخزينة إلى",
         "payoutAll": "إرسال كامل الخزينة إلى",
         "changeDao": "تسليم الـDAO وخزينته إلى",
@@ -3362,9 +3363,13 @@
         "step": "الخطوة {{step}} من {{total}}",
         "whatLabel": "ماذا تريد أن تفعل؟",
         "kinds": {
+          "event": {
+            "title": "تمويل فعالية",
+            "text": "إرسال AE من الخزينة إلى منظّم الفعالية."
+          },
           "payout": {
             "title": "إرسال AE من الخزينة",
-            "text": "موّل فعالية أو ادفع لمساهم."
+            "text": "الدفع لمساهم أو مشروع."
           },
           "payoutAll": {
             "title": "إرسال كامل الخزينة",
@@ -3394,6 +3399,7 @@
         "quickAmounts": "مبالغ سريعة",
         "percentOfTreasury": "{{percent}}%",
         "accountLabel": {
+          "event": "من يستلم AE؟",
           "payout": "من يستلم الـAE؟",
           "payoutAll": "من يستلم الخزينة؟",
           "addModerator": "من سيصبح مشرفًا؟",
@@ -3401,6 +3407,7 @@
           "changeDao": "عنوان الـDAO الجديد"
         },
         "accountLabelShort": {
+          "event": "إلى",
           "payout": "إلى",
           "payoutAll": "إلى",
           "addModerator": "المشرف",
@@ -3418,6 +3425,7 @@
         "editDetails": "تعديل التفاصيل",
         "back": "رجوع",
         "summary": {
+          "event": "الفعالية",
           "action": "الإجراء",
           "why": "السبب",
           "link": "الرابط",
@@ -3425,6 +3433,7 @@
           "endsValue": "بعد نحو {{duration}}"
         },
         "action": {
+          "event": "إرسال {{amount}} AE من الخزينة لتمويل الفعالية",
           "payout": "إرسال {{amount}} AE من الخزينة",
           "payoutAll": "إرسال كامل الخزينة",
           "addModerator": "إضافة مشرف",
@@ -3448,9 +3457,20 @@
           "amountInvalid": "أدخل مبلغًا صالحًا.",
           "amountOverTreasury": "هذا أكثر مما في الخزينة.",
           "descriptionRequired": "أخبر الحاملين بالسبب.",
-          "descriptionTooLong": "اجعله أقل من 300 حرف.",
-          "linkInvalid": "استخدم رابط http أو https."
-        }
+          "descriptionTooLong": "اجعله أقل من {{max}} حرف.",
+          "linkInvalid": "استخدم رابط http أو https.",
+          "eventNameRequired": "أدخل اسم الفعالية.",
+          "eventNameInvalid": "حتى 60 حرفًا، بدون |.",
+          "eventCityRequired": "أدخل المدينة.",
+          "eventCityInvalid": "حتى 40 حرفًا، بدون |.",
+          "eventDateRequired": "اختر تاريخ الفعالية.",
+          "eventDatePast": "اختر تاريخ اليوم أو تاريخًا لاحقًا."
+        },
+        "organiserHelp": "عنوان ak_ الخاص بالمنظّم. يُرسل AE إليه إذا نجح التصويت.",
+        "eventNameLabel": "اسم الفعالية",
+        "eventNameHelp": "يراه الحاملون في التصويت.",
+        "eventCityLabel": "المدينة",
+        "eventDateLabel": "تاريخ الفعالية"
       },
       "tab": {
         "title": "تصويتات {{token}}",
@@ -3473,6 +3493,10 @@
         "notPassed": "لم يُقرّ هذا التصويت، لذا لا يمكن تنفيذه.",
         "notEnoughAe": "لا يوجد AE كافٍ في محفظتك.",
         "generic": "حدث خطأ ما. حاول مجددًا."
+      },
+      "event": {
+        "badge": "فعالية",
+        "line": "{{name}} · {{city}} · {{date}}"
       }
     }
   },

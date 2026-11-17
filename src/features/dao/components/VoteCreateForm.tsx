@@ -3,7 +3,7 @@ import { Encoded, Encoding, isAddressValid } from '@aeternity/aepp-sdk';
 import BigNumber from 'bignumber.js';
 import { VOTE_TYPE, VoteMetadata, VoteSubject } from 'bctsl-sdk';
 import {
-  ChevronLeft, ChevronRight, Coins, HandCoins, Repeat, SlidersHorizontal, UserMinus, UserPlus,
+  CalendarDays, ChevronLeft, ChevronRight, Coins, HandCoins, Repeat, SlidersHorizontal, UserMinus, UserPlus,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -12,12 +12,15 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ConnectWalletButton } from '@/components/ConnectWalletButton';
 import { safeHref } from '@/utils/safeHref';
-import { DAO_VOTE_RULES, formatBlockDuration, formatUnits } from '../utils/voteRules';
+import {
+  DAO_VOTE_RULES, EVENT_FIELD_MAX, encodeEventDescription, eventLine, formatBlockDuration, formatEventDate, formatUnits,
+} from '../utils/voteRules';
 import { daoErrorKey } from '../utils/daoErrors';
 
-export type CreateKind = 'payout' | 'payoutAll' | 'addModerator' | 'removeModerator' | 'minimumTokens' | 'changeDao';
+export type CreateKind = 'event' | 'payout' | 'payoutAll' | 'addModerator' | 'removeModerator' | 'minimumTokens' | 'changeDao';
 
 const KINDS: { kind: CreateKind; Icon: typeof Coins }[] = [
+  { kind: 'event', Icon: CalendarDays },
   { kind: 'payout', Icon: HandCoins },
   { kind: 'payoutAll', Icon: Coins },
   { kind: 'addModerator', Icon: UserPlus },
@@ -26,7 +29,7 @@ const KINDS: { kind: CreateKind; Icon: typeof Coins }[] = [
   { kind: 'changeDao', Icon: Repeat },
 ];
 
-const ACCOUNT_KINDS: CreateKind[] = ['payout', 'payoutAll', 'addModerator', 'removeModerator'];
+const ACCOUNT_KINDS: CreateKind[] = ['event', 'payout', 'payoutAll', 'addModerator', 'removeModerator'];
 
 export interface CreateDraft {
   kind: CreateKind;
@@ -34,9 +37,38 @@ export interface CreateDraft {
   amount: string;
   description: string;
   link: string;
+  eventName: string;
+  eventCity: string;
+  /** `YYYY-MM-DD` from the date input. */
+  eventDate: string;
 }
 
-export type CreateErrors = Partial<Record<'account' | 'amount' | 'description' | 'link', string>>;
+type ErrorField = 'account' | 'amount' | 'description' | 'link' | 'eventName' | 'eventCity' | 'eventDate';
+export type CreateErrors = Partial<Record<ErrorField, string>>;
+
+const isPayoutKind = (kind: CreateKind) => kind === 'event' || kind === 'payout';
+
+// The reader's calendar day, as the date input shows it (toISOString alone gives the UTC day).
+const todayIso = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60_000)
+  .toISOString().slice(0, 10);
+
+/** The description the contract stores: the event line first for event votes, the reason otherwise. */
+export function draftDescription(draft: CreateDraft) {
+  if (draft.kind !== 'event') return draft.description.trim();
+  return encodeEventDescription(
+    { name: draft.eventName, city: draft.eventCity, date: draft.eventDate },
+    draft.description,
+  );
+}
+
+/** Characters left for the reason once the event line takes its share of the contract limit. */
+export function descriptionLimit(draft: CreateDraft) {
+  if (draft.kind !== 'event') return DAO_VOTE_RULES.descriptionMaxLength;
+  const line = eventLine({
+    name: draft.eventName || ' ', city: draft.eventCity || ' ', date: draft.eventDate || '0000-00-00',
+  });
+  return Math.max(0, DAO_VOTE_RULES.descriptionMaxLength - line.length - 1);
+}
 
 const toBaseUnits = (value: string) => BigInt(
   new BigNumber(value).shiftedBy(18).integerValue(BigNumber.ROUND_DOWN).toFixed(),
@@ -62,19 +94,29 @@ export function validateDraft(draft: CreateDraft, treasuryAettos?: bigint): Crea
     if (!account) errors.account = 'voting.create.errors.daoRequired';
     else if (!isAddressValid(account, Encoding.ContractAddress)) errors.account = 'voting.create.errors.daoInvalid';
   }
-  if (draft.kind === 'payout' || draft.kind === 'minimumTokens') {
+  if (isPayoutKind(draft.kind) || draft.kind === 'minimumTokens') {
     const amount = new BigNumber(draft.amount.trim());
     if (!draft.amount.trim()) errors.amount = 'voting.create.errors.amountRequired';
-    else if (!amount.isFinite() || (draft.kind === 'payout' ? amount.lte(0) : amount.lt(0))) {
+    else if (!amount.isFinite() || (isPayoutKind(draft.kind) ? amount.lte(0) : amount.lt(0))) {
       errors.amount = 'voting.create.errors.amountInvalid';
     } else if (amount.decimalPlaces()! > 18) errors.amount = 'voting.create.errors.amountInvalid';
-    else if (draft.kind === 'payout' && treasuryAettos != null && toBaseUnits(draft.amount.trim()) > treasuryAettos) {
+    else if (isPayoutKind(draft.kind) && treasuryAettos != null && toBaseUnits(draft.amount.trim()) > treasuryAettos) {
       errors.amount = 'voting.create.errors.amountOverTreasury';
     }
   }
+  if (draft.kind === 'event') {
+    const name = draft.eventName.trim();
+    const city = draft.eventCity.trim();
+    if (!name) errors.eventName = 'voting.create.errors.eventNameRequired';
+    else if (name.includes('|') || name.length > EVENT_FIELD_MAX.name) errors.eventName = 'voting.create.errors.eventNameInvalid';
+    if (!city) errors.eventCity = 'voting.create.errors.eventCityRequired';
+    else if (city.includes('|') || city.length > EVENT_FIELD_MAX.city) errors.eventCity = 'voting.create.errors.eventCityInvalid';
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.eventDate)) errors.eventDate = 'voting.create.errors.eventDateRequired';
+    else if (draft.eventDate < todayIso()) errors.eventDate = 'voting.create.errors.eventDatePast';
+  }
   const description = draft.description.trim();
   if (!description) errors.description = 'voting.create.errors.descriptionRequired';
-  else if (description.length > DAO_VOTE_RULES.descriptionMaxLength) errors.description = 'voting.create.errors.descriptionTooLong';
+  else if (description.length > descriptionLimit(draft)) errors.description = 'voting.create.errors.descriptionTooLong';
   const link = draft.link.trim();
   if (link && !safeHref(link)) errors.link = 'voting.create.errors.linkInvalid';
   return errors;
@@ -85,6 +127,7 @@ export function draftToMetadata(draft: CreateDraft): VoteMetadata {
   const amount = draft.amount.trim();
   let subject: VoteSubject;
   switch (draft.kind) {
+    case 'event':
     case 'payout':
       subject = { [VOTE_TYPE.VotePayoutAmount]: [account as Encoded.AccountAddress, toBaseUnits(amount)] };
       break;
@@ -106,7 +149,7 @@ export function draftToMetadata(draft: CreateDraft): VoteMetadata {
       subject = { [VOTE_TYPE.ChangeDAO]: [account.replace(/^ct_/, 'ak_') as Encoded.AccountAddress] };
       break;
   }
-  return { subject, description: draft.description.trim(), link: draft.link.trim() };
+  return { subject, description: draftDescription(draft), link: draft.link.trim() };
 }
 
 interface VoteCreateFormProps {
@@ -126,7 +169,7 @@ const VoteCreateForm = ({
   const { t, i18n } = useTranslation('dao');
   const [step, setStep] = useState<'details' | 'review'>('details');
   const [draft, setDraft] = useState<CreateDraft>({
-    kind: 'payout', account: '', amount: '', description: '', link: '',
+    kind: 'event', account: '', amount: '', description: '', link: '', eventName: '', eventCity: '', eventDate: '',
   });
   const [errors, setErrors] = useState<CreateErrors>({});
   const [ack, setAck] = useState(false);
@@ -140,7 +183,12 @@ const VoteCreateForm = ({
 
   const treasury = treasuryAettos != null ? formatUnits(treasuryAettos, 18, i18n.language) : undefined;
   const needsAccount = draft.kind !== 'minimumTokens';
-  const needsAmount = draft.kind === 'payout' || draft.kind === 'minimumTokens';
+  const needsAmount = isPayoutKind(draft.kind) || draft.kind === 'minimumTokens';
+  const isEvent = draft.kind === 'event';
+  const maxDescription = descriptionLimit(draft);
+  let accountHelpKey = 'voting.create.accountHelp';
+  if (draft.kind === 'changeDao') accountHelpKey = 'voting.create.daoHelp';
+  else if (isEvent) accountHelpKey = 'voting.create.organiserHelp';
   const notEnoughAe = aeBalanceAettos != null && aeBalanceAettos < DAO_VOTE_RULES.createFeeAettos;
   const fee = DAO_VOTE_RULES.createFeeAe.toLocaleString(i18n.language);
 
@@ -177,7 +225,7 @@ const VoteCreateForm = ({
         <label htmlFor={id}>{label}</label>
         {control({ id, 'aria-invalid': !!errors[name], 'aria-describedby': `${id}-help` })}
         {errors[name]
-          ? <p className="dao-v-error" id={`${id}-help`} role="alert">{t(errors[name]!)}</p>
+          ? <p className="dao-v-error" id={`${id}-help`} role="alert">{t(errors[name]!, { max: maxDescription })}</p>
           : help && <p className="dao-v-help" id={`${id}-help`}>{help}</p>}
       </div>
     );
@@ -204,6 +252,18 @@ const VoteCreateForm = ({
           <span className="dao-v-muted">{t('voting.create.step', { step: 2, total: 2 })}</span>
         </div>
         <dl className="dao-v-summary">
+          {isEvent && (
+            <div>
+              <dt>{t('voting.create.summary.event')}</dt>
+              <dd>
+                {t('voting.event.line', {
+                  name: draft.eventName.trim(),
+                  city: draft.eventCity.trim(),
+                  date: formatEventDate(draft.eventDate, i18n.language),
+                })}
+              </dd>
+            </div>
+          )}
           <div>
             <dt>{t('voting.create.summary.action')}</dt>
             <dd>{actionText}</dd>
@@ -313,10 +373,49 @@ const VoteCreateForm = ({
         ))}
       </fieldset>
 
+      {isEvent && (
+        <>
+          {field('eventName', t('voting.create.eventNameLabel'), t('voting.create.eventNameHelp'), (props) => (
+            <Input
+              {...props}
+              className="dao-v-input"
+              dir="auto"
+              autoComplete="off"
+              maxLength={EVENT_FIELD_MAX.name}
+              value={draft.eventName}
+              onChange={(e) => update('eventName', e.target.value)}
+            />
+          ))}
+          <div className="dao-v-two">
+            {field('eventCity', t('voting.create.eventCityLabel'), undefined, (props) => (
+              <Input
+                {...props}
+                className="dao-v-input"
+                dir="auto"
+                autoComplete="address-level2"
+                maxLength={EVENT_FIELD_MAX.city}
+                value={draft.eventCity}
+                onChange={(e) => update('eventCity', e.target.value)}
+              />
+            ))}
+            {field('eventDate', t('voting.create.eventDateLabel'), undefined, (props) => (
+              <Input
+                {...props}
+                className="dao-v-input"
+                type="date"
+                min={todayIso()}
+                value={draft.eventDate}
+                onChange={(e) => update('eventDate', e.target.value)}
+              />
+            ))}
+          </div>
+        </>
+      )}
+
       {needsAmount && field(
         'amount',
-        draft.kind === 'payout' ? t('voting.create.amountLabel') : t('voting.create.minimumLabel', { symbol: tokenSymbol }),
-        draft.kind === 'payout' && treasury
+        isPayoutKind(draft.kind) ? t('voting.create.amountLabel') : t('voting.create.minimumLabel', { symbol: tokenSymbol }),
+        isPayoutKind(draft.kind) && treasury
           ? t('voting.create.amountHelp', { treasury })
           : t('voting.create.minimumHelp', { symbol: tokenSymbol }),
         (props) => (
@@ -330,11 +429,11 @@ const VoteCreateForm = ({
               placeholder="0"
               onChange={(e) => update('amount', e.target.value.replace(',', '.'))}
             />
-            <span>{draft.kind === 'payout' ? 'AE' : tokenSymbol}</span>
+            <span>{isPayoutKind(draft.kind) ? 'AE' : tokenSymbol}</span>
           </div>
         ),
       )}
-      {draft.kind === 'payout' && treasuryAettos != null && treasuryAettos > 0n && (
+      {isPayoutKind(draft.kind) && treasuryAettos != null && treasuryAettos > 0n && (
         <div className="dao-v-quick" role="group" aria-label={t('voting.create.quickAmounts')}>
           {[10, 25, 50].map((pct) => (
             <Button
@@ -352,7 +451,7 @@ const VoteCreateForm = ({
       {needsAccount && field(
         'account',
         t(`voting.create.accountLabel.${draft.kind}`),
-        t(draft.kind === 'changeDao' ? 'voting.create.daoHelp' : 'voting.create.accountHelp'),
+        t(accountHelpKey),
         (props) => (
           <Input
             {...props}
@@ -371,7 +470,7 @@ const VoteCreateForm = ({
         t('voting.create.descriptionLabel'),
         t('voting.create.descriptionHelp', {
           count: draft.description.trim().length,
-          max: DAO_VOTE_RULES.descriptionMaxLength,
+          max: maxDescription,
         }),
         (props) => (
           <Textarea
@@ -379,7 +478,7 @@ const VoteCreateForm = ({
             className="dao-v-input"
             dir="auto"
             value={draft.description}
-            maxLength={DAO_VOTE_RULES.descriptionMaxLength}
+            maxLength={maxDescription}
             onChange={(e) => update('description', e.target.value)}
           />
         ),

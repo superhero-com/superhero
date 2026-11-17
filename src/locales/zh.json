@@ -3254,6 +3254,7 @@
         "needsYes": "尚未通过：需要更多赞成票。"
       },
       "subject": {
+        "event": "资助 {{name}}：发送 {{amount}} AE 给",
         "payout": "从金库发送 {{amount}} AE 给",
         "payoutAll": "将整个金库发送给",
         "changeDao": "将 DAO 及其金库移交给",
@@ -3343,9 +3344,13 @@
         "step": "第 {{step}} 步，共 {{total}} 步",
         "whatLabel": "你想做什么？",
         "kinds": {
+          "event": {
+            "title": "资助活动",
+            "text": "从金库向活动组织者发送 AE。"
+          },
           "payout": {
             "title": "从金库发送 AE",
-            "text": "资助活动或支付贡献者。"
+            "text": "支付贡献者或项目。"
           },
           "payoutAll": {
             "title": "发送整个金库",
@@ -3375,6 +3380,7 @@
         "quickAmounts": "快捷金额",
         "percentOfTreasury": "{{percent}}%",
         "accountLabel": {
+          "event": "谁接收 AE？",
           "payout": "谁接收 AE？",
           "payoutAll": "谁接收金库？",
           "addModerator": "谁成为管理员？",
@@ -3382,6 +3388,7 @@
           "changeDao": "新 DAO 地址"
         },
         "accountLabelShort": {
+          "event": "接收方",
           "payout": "接收方",
           "payoutAll": "接收方",
           "addModerator": "管理员",
@@ -3399,6 +3406,7 @@
         "editDetails": "修改信息",
         "back": "返回",
         "summary": {
+          "event": "活动",
           "action": "操作",
           "why": "理由",
           "link": "链接",
@@ -3406,6 +3414,7 @@
           "endsValue": "约 {{duration}} 后"
         },
         "action": {
+          "event": "从金库发送 {{amount}} AE 资助活动",
           "payout": "从金库发送 {{amount}} AE",
           "payoutAll": "发送整个金库",
           "addModerator": "添加管理员",
@@ -3429,9 +3438,20 @@
           "amountInvalid": "请输入有效的数额。",
           "amountOverTreasury": "超过了金库余额。",
           "descriptionRequired": "请说明理由。",
-          "descriptionTooLong": "请控制在 300 个字符以内。",
-          "linkInvalid": "请使用 http 或 https 链接。"
-        }
+          "descriptionTooLong": "请控制在 {{max}} 个字符以内。",
+          "linkInvalid": "请使用 http 或 https 链接。",
+          "eventNameRequired": "请输入活动名称。",
+          "eventNameInvalid": "最多 60 个字符，不含 |。",
+          "eventCityRequired": "请输入城市。",
+          "eventCityInvalid": "最多 40 个字符，不含 |。",
+          "eventDateRequired": "请选择活动日期。",
+          "eventDatePast": "请选择今天或之后的日期。"
+        },
+        "organiserHelp": "组织者的 ak_ 地址。投票通过后 AE 将发往该地址。",
+        "eventNameLabel": "活动名称",
+        "eventNameHelp": "持有者会在投票中看到。",
+        "eventCityLabel": "城市",
+        "eventDateLabel": "活动日期"
       },
       "tab": {
         "title": "{{token}} 投票",
@@ -3454,6 +3474,10 @@
         "notPassed": "此投票未通过，无法执行。",
         "notEnoughAe": "钱包中的 AE 不足。",
         "generic": "出错了，请重试。"
+      },
+      "event": {
+        "badge": "活动",
+        "line": "{{name}} · {{city}} · {{date}}"
       }
     }
   },

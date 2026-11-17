@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { VOTE_TYPE } from 'bctsl-sdk';
 import {
-  DAO_VOTE_RULES, formatPercent, summarizeSubject, voterActions, voteStatus, voteTally,
+  DAO_VOTE_RULES, encodeEventDescription, formatPercent, parseEventDescription, summarizeSubject,
+  voterActions, voteStatus, voteTally,
 } from '../voteRules';
 import { draftToMetadata, validateDraft } from '../../components/VoteCreateForm';
 
@@ -88,8 +89,52 @@ describe('voteRules', () => {
 
 describe('create vote draft', () => {
   const base = {
-    kind: 'payout' as const, account: AK, amount: '12.5', description: 'Fund the meetup', link: '',
+    kind: 'payout' as const,
+    account: AK,
+    amount: '12.5',
+    description: 'Fund the meetup',
+    link: '',
+    eventName: '',
+    eventCity: '',
+    eventDate: '',
   };
+  const event = {
+    ...base, kind: 'event' as const, eventName: 'Superhero Meetup', eventCity: 'Sofia', eventDate: '2099-03-14',
+  };
+
+  it('sends an event as a payout with the event line first in the description', () => {
+    const md = draftToMetadata({ ...event, eventName: ' Superhero Meetup ', description: ' Venue and snacks ' });
+    expect(md.subject).toEqual({ VotePayoutAmount: [AK, 12_500_000_000_000_000_000n] });
+    expect(md.description).toBe('Event: Superhero Meetup | Sofia | 2099-03-14\nVenue and snacks');
+    expect(md.description.length).toBeLessThanOrEqual(DAO_VOTE_RULES.descriptionMaxLength);
+    expect(parseEventDescription(md.description)).toEqual({
+      event: { name: 'Superhero Meetup', city: 'Sofia', date: '2099-03-14' },
+      text: 'Venue and snacks',
+    });
+  });
+
+  it('validates the event fields and keeps the whole description inside the contract limit', () => {
+    expect(validateDraft(event)).toEqual({});
+    expect(validateDraft({ ...event, eventName: ' ' }).eventName).toBe('voting.create.errors.eventNameRequired');
+    expect(validateDraft({ ...event, eventName: 'A | B' }).eventName).toBe('voting.create.errors.eventNameInvalid');
+    expect(validateDraft({ ...event, eventCity: '' }).eventCity).toBe('voting.create.errors.eventCityRequired');
+    expect(validateDraft({ ...event, eventDate: '' }).eventDate).toBe('voting.create.errors.eventDateRequired');
+    expect(validateDraft({ ...event, eventDate: '2000-01-01' }).eventDate).toBe('voting.create.errors.eventDatePast');
+    expect(validateDraft({ ...event, amount: '20' }, 10n * E18).amount).toBe('voting.create.errors.amountOverTreasury');
+    const line = 'Event: Superhero Meetup | Sofia | 2099-03-14\n'.length;
+    const room = DAO_VOTE_RULES.descriptionMaxLength - line;
+    expect(validateDraft({ ...event, description: 'x'.repeat(room) })).toEqual({});
+    expect(validateDraft({ ...event, description: 'x'.repeat(room + 1) }).description)
+      .toBe('voting.create.errors.descriptionTooLong');
+  });
+
+  it('reads only well-formed event lines, so plain payouts stay plain', () => {
+    expect(parseEventDescription('Fund the meetup')).toEqual({ text: 'Fund the meetup' });
+    expect(parseEventDescription(undefined)).toEqual({ text: '' });
+    expect(parseEventDescription('Event: Meetup | Sofia | soon\nWhy')).toEqual({ text: 'Event: Meetup | Sofia | soon\nWhy' });
+    expect(parseEventDescription(encodeEventDescription({ name: 'Hack', city: 'Dubai', date: '2099-01-02' }, '')))
+      .toEqual({ event: { name: 'Hack', city: 'Dubai', date: '2099-01-02' }, text: '' });
+  });
 
   it('builds the VotePayoutAmount subject with the amount in aettos', () => {
     expect(draftToMetadata(base)).toEqual({

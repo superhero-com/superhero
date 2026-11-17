@@ -1348,6 +1348,7 @@
         "needsYes": "Пока не проходит: нужно больше голосов «за»."
       },
       "subject": {
+        "event": "Профинансировать {{name}}: отправить {{amount}} AE",
         "payout": "Отправить {{amount}} AE из казны:",
         "payoutAll": "Отправить всю казну:",
         "changeDao": "Передать DAO и казну:",
@@ -1437,9 +1438,13 @@
         "step": "Шаг {{step}} из {{total}}",
         "whatLabel": "Что вы хотите сделать?",
         "kinds": {
+          "event": {
+            "title": "Профинансировать событие",
+            "text": "Отправить AE из казны организатору события."
+          },
           "payout": {
             "title": "Отправить AE из казны",
-            "text": "Оплатить мероприятие или работу участника."
+            "text": "Оплатить работу участника или проект."
           },
           "payoutAll": {
             "title": "Отправить всю казну",
@@ -1469,6 +1474,7 @@
         "quickAmounts": "Быстрые суммы",
         "percentOfTreasury": "{{percent}}%",
         "accountLabel": {
+          "event": "Кто получает AE?",
           "payout": "Кто получит AE?",
           "payoutAll": "Кто получит казну?",
           "addModerator": "Кто станет модератором?",
@@ -1476,6 +1482,7 @@
           "changeDao": "Адрес нового DAO"
         },
         "accountLabelShort": {
+          "event": "Кому",
           "payout": "Кому",
           "payoutAll": "Кому",
           "addModerator": "Модератор",
@@ -1493,6 +1500,7 @@
         "editDetails": "Изменить данные",
         "back": "Назад",
         "summary": {
+          "event": "Событие",
           "action": "Действие",
           "why": "Зачем",
           "link": "Ссылка",
@@ -1500,6 +1508,7 @@
           "endsValue": "Примерно через {{duration}}"
         },
         "action": {
+          "event": "Отправить {{amount}} AE из казны на событие",
           "payout": "Отправить {{amount}} AE из казны",
           "payoutAll": "Отправить всю казну",
           "addModerator": "Добавить модератора",
@@ -1523,9 +1532,20 @@
           "amountInvalid": "Введите корректную сумму.",
           "amountOverTreasury": "Это больше, чем есть в казне.",
           "descriptionRequired": "Объясните держателям, зачем.",
-          "descriptionTooLong": "Не больше 300 символов.",
-          "linkInvalid": "Используйте ссылку http или https."
-        }
+          "descriptionTooLong": "Не больше {{max}} символов.",
+          "linkInvalid": "Используйте ссылку http или https.",
+          "eventNameRequired": "Введите название события.",
+          "eventNameInvalid": "До 60 символов, без |.",
+          "eventCityRequired": "Введите город.",
+          "eventCityInvalid": "До 40 символов, без |.",
+          "eventDateRequired": "Выберите дату события.",
+          "eventDatePast": "Выберите сегодняшнюю или более позднюю дату."
+        },
+        "organiserHelp": "Адрес ak_ организатора. AE уйдут туда, если голосование пройдёт.",
+        "eventNameLabel": "Название события",
+        "eventNameHelp": "Держатели увидят его в голосовании.",
+        "eventCityLabel": "Город",
+        "eventDateLabel": "Дата события"
       },
       "tab": {
         "title": "Голосования {{token}}",
@@ -1548,6 +1568,10 @@
         "notPassed": "Голосование не принято, исполнить нельзя.",
         "notEnoughAe": "Недостаточно AE в кошельке.",
         "generic": "Что-то пошло не так. Попробуйте ещё раз."
+      },
+      "event": {
+        "badge": "Событие",
+        "line": "{{name}} · {{city}} · {{date}}"
       }
     }
   }

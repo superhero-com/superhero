@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import type { DaoVoteWithStatus } from '../hooks/useDaoVotes';
-import { voteTally } from '../utils/voteRules';
+import { parseEventDescription, voteTally } from '../utils/voteRules';
+import VoteEvent from './VoteEvent';
 import VoteSubject from './VoteSubject';
 import { VoteMeters, VoteStatusBadge, VoteTime } from './VoteStatus';
 
@@ -25,6 +26,7 @@ const TokenVoteCard = ({
   const { t } = useTranslation('dao');
   const { state, status } = vote;
   const tally = voteTally(state, tokenSupply);
+  const { event, text } = parseEventDescription(state.metadata?.description);
   // The accessible name starts with the visible text, so voice control can find the link.
   const linkText = status === 'open' ? t('voting.list.openVote') : t('voting.list.viewResult');
 
@@ -42,7 +44,8 @@ const TokenVoteCard = ({
       <h3>
         <VoteSubject voteState={state} tokenSymbol={tokenSymbol} />
       </h3>
-      {state.metadata?.description && <p className="dao-v-muted" dir="auto">{state.metadata.description}</p>}
+      {event && <VoteEvent event={event} />}
+      {text && <p className="dao-v-muted" dir="auto">{text}</p>}
       <VoteMeters tally={tally} status={status} />
       <div className="dao-v-item-foot">
         <span className="dao-v-by dao-v-muted">

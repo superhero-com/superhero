@@ -195,3 +195,44 @@ export function summarizeSubject(subject: VoteSubject | undefined): SubjectSumma
       return { kind: 'unknown' };
   }
 }
+
+/**
+ * An event funding vote is a `VotePayoutAmount` whose description starts with one event line:
+ * `Event: <name> | <city> | <YYYY-MM-DD>`, then a new line and the reason. The contracts have no
+ * event type, so the details ride in the description, which every client already shows as text.
+ * The marker stays in English so the line parses whatever language the author used.
+ */
+export interface DaoEvent {
+  name: string;
+  city: string;
+  /** ISO date, `YYYY-MM-DD`. */
+  date: string;
+}
+
+const EVENT_LINE = /^Event: ([^|\n]+?) \| ([^|\n]+?) \| (\d{4}-\d{2}-\d{2})(?:\n|$)/;
+
+export const EVENT_FIELD_MAX = { name: 60, city: 40 } as const;
+
+export const eventLine = ({ name, city, date }: DaoEvent) => `Event: ${name.trim()} | ${city.trim()} | ${date}`;
+
+export function encodeEventDescription(event: DaoEvent, why: string) {
+  return `${eventLine(event)}\n${why.trim()}`;
+}
+
+/** Splits an event vote's description into its event details and the reason; `event` is unset otherwise. */
+export function parseEventDescription(description: string | undefined): { event?: DaoEvent; text: string } {
+  const value = description ?? '';
+  const match = EVENT_LINE.exec(value);
+  if (!match) return { text: value };
+  return {
+    event: { name: match[1].trim(), city: match[2].trim(), date: match[3] },
+    text: value.slice(match[0].length).trim(),
+  };
+}
+
+export function formatEventDate(date: string, locale?: string) {
+  const [y, m, d] = date.split('-').map(Number);
+  return new Intl.DateTimeFormat(locale, {
+    day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC',
+  }).format(new Date(Date.UTC(y, m - 1, d)));
+}

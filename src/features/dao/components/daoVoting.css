@@ -160,6 +160,11 @@
 .dao-v-type.is-checked svg { color: var(--dv-blue); }
 .dao-v-field { display: grid; gap: 6px; margin-bottom: 16px; }
 .dao-v-field > label { font-size: 14px; font-weight: 600; }
+.dao-v-two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.dao-v-two > .dao-v-field { min-width: 0; }
+.dao-v-event { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0 0; font-size: 14px; font-weight: 600; color: var(--dv-text); }
+.dao-v-event-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border: 1px solid var(--dv-blue-border); border-radius: 999px; background: var(--dv-blue-bg); color: var(--dv-blue); font-size: 12px; }
+.dao-v-event-badge svg { width: 14px; height: 14px; }
 .dao-v .dao-v-input { min-height: 44px; border-color: var(--dv-border); background: var(--dv-surface); color: var(--dv-text); font-size: 15px; }
 .dao-v .dao-v-input::placeholder { color: var(--dv-muted); }
 .dao-v .dao-v-input[aria-invalid='true'] { border-color: var(--dv-red); }
@@ -193,6 +198,7 @@
 .dao-v-count { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: #2871ed; color: #fff; font-size: 11px; font-weight: 700; line-height: 1; }
 
 @media (max-width: 600px) {
+  .dao-v-two { grid-template-columns: minmax(0, 1fr); gap: 0; }
   .dao-v .dao-v-card { padding: 16px; }
   .dao-v-treasury { text-align: start; width: 100%; }
   .dao-v-summary div { grid-template-columns: minmax(0, 1fr); gap: 2px; }

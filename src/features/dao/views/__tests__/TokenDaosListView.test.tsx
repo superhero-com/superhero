@@ -131,6 +131,19 @@ describe('TokenDaosListView', () => {
       .toHaveAttribute('href', `/trends/dao/${SALE}/vote/0/ct_vote0`);
   });
 
+  it('shows an event funding vote with its event and the reason, not the raw line', async () => {
+    const ev = vote(2, 'open', 40n * E18, { VotePayoutAmount: [AK, 300n * E18] });
+    ev.state.metadata.description = 'Event: Superhero Meetup | Sofia | 2099-03-14\nVenue and snacks';
+    mockVotes = [ev];
+    renderAt(`/trends/dao/${SALE}`);
+    const [item] = within(await screen.findByRole('region', { name: 'Votes' })).getAllByRole('listitem');
+    expect(within(item).getByText('Fund Superhero Meetup: send 300 AE to')).toBeInTheDocument();
+    expect(within(item).getByText('Event')).toBeInTheDocument();
+    expect(within(item).getByText('Superhero Meetup · Sofia · Mar 14, 2099')).toBeInTheDocument();
+    expect(within(item).getByText('Venue and snacks')).toBeInTheDocument();
+    expect(within(item).queryByText(/Event: Superhero/)).toBeNull();
+  });
+
   it('filters open and closed votes', async () => {
     renderAt(`/trends/dao/${SALE}`);
     fireEvent.click(await screen.findByRole('button', { name: /^Closed/ }));
@@ -156,6 +169,7 @@ describe('TokenDaosListView', () => {
 describe('Create a vote', () => {
   const fillPayout = async (amount = '150') => {
     renderAt(`/trends/dao/${SALE}?create=1`);
+    fireEvent.click(await screen.findByRole('radio', { name: /^Send AE from the treasury/ }));
     fireEvent.change(await screen.findByLabelText('How much AE?'), { target: { value: amount } });
     fireEvent.change(screen.getByLabelText('Who receives the AE?'), { target: { value: AK } });
     fireEvent.change(screen.getByLabelText('Why should holders say yes?'), { target: { value: 'Fund the meetup' } });
@@ -164,7 +178,8 @@ describe('Create a vote', () => {
 
   it('uses plain labels per type, not contract names', async () => {
     renderAt(`/trends/dao/${SALE}?create=1`);
-    expect(await screen.findByRole('radio', { name: /Send AE from the treasury/ })).toBeChecked();
+    expect(await screen.findByRole('radio', { name: /^Fund an event/ })).toBeChecked();
+    expect(screen.getByRole('radio', { name: /^Send AE from the treasury/ })).not.toBeChecked();
     expect(screen.getByRole('radio', { name: /Add a moderator/ })).toBeInTheDocument();
     expect(screen.queryByText('VotePayoutAmount')).toBeNull();
   });
@@ -172,6 +187,9 @@ describe('Create a vote', () => {
   it('keeps validation and shows errors next to the fields', async () => {
     renderAt(`/trends/dao/${SALE}?create=1`);
     fireEvent.click(await screen.findByRole('button', { name: /Review vote/ }));
+    expect(screen.getByText('Enter the event name.')).toBeInTheDocument();
+    expect(screen.getByText('Enter the city.')).toBeInTheDocument();
+    expect(screen.getByText('Pick the event date.')).toBeInTheDocument();
     expect(screen.getByText('Enter an amount.')).toBeInTheDocument();
     expect(screen.getByText('Enter an account address.')).toBeInTheDocument();
     expect(screen.getByText('Tell holders why.')).toBeInTheDocument();
@@ -209,6 +227,28 @@ describe('Create a vote', () => {
     }]);
     // In the DAO that owns this sale, signed with the wallet's SDK.
     expect(createdVia).toEqual([{ sdk: 'wallet-sdk', sale: SALE }]);
+  });
+
+  it('funds an event: the event rides at the top of the description', async () => {
+    mockAccount = AK;
+    renderAt(`/trends/dao/${SALE}?create=1`);
+    fireEvent.change(await screen.findByLabelText('Event name'), { target: { value: 'Superhero Meetup' } });
+    fireEvent.change(screen.getByLabelText('City'), { target: { value: 'Sofia' } });
+    fireEvent.change(screen.getByLabelText('Event date'), { target: { value: '2099-03-14' } });
+    fireEvent.change(screen.getByLabelText('How much AE?'), { target: { value: '150' } });
+    fireEvent.change(screen.getByLabelText('Who receives the AE?'), { target: { value: AK } });
+    fireEvent.change(screen.getByLabelText('Why should holders say yes?'), { target: { value: 'Venue and snacks' } });
+    fireEvent.click(screen.getByRole('button', { name: /Review vote/ }));
+    expect(await screen.findByText('Send 150 AE from the treasury to fund the event')).toBeInTheDocument();
+    expect(screen.getByText(/Superhero Meetup · Sofia · /)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: 'Create vote · 555 AE' }));
+    expect(await screen.findByText('vote page')).toBeInTheDocument();
+    expect(created).toEqual([{
+      subject: { VotePayoutAmount: [AK, 150n * E18] },
+      description: 'Event: Superhero Meetup | Sofia | 2099-03-14\nVenue and snacks',
+      link: '',
+    }]);
   });
 
   it('can go back and edit without losing the details', async () => {

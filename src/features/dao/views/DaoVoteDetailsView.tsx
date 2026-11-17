@@ -16,11 +16,12 @@ import { useAeSdk } from '@/hooks';
 import { ensureAddress, ensureString } from '@/utils/common';
 import { safeHref } from '@/utils/safeHref';
 import VoteRulesCard from '@/features/dao/components/VoteRulesCard';
+import VoteEvent from '@/features/dao/components/VoteEvent';
 import VoteSubject from '@/features/dao/components/VoteSubject';
 import VotersTable from '@/features/dao/components/VotersTable';
 import { VoteMeters, VoteStatusBadge, VoteTime } from '@/features/dao/components/VoteStatus';
 import { daoErrorKey } from '@/features/dao/utils/daoErrors';
-import { formatUnits, summarizeSubject } from '@/features/dao/utils/voteRules';
+import { formatUnits, parseEventDescription, summarizeSubject } from '@/features/dao/utils/voteRules';
 import Spinner from '@/components/Spinner';
 import '@/features/dao/components/daoVoting.css';
 
@@ -115,6 +116,7 @@ const DaoVoteDetailsContent = ({
   const symbol = chainSymbol || token.symbol || '';
   const fmtTokens = (value?: bigint) => formatUnits(value ?? 0n, tokenDecimals, i18n.language);
   const summary = summarizeSubject(voteState?.metadata?.subject);
+  const { event, text: reason } = parseEventDescription(voteState?.metadata?.description);
   const height = currentBlockHeight ?? 0;
   const hasTokens = (userTokenBalance ?? 0n) > 0n;
   const errorText = actionError ? t(daoErrorKey(actionError)) : '';
@@ -311,10 +313,11 @@ const DaoVoteDetailsContent = ({
                 </div>
               )}
 
-              {voteState.metadata?.description && (
+              {event && <VoteEvent event={event} className="mt-4" />}
+              {reason && (
                 <>
                   <h3 className="mt-5">{t('voting.detail.why')}</h3>
-                  <p className="dao-v-prose" dir="auto">{voteState.metadata.description}</p>
+                  <p className="dao-v-prose" dir="auto">{reason}</p>
                 </>
               )}
               {proposalLink && (

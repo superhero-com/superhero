@@ -3336,6 +3336,7 @@
         "needsYes": "Not passing yet: it needs more Yes votes."
       },
       "subject": {
+        "event": "Fund {{name}}: send {{amount}} AE to",
         "payout": "Send {{amount}} AE from the treasury to",
         "payoutAll": "Send the whole treasury to",
         "changeDao": "Hand the DAO and its treasury over to",
@@ -3425,9 +3426,13 @@
         "step": "Step {{step}} of {{total}}",
         "whatLabel": "What do you want to do?",
         "kinds": {
+          "event": {
+            "title": "Fund an event",
+            "text": "Send AE from the treasury to an event organiser."
+          },
           "payout": {
             "title": "Send AE from the treasury",
-            "text": "Fund an event or pay a contributor."
+            "text": "Pay a contributor or a project."
           },
           "payoutAll": {
             "title": "Send the whole treasury",
@@ -3457,6 +3462,7 @@
         "quickAmounts": "Quick amounts",
         "percentOfTreasury": "{{percent}}%",
         "accountLabel": {
+          "event": "Who receives the AE?",
           "payout": "Who receives the AE?",
           "payoutAll": "Who receives the treasury?",
           "addModerator": "Who becomes a moderator?",
@@ -3464,6 +3470,7 @@
           "changeDao": "Address of the new DAO"
         },
         "accountLabelShort": {
+          "event": "To",
           "payout": "To",
           "payoutAll": "To",
           "addModerator": "Moderator",
@@ -3481,6 +3488,7 @@
         "editDetails": "Edit details",
         "back": "Back",
         "summary": {
+          "event": "Event",
           "action": "Action",
           "why": "Why",
           "link": "Link",
@@ -3488,6 +3496,7 @@
           "endsValue": "In about {{duration}}"
         },
         "action": {
+          "event": "Send {{amount}} AE from the treasury to fund the event",
           "payout": "Send {{amount}} AE from the treasury",
           "payoutAll": "Send the whole treasury",
           "addModerator": "Add a moderator",
@@ -3511,9 +3520,20 @@
           "amountInvalid": "Enter a valid amount.",
           "amountOverTreasury": "That is more than the treasury holds.",
           "descriptionRequired": "Tell holders why.",
-          "descriptionTooLong": "Keep it under 300 characters.",
-          "linkInvalid": "Use an http or https link."
-        }
+          "descriptionTooLong": "Keep it under {{max}} characters.",
+          "linkInvalid": "Use an http or https link.",
+          "eventNameRequired": "Enter the event name.",
+          "eventNameInvalid": "Use up to 60 characters, without |.",
+          "eventCityRequired": "Enter the city.",
+          "eventCityInvalid": "Use up to 40 characters, without |.",
+          "eventDateRequired": "Pick the event date.",
+          "eventDatePast": "Pick today or a later date."
+        },
+        "organiserHelp": "The organiser's ak_ address. The AE goes there if the vote passes.",
+        "eventNameLabel": "Event name",
+        "eventNameHelp": "Holders see this on the vote.",
+        "eventCityLabel": "City",
+        "eventDateLabel": "Event date"
       },
       "tab": {
         "title": "{{token}} votes",
@@ -3536,6 +3556,10 @@
         "notPassed": "This vote did not pass, so it can't be applied.",
         "notEnoughAe": "Not enough AE in your wallet for this.",
         "generic": "Something went wrong. Please try again."
+      },
+      "event": {
+        "badge": "Event",
+        "line": "{{name}} · {{city}} · {{date}}"
       }
     }
   },

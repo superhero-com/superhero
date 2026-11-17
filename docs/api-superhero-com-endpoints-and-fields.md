@@ -56,13 +56,18 @@ All methods use the same base URL; only the path and query params vary.
 
 ---
 
-### 1.5 `GET /api/topics/name/{name}`
+### 1.5 `GET /api/posts?topic={name}`
 
-**Used in:** `TokenTopicFeed.tsx`, `TokenTopicComposer.tsx`
+**Query:** `topic` (exact, no leading `#`), `page`, `limit` (100), `order_by=created_at`, `order_direction=DESC`
+
+**Used in:** `useTopicPosts.ts` (`TokenTopicFeed.tsx`, `TokenTopicComposer.tsx`)
 
 **Response fields used:**
-- `posts` (array)
-- `post_count` (number)
+- `items` (array of posts)
+- `meta`
+  - `currentPage`
+  - `totalPages`
+  - `totalItems`
 
 ---
 
@@ -389,7 +394,6 @@ These hit the same backend; only the path is listed. Response shapes follow gene
 | **PostsService** | GET /api/posts/{id}/comments | comments list |
 | **TipsService** | GET /api/tips/posts/{postId}/summary | totalTips |
 | **TipsService** | GET /api/tips/accounts/{address}/summary | (trace as needed) |
-| **TopicsService** | GET /api/topics/name/{name} | posts, post_count |
 | **TrendingTagsService** | GET /api/trending-tags | items (tag, score, etc.) |
 | **AnalyticsService** | GET /api/analytics/daily-created-tokens-count | (analytics DTOs) |
 | **AnalyticsService** | GET /api/analytics/total-market-cap | (value) |
@@ -484,7 +488,7 @@ The following endpoints are **defined** (in `backend.ts` or generated services) 
 | GET /api/tips/posts/{id}/summary | totalTips |
 | GET /api/factory | (factory schema) |
 | GET /api/trending-tags | items[].tag|name, score|value, source|platform |
-| GET /api/topics/name/{name} | posts, post_count |
+| GET /api/posts?topic={name} | items[], meta (currentPage, totalPages, totalItems) |
 | GET /api/tokens | items[].sale_address, address, token_name, name, created_at, tx_hash, creator_address |
 | GET /api/tokens/{address} | Full TokenDto; SEO: symbol, name, metaInfo.description, logo_url/image_url/logo |
 | GET /api/tokens/{address}/performance | past_7d.current_change_percent |

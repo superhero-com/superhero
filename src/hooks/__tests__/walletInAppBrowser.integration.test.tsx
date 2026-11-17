@@ -161,4 +161,23 @@ describe('in the wallet in-app browser (integration)', () => {
     expect([null, 'undefined']).toContain(localStorage.getItem('wallet:walletInfo'));
     expect(openWindow).not.toHaveBeenCalled();
   });
+
+  it('drops a persisted session once a wallet that never announces itself times out', async () => {
+    clearTimeout(announceTimeout);
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'], shouldAdvanceTime: true });
+    try {
+      seedPersistedSession();
+      renderApp();
+      await waitFor(() => expect(screen.getByTestId('sdk').textContent).toBe('ready'));
+      expect(screen.getByTestId('account').textContent).toBe(ACCOUNT);
+
+      await act(() => vi.advanceTimersByTimeAsync(15_000));
+
+      await waitFor(() => expect(screen.getByTestId('account').textContent).toBe('none'));
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(fakeWallet.connectionOpens).toBe(0);
+    expect(openWindow).not.toHaveBeenCalled();
+  });
 });

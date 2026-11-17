@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import LivePriceFormatter from '@/features/shared/components/LivePriceFormatter';
 import { Decimal } from '@/libs/decimal';
-import { calculateBuyPriceWithAffiliationFee, calculateTokensFromAE, toDecimals } from '@/utils/bondingCurve';
+import { calculateBuyPriceWithAffiliationFee, calculateBuyTokensFromAE, toDecimals } from '@/utils/bondingCurve';
 import { collectionLabel } from '@/utils/collection';
 import { detectMatchingCollections, preferredCollection } from '@/utils/collectionNameChars';
 import { toAe } from '@aeternity/aepp-sdk';
@@ -220,7 +220,7 @@ const CreateTokenView = () => {
       setLoadingPrice(true);
       try {
         const ae = Number(aeAmountDebounced);
-        const tokensBn = calculateTokensFromAE(new BigNumber(0), ae);
+        const tokensBn = calculateBuyTokensFromAE(new BigNumber(0), ae);
         setEstimatedTokens(Decimal.from(tokensBn.toString()));
       } catch (error) {
         console.error('Token estimation error:', error);
@@ -438,7 +438,7 @@ const CreateTokenView = () => {
       if (inputMode === 'AE') {
         const ae = Number(aeAmount || 0);
         if (ae > 0) {
-          const tokensBn = calculateTokensFromAE(new BigNumber(0), ae);
+          const tokensBn = calculateBuyTokensFromAE(new BigNumber(0), ae);
           initialBuyCount = Number(tokensBn.toString());
         }
       } else {

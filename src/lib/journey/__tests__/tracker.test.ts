@@ -11,6 +11,7 @@ import {
   type JourneyPayload,
 } from '../tracker';
 import { track as clientTrack } from '../client';
+import { resetAnonIdForTests } from '../anonId';
 
 const ENDPOINT = 'https://api.example.test/api/analytics/journey/events';
 const ANON = '3f2c8a4e-1b2d-4c3e-8f9a-0b1c2d3e4f5a';
@@ -107,6 +108,23 @@ describe('journey tracker', () => {
     expect(blob.type).toBe('text/plain');
     expect(beaconPayloads(win)[0].e).toHaveLength(FLUSH_AT);
     expect(tracker.pending()).toHaveLength(0);
+  });
+
+  it('uses the real in-memory id: the same id across batches, nothing stored', () => {
+    resetAnonIdForTests();
+    window.localStorage.clear();
+    const win = makeWin();
+    const tracker = createJourneyTracker({ endpoint: ENDPOINT, win: win as any });
+    tracker.track('page_view', { page: '/' });
+    tracker.flush();
+    tracker.track('profile_view', { page: '/users/:address' });
+    tracker.flush();
+    const ids = beaconPayloads(win).map((p) => p.a);
+    expect(ids).toHaveLength(2);
+    expect(ids[0]).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    expect(ids[1]).toBe(ids[0]);
+    expect(window.localStorage.length).toBe(0);
+    resetAnonIdForTests();
   });
 
   it('chunks to 50 events per request', () => {

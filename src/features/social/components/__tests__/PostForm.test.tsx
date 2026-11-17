@@ -194,9 +194,12 @@ describe('PostForm', () => {
     filteredKeys.forEach((key) => queryClient.setQueryData(key, {
       pageParams: [1], pages: [{ items: [], meta: { currentPage: 1, totalPages: 1 } }],
     }));
-    queryClient.setQueryData(['topic-by-name', '#nancy'], {
-      posts: [{ id: 'existing-topic-post' }],
-      post_count: 1,
+    queryClient.setQueryData(['topic-posts', 'nancy'], {
+      pageParams: [1],
+      pages: [{
+        items: [{ id: 'existing-topic-post' }],
+        meta: { currentPage: 1, totalPages: 1, totalItems: 1 },
+      }],
     });
 
     render(
@@ -237,12 +240,12 @@ describe('PostForm', () => {
     expect(queryClient.getQueryData<any>(filteredKeys[0]).pages[0].items)
       .toHaveLength(language === 'en' ? 1 : 0);
     expect(queryClient.getQueryData<any>(filteredKeys[1]).pages[0].items).toHaveLength(0);
-    const topicFeed = queryClient.getQueryData<any>(['topic-by-name', '#nancy']);
-    expect(topicFeed.posts[0]).toEqual(expect.objectContaining({
+    const topicFeed = queryClient.getQueryData<any>(['topic-posts', 'nancy']).pages[0];
+    expect(topicFeed.items[0]).toEqual(expect.objectContaining({
       id: 'th_post_v3',
       tx_hash: 'th_post',
     }));
-    expect(topicFeed.post_count).toBe(2);
+    expect(topicFeed.meta.totalItems).toBe(2);
     // Already indexed: nothing left to wait for.
     expect(listPendingTransactions({ kind: 'create_post' })).toEqual([]);
   });

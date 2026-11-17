@@ -10,6 +10,7 @@ import {
   type PriceAlertDirection,
 } from '@/features/notifications/priceAlerts';
 import { apiBaseUrl, useNotificationSigner } from '@/features/notifications/useNotifications';
+import { useNotificationsContext } from '@/features/notifications/NotificationsContext';
 import './TokenPriceAlerts.css';
 
 const priceAlertsKey = (account: string | undefined) => ['price-alerts', account];
@@ -29,6 +30,9 @@ interface TokenPriceAlertsProps {
 const TokenPriceAlerts = ({ saleAddress, symbol, priceAe }: TokenPriceAlertsProps) => {
   const { t } = useTranslation('trending');
   const { activeAccount, signNotificationMessage } = useNotificationSigner();
+  const {
+    connected, connecting, connect, error: connectError, sessionToken, items,
+  } = useNotificationsContext();
   const queryClient = useQueryClient();
   const api = useMemo(() => new PriceAlertsApi({ baseUrl: apiBaseUrl() }), []);
   const inputId = useId();
@@ -38,13 +42,16 @@ const TokenPriceAlerts = ({ saleAddress, symbol, priceAe }: TokenPriceAlertsProp
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
-  // The backend allows 10 requests a minute per IP on this route, creates
-  // included: every token page shares one cached list per account, and a
-  // failed read is not retried (the list just stays empty).
+  // Every token page shares one cached list per account, and a failed read is
+  // not retried (the list just stays empty).
   const { data: accountAlerts } = useQuery({
     queryKey: priceAlertsKey(activeAccount),
-    queryFn: () => api.list(activeAccount!),
-    enabled: !!activeAccount,
+    queryFn: () => {
+      const token = sessionToken(activeAccount!);
+      if (!token) throw new Error('No notification session');
+      return api.list(activeAccount!, token);
+    },
+    enabled: !!activeAccount && connected,
     staleTime: 60_000,
     retry: false,
   });
@@ -118,8 +125,14 @@ const TokenPriceAlerts = ({ saleAddress, symbol, priceAe }: TokenPriceAlertsProp
     }
   };
 
-  const active = alerts.filter((a) => !a.triggered_at);
-  const fired = alerts.filter((a) => a.triggered_at);
+  // The list stays cached while the page is open; a fired alert's notification
+  // reaches the feed first.
+  const firedIds = new Set(
+    items.filter((item) => item.type === 'token-price-alert').map((item) => item.data?.alertId),
+  );
+  const isFired = (a: PriceAlert) => !!a.triggered_at || firedIds.has(a.id);
+  const active = alerts.filter((a) => !isFired(a));
+  const fired = alerts.filter(isFired);
 
   return (
     <section className="token-price-alerts" aria-labelledby={`${inputId}-title`}>
@@ -158,6 +171,15 @@ const TokenPriceAlerts = ({ saleAddress, symbol, priceAe }: TokenPriceAlertsProp
       </form>
       {error && <p className="token-price-alerts__error" role="alert">{error}</p>}
       {saved && <p className="token-price-alerts__saved" role="status">{t('priceAlerts.saved')}</p>}
+      {!connected && (
+        <div className="token-price-alerts__connect">
+          <span>{t('priceAlerts.connectHint')}</span>
+          <button type="button" onClick={() => connect()} disabled={connecting}>
+            {connecting ? t('priceAlerts.connecting') : t('priceAlerts.connect')}
+          </button>
+          {connectError && <p className="token-price-alerts__error" role="alert">{connectError}</p>}
+        </div>
+      )}
       {active.length > 0 && (
         <ul className="token-price-alerts__list" aria-label={t('priceAlerts.active')}>
           {active.map((a) => (

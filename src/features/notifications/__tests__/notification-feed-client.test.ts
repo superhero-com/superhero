@@ -369,6 +369,19 @@ describe('session', () => {
     expect(makeClient().client.hasCachedSession()).toBe(false);
   });
 
+  it('hands out its session token only for its own account', async () => {
+    const { client, signMessage } = makeClient();
+    expect(client.sessionToken(ADDR)).toBeNull();
+    await client.start();
+    expect(client.sessionToken(ADDR)).toBe('tok-ABCDEF');
+    // Right after an account switch, the new account's reads can still reach this
+    // client; this account's token must not authorize them.
+    expect(client.sessionToken('ak_other')).toBeNull();
+    client.stop();
+    expect(client.sessionToken(ADDR)).toBe('tok-ABCDEF'); // the cached session a reload reuses
+    expect(signMessage).toHaveBeenCalledTimes(1); // the start() itself; reading never prompts
+  });
+
   it('does NOT retry a second consecutive 401 — throws', async () => {
     const backend = makeBackend();
     backend.fetchMock.mockImplementation(async (input: RequestInfo | URL) => {

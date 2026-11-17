@@ -1,0 +1,50 @@
+name: Trade quotes
+
+# Dry-runs the live mainnet sale, so it needs the node and the backend up and nobody
+# trading the token mid-run: kept off the PRs that cannot change a quote.
+on:
+  schedule:
+    - cron: '23 4 * * *'
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'src/utils/bondingCurve.ts'
+      - 'src/libs/decimal/**'
+      - 'src/atoms/tokenTradeAtoms.ts'
+      - 'src/features/trending/**/*Trade*'
+      - 'e2e/token-trade.spec.ts'
+      - 'package-lock.json'
+      - '.github/workflows/trade-quotes.yaml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  trade-quotes:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Check token trade quotes against the live sale contract
+        run: npm run test:e2e:trade

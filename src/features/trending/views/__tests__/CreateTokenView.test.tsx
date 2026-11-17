@@ -2,13 +2,19 @@
 import {
   act, fireEvent, render, screen, waitFor,
 } from '@testing-library/react';
+import BigNumber from 'bignumber.js';
 import { MemoryRouter } from 'react-router-dom';
 import {
   beforeEach, describe, expect, it, vi,
 } from 'vitest';
+import { buyPrice } from '@/__tests__/helpers/bondingCurveContract';
+import { Decimal } from '@/libs/decimal';
 import CreateTokenView from '../CreateTokenView';
 
 const DEPLOYER = 'ak_2X6puZgdPKcfjSVdUGs2bvsvkbsCLN8XbKQwSVtqLUBc3518bi';
+
+/** AE or tokens as aettos. */
+const aettos = (amount: number) => BigInt(new BigNumber(amount).shiftedBy(18).toFixed(0));
 
 // The rules below are copied from what the factory endpoint actually serves.
 const COLLECTIONS = {
@@ -109,21 +115,21 @@ async function typeName(value: string) {
   return input;
 }
 
-describe('CreateTokenView language auto-detection', () => {
-  beforeEach(() => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-    backendMocks.listTokens.mockReset();
-    backendMocks.listTokens.mockResolvedValue({ items: [] });
-    createCommunityMock.mockReset();
-    createCommunityMock.mockResolvedValue('th_hash');
-    factoryMocks.value = {
-      activeFactorySchema: FACTORY_SCHEMA,
-      activeFactoryCollections: Object.values(COLLECTIONS),
-      loadFactorySchema: vi.fn().mockResolvedValue(FACTORY_SCHEMA),
-      getFactory: vi.fn().mockResolvedValue({ address: 'ct_factory' }),
-    };
-  });
+beforeEach(() => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  backendMocks.listTokens.mockReset();
+  backendMocks.listTokens.mockResolvedValue({ items: [] });
+  createCommunityMock.mockReset();
+  createCommunityMock.mockResolvedValue('th_hash');
+  factoryMocks.value = {
+    activeFactorySchema: FACTORY_SCHEMA,
+    activeFactoryCollections: Object.values(COLLECTIONS),
+    loadFactorySchema: vi.fn().mockResolvedValue(FACTORY_SCHEMA),
+    getFactory: vi.fn().mockResolvedValue({ address: 'ct_factory' }),
+  };
+});
 
+describe('CreateTokenView language auto-detection', () => {
   it.each([
     ['BITCOIN', 'English'],
     ['北京', 'Chinese'],
@@ -345,5 +351,32 @@ describe('CreateTokenView language auto-detection', () => {
 
     expect(await screen.findByText('Trading live')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Create Token' })).toBeDisabled();
+  });
+});
+
+describe('CreateTokenView initial buy', () => {
+  it('pre-buys what the AE picked pays for, fee included, and shows that count', async () => {
+    renderView();
+    const input = await typeName('BITCOIN');
+    expect(await screen.findByText('English')).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '10 AE' }));
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(300);
+    });
+    await act(async () => {
+      fireEvent.submit(input.closest('form')!);
+    });
+
+    await waitFor(() => {
+      expect(createCommunityMock).toHaveBeenCalledTimes(1);
+    });
+    const [, , { initialBuyCount }] = createCommunityMock.mock.calls[0];
+    // The factory charges the new sale's price(count), taken at zero supply.
+    const cost = buyPrice(0n, aettos(initialBuyCount));
+    expect(cost <= aettos(10) && cost >= aettos(9.9999), `${cost} aettos for 10 AE`).toBe(true);
+    expect(screen.getByText(Decimal.from(initialBuyCount).prettify())).toBeInTheDocument();
   });
 });

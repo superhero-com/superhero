@@ -6,6 +6,7 @@ import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useWalletConnect } from '../../../hooks/useWalletConnect';
 import { useSocialGraphConfig } from '../../../hooks/useSocialGraph';
 import { IconDiamond } from '../../../icons';
+import { track } from '../../../lib/journey';
 import ProfileSocialActions from './ProfileSocialActions';
 
 interface ProfileActionBarProps {
@@ -32,6 +33,12 @@ const ProfileActionBar = ({
   // becomes a connect prompt rather than an absence. When the graph is
   // unconfigured, follow stays silent (ProfileSocialActions renders nothing).
   const needsWallet = !ownProfile && !!config?.contract_address && !activeAccount;
+
+  // This button connects without the onboarding modal, which records these steps elsewhere.
+  const connectToFollow = async () => {
+    track('wallet_connect_open');
+    if (await connectWallet()) track('wallet_connected');
+  };
 
   return (
     <div
@@ -65,7 +72,7 @@ const ProfileActionBar = ({
               variant="ghost"
               size="sm"
               loading={connectingWallet}
-              onClick={() => connectWallet()}
+              onClick={connectToFollow}
               data-testid="profile-connect-to-follow"
               className="flex-1 md:flex-none !rounded-full !h-11 md:!h-9 px-4 justify-center inline-flex items-center gap-2 text-[13px] font-semibold !border !border-dashed !border-white/30 hover:!border-white/50 hover:!bg-white/5 transition-colors"
             >

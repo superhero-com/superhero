@@ -152,6 +152,11 @@ const Privacy = () => {
         <p className="text-white/80 leading-relaxed">
           {t('common.views.privacy.contactP1')}
         </p>
+
+        <h3 className="text-xl font-semibold text-white mt-6 mb-2">{t('common.views.privacy.appendixHeading')}</h3>
+        <p className="text-white/80 leading-relaxed">
+          {t('common.views.privacy.appendixP1')}
+        </p>
       </div>
       <div className="mt-8">
         <FooterSection />

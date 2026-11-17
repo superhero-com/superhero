@@ -83,8 +83,17 @@ describe('PriceAlertsApi', () => {
       .mockResolvedValueOnce(json({ statusCode: 500, message: 'Internal server error' }, 500))
       .mockResolvedValueOnce(new Response('<html>Bad Gateway</html>', { status: 502 }));
     const api = new PriceAlertsApi({ baseUrl: 'http://api.test', fetch: fetchMock });
-    await expect(api.list('ak_a')).rejects.toThrow(/^$/);
-    await expect(api.list('ak_a')).rejects.toThrow(/^$/);
+    await expect(api.list('ak_a', 'tok')).rejects.toThrow(/^$/);
+    await expect(api.list('ak_a', 'tok')).rejects.toThrow(/^$/);
+  });
+
+  it('reads the list with the feed session', async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(json([]));
+    const api = new PriceAlertsApi({ baseUrl: 'http://api.test', fetch: fetchMock });
+    await expect(api.list('ak_a', 'tok')).resolves.toEqual([]);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('http://api.test/api/notifications/ak_a/price-alerts');
+    expect(init.headers).toEqual({ Authorization: 'Bearer tok' });
   });
 
   it('deletes with a signature bound to the alert id', async () => {

@@ -1,18 +1,11 @@
 /**
- * One random id per browser, and nothing else. It is not derived from anything (no wallet,
- * no device data), never leaves this module except in the journey payload, and is never sent
- * anywhere else. If storage is blocked (e.g. Safari private mode) it lives in memory for the tab.
+ * One random id per page load, and nothing else. It lives only in memory: nothing is written
+ * to cookies, localStorage or any other storage, so a reload or a new tab starts a new id and
+ * the same person is never followed across visits. It is not derived from anything (no wallet,
+ * no device data) and never leaves this module except in the journey payload.
  */
-export const ANON_ID_STORAGE_KEY = 'sh_journey_id';
-
-const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
 type CryptoLike = Pick<Crypto, 'getRandomValues'> & { randomUUID?: () => string };
-type StorageLike = Pick<Storage, 'getItem' | 'setItem'>;
-
-export const isUuidV4 = (value: unknown): value is string => (
-  typeof value === 'string' && UUID_V4.test(value)
-);
 
 export function randomUuidV4(cryptoImpl: CryptoLike | undefined = globalThis.crypto): string {
   if (cryptoImpl && typeof cryptoImpl.randomUUID === 'function') {
@@ -23,7 +16,7 @@ export function randomUuidV4(cryptoImpl: CryptoLike | undefined = globalThis.cry
     cryptoImpl.getRandomValues(bytes);
   } else {
     // No Web Crypto at all (very old engines). The id only has to be random enough not to
-    // collide between browsers; it is not a secret.
+    // collide between tabs; it is not a secret.
     for (let i = 0; i < 16; i += 1) bytes[i] = Math.floor(Math.random() * 256);
   }
   // eslint-disable-next-line no-bitwise
@@ -36,40 +29,13 @@ export function randomUuidV4(cryptoImpl: CryptoLike | undefined = globalThis.cry
 
 let memoryId: string | null = null;
 
-function defaultStorage(): StorageLike | null {
-  try {
-    return typeof window !== 'undefined' ? window.localStorage : null;
-  } catch {
-    return null;
-  }
+/** Read this page load's id, creating it on first use. */
+export function getOrCreateAnonId(cryptoImpl?: CryptoLike): string {
+  if (!memoryId) memoryId = randomUuidV4(cryptoImpl);
+  return memoryId;
 }
 
-/** Read the browser's id, creating it on first use. */
-export function getOrCreateAnonId(
-  storage: StorageLike | null = defaultStorage(),
-  cryptoImpl?: CryptoLike,
-): string {
-  if (memoryId) return memoryId;
-  try {
-    const stored = storage?.getItem(ANON_ID_STORAGE_KEY);
-    if (isUuidV4(stored)) {
-      memoryId = stored;
-      return stored;
-    }
-  } catch {
-    // storage blocked: fall through to an in-memory id
-  }
-  const created = randomUuidV4(cryptoImpl);
-  memoryId = created;
-  try {
-    storage?.setItem(ANON_ID_STORAGE_KEY, created);
-  } catch {
-    // quota / private mode: keep the in-memory id for this tab
-  }
-  return created;
-}
-
-/** Test hook: forget the in-memory copy. */
+/** Test hook: forget the in-memory id. */
 export function resetAnonIdForTests(): void {
   memoryId = null;
 }

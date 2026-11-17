@@ -1,10 +1,14 @@
-/* eslint-disable max-len */
 import BigNumber from 'bignumber.js';
 
-// Constants mirror Vue calculators
-const a = 0.001;
-const k = 0.00000001;
-const c = 0.0009999;
+// The sale's pricing, from bctsl-contracts: BondingCurveExponential.aes charges the area
+// under f(x) = A·e^(K·x) − (A − INITIAL_PRICE) AE per token (x = supply in tokens) and pays
+// back SELL_RETURN_SHARE of it on a sell; AffiliationBondingCurveTokenSale.aes adds the
+// treasury's 500 / 1e5 fee on top of every buy.
+const A = 0.001;
+const K = 0.00000001;
+const INITIAL_PRICE = 0.0000001;
+const SELL_RETURN_SHARE = 0.995;
+const AFFILIATION_FEE = 0.005;
 const DECIMALS = new BigNumber(10).pow(18); // 1e18
 
 export function toDecimals(amount: number | string, decimals: number | string = 18): BigNumber {
@@ -16,55 +20,71 @@ export function toAe(aettos: BigNumber | string | number): number {
   return Number(n.dividedBy(DECIMALS).toFixed(18));
 }
 
-function integrateTrapezoidal(f: (x: number) => number, aStart: number, bEnd: number, n = 100) {
-  const h = (bEnd - aStart) / n;
-  let sum = 0.5 * (f(aStart) + f(bEnd));
-  for (let i = 1; i < n; i += 1) {
-    const x = aStart + i * h;
-    sum += f(x);
-  }
-  return sum * h;
+const toTokens = (aettos: BigNumber) => aettos.div(DECIMALS).toNumber();
+
+// The area in closed form (expm1 keeps small counts precise), in AE.
+function curveArea(fromTokens: number, countTokens: number): number {
+  return A * ((Math.exp(K * fromTokens) * Math.expm1(K * countTokens)) / K - countTokens)
+    + INITIAL_PRICE * countTokens;
 }
 
-// Core price integrator (returns aettos)
-function calculatePrice(totalSupplyAettos: BigNumber, countAettos: BigNumber): BigNumber {
-  const totalSupplyInDecimals = totalSupplyAettos.div(DECIMALS).toNumber();
-  const countInDecimals = countAettos.div(DECIMALS).toNumber();
-  const f = (x: number) => a * Math.exp(k * x) - c;
-  const cumulativeTotal = integrateTrapezoidal(f, totalSupplyInDecimals, totalSupplyInDecimals + countInDecimals);
-  return new BigNumber(cumulativeTotal).multipliedBy(DECIMALS);
-}
+const buyCost = (supplyTokens: number, countTokens: number) => (
+  curveArea(supplyTokens, countTokens) * (1 + AFFILIATION_FEE)
+);
+const sellReturn = (remainingTokens: number, countTokens: number) => (
+  curveArea(remainingTokens, countTokens) * SELL_RETURN_SHARE
+);
 
-export function calculateTokensFromAE(totalSupplyAettos: BigNumber, aeAmount: number, tolerance = 1e-3): BigNumber {
-  const priceAettos = toDecimals(aeAmount, 18);
-  const maxIterations = 1000;
-  const f = (x: number) => a * Math.exp(k * x) - c;
-  const totalSupplyInDecimals = totalSupplyAettos.div(DECIMALS).toNumber();
-  const priceInDecimals = priceAettos.div(DECIMALS).toNumber();
-
+// The token count whose AE amount, as `amountOf` grows with the count, is `aeAmount`;
+// bisected down to adjacent doubles. `side` picks which end of the final bracket to return.
+function invert(
+  amountOf: (countTokens: number) => number,
+  aeAmount: number,
+  maxTokens: number,
+  side: 'atMost' | 'atLeast',
+): number {
+  if (!(aeAmount > 0) || !(maxTokens > 0)) return 0;
+  let high = Math.min(1, maxTokens);
+  while (high < maxTokens && amountOf(high) < aeAmount) high = Math.min(high * 2, maxTokens);
+  if (amountOf(high) < aeAmount) return maxTokens;
   let low = 0;
-  let high = 1e12; // Arbitrary upper bound
-  let mid = 0;
-  let iterations = 0;
-  while (iterations < maxIterations) {
-    mid = (low + high) / 2;
-    const integralValue = integrateTrapezoidal(f, totalSupplyInDecimals, totalSupplyInDecimals + mid);
-    if (Math.abs(integralValue - priceInDecimals) < tolerance) break;
-    if (integralValue < priceInDecimals) low = mid; else high = mid;
-    iterations += 1;
+  for (let i = 0; i < 2000; i += 1) {
+    const mid = (low + high) / 2;
+    if (mid <= low || mid >= high) break;
+    if (amountOf(mid) < aeAmount) low = mid; else high = mid;
   }
-  // Return number of tokens (not scaled by DECIMALS)
-  return new BigNumber(mid);
+  return side === 'atMost' ? low : high;
 }
 
-export function calculateBuyPrice(totalSupplyAettos: BigNumber, countAettos: BigNumber): BigNumber {
-  return calculatePrice(totalSupplyAettos, countAettos);
+export function calculateBuyPrice(supplyAettos: BigNumber, countAettos: BigNumber): BigNumber {
+  return toDecimals(curveArea(toTokens(supplyAettos), toTokens(countAettos)));
 }
 
-export function calculateSellReturn(totalSupplyAettos: BigNumber, sellTokensAettos: BigNumber): BigNumber {
-  return calculatePrice(totalSupplyAettos.minus(sellTokensAettos), sellTokensAettos);
+export function calculateBuyPriceWithAffiliationFee(
+  supplyAettos: BigNumber,
+  countAettos: BigNumber,
+): BigNumber {
+  return toDecimals(buyCost(toTokens(supplyAettos), toTokens(countAettos)));
 }
 
-export function calculateBuyPriceWithAffiliationFee(totalSupplyAettos: BigNumber, countAettos: BigNumber): BigNumber {
-  return calculateBuyPrice(totalSupplyAettos, countAettos).multipliedBy(1.005);
+export function calculateSellReturn(supplyAettos: BigNumber, countAettos: BigNumber): BigNumber {
+  const remaining = toTokens(supplyAettos.minus(countAettos));
+  return toDecimals(sellReturn(remaining, toTokens(countAettos)));
+}
+
+/** Tokens (not aettos) that `aeAmount` AE buys, fee included, without costing more. */
+export function calculateBuyTokensFromAE(supplyAettos: BigNumber, aeAmount: number): BigNumber {
+  const supply = toTokens(supplyAettos);
+  return new BigNumber(invert((count) => buyCost(supply, count), aeAmount, Infinity, 'atMost'));
+}
+
+/**
+ * Tokens (not aettos) to sell for at least `aeAmount` AE. When the whole supply returns
+ * less, that is the whole supply: no sell can reach the amount.
+ */
+export function calculateSellTokensFromAE(supplyAettos: BigNumber, aeAmount: number): BigNumber {
+  const supply = toTokens(supplyAettos);
+  return new BigNumber(
+    invert((count) => sellReturn(supply - count, count), aeAmount, supply, 'atLeast'),
+  );
 }

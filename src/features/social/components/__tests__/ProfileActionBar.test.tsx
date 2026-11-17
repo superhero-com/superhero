@@ -1,4 +1,6 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import {
+  render, screen, fireEvent, waitFor,
+} from '@testing-library/react';
 import {
   beforeEach, describe, expect, it, vi,
 } from 'vitest';
@@ -7,8 +9,11 @@ import ProfileActionBar from '../ProfileActionBar';
 const state = vi.hoisted(() => ({
   activeAccount: null as string | null,
   contractAddress: 'ct_config000000000000000000000000000000000000000000000' as string | null,
-  connectWallet: vi.fn(async () => 'ak_me'),
+  connectWallet: vi.fn(async (): Promise<string | null> => 'ak_me'),
+  track: vi.fn(),
 }));
+
+vi.mock('@/lib/journey', () => ({ track: state.track }));
 
 vi.mock('../../../../hooks/useAeSdk', () => ({ useAeSdk: () => ({ activeAccount: state.activeAccount }) }));
 vi.mock('../../../../hooks/useWalletConnect', () => ({
@@ -41,6 +46,7 @@ describe('ProfileActionBar', () => {
     state.activeAccount = 'ak_me';
     state.contractAddress = 'ct_config000000000000000000000000000000000000000000000';
     state.connectWallet.mockClear();
+    state.track.mockClear();
   });
 
   it('shows the own-profile control: edit only — never tip, follow, share or overflow', () => {
@@ -72,6 +78,26 @@ describe('ProfileActionBar', () => {
     expect(screen.queryByTestId('social-actions-stub')).toBeNull();
     // Tipping needs a wallet too, so the connect prompt stands in for it.
     expect(screen.queryByTestId('profile-tip-button')).toBeNull();
+  });
+
+  it('records the connect prompt and the connection it produced', async () => {
+    state.activeAccount = null;
+    renderBar();
+    fireEvent.click(screen.getByTestId('profile-connect-to-follow'));
+    await waitFor(() => expect(state.track.mock.calls).toEqual([
+      ['wallet_connect_open'],
+      ['wallet_connected'],
+    ]));
+  });
+
+  it('records no connection when the wallet did not connect', async () => {
+    state.activeAccount = null;
+    state.connectWallet.mockResolvedValueOnce(null);
+    renderBar();
+    fireEvent.click(screen.getByTestId('profile-connect-to-follow'));
+    await waitFor(() => expect(state.connectWallet).toHaveBeenCalledTimes(1));
+    await state.connectWallet.mock.results[0].value;
+    expect(state.track.mock.calls).toEqual([['wallet_connect_open']]);
   });
 
   it('stays silent on follow when the social graph is unconfigured', () => {

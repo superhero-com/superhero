@@ -3472,6 +3472,7 @@
         "alreadyApplied": "此投票已执行。",
         "applyWindowOver": "执行此投票的时间已过。",
         "notPassed": "此投票未通过，无法执行。",
+        "notListed": "此投票不属于该代币的 DAO，无法在这里投票或执行。",
         "notEnoughAe": "钱包中的 AE 不足。",
         "generic": "出错了，请重试。"
       },

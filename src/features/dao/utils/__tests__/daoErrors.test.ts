@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { daoErrorKey } from '../daoErrors';
+import { daoErrorKey, VOTE_NOT_LISTED } from '../daoErrors';
 
 describe('daoErrorKey', () => {
   it('recognises a request the user cancelled in the wallet', () => {
@@ -18,6 +18,10 @@ describe('daoErrorKey', () => {
     ['VOTE_NOT_YET_FINAL', 'voteNotClosed'],
   ])('maps the contract abort %s to a plain message', (code, key) => {
     expect(daoErrorKey(new Error(`Invocation failed: "${code}"`))).toBe(`voting.errors.${key}`);
+  });
+
+  it('explains a vote the DAO does not list', () => {
+    expect(daoErrorKey(new Error(VOTE_NOT_LISTED))).toBe('voting.errors.notListed');
   });
 
   it('tells an account short of AE apart from anything else', () => {

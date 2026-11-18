@@ -16,6 +16,9 @@ const CONTRACT_ERRORS: Record<string, string> = {
   VOTE_NOT_YET_FINAL: 'voteNotClosed',
 };
 
+/** Raised by the app, not a contract: the link's vote contract is not the DAO's vote of that id. */
+export const VOTE_NOT_LISTED = 'VOTE_NOT_LISTED';
+
 /** Returns an i18n key under the `dao` namespace for a failed DAO call. */
 export function daoErrorKey(error: unknown): string {
   const raw = String((error as any)?.message ?? error ?? '');
@@ -23,6 +26,7 @@ export function daoErrorKey(error: unknown): string {
   if (lc.includes('rejected by user') || lc.includes('user rejected')) {
     return 'voting.errors.rejected';
   }
+  if (raw.includes(VOTE_NOT_LISTED)) return 'voting.errors.notListed';
   const code = Object.keys(CONTRACT_ERRORS).find((c) => raw.includes(c));
   if (code) return `voting.errors.${CONTRACT_ERRORS[code]}`;
   if (lc.includes('insufficient') && lc.includes('balance')) return 'voting.errors.notEnoughAe';

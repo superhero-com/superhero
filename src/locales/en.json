@@ -3554,6 +3554,7 @@
         "alreadyApplied": "This vote has already been applied.",
         "applyWindowOver": "The time to apply this vote has passed.",
         "notPassed": "This vote did not pass, so it can't be applied.",
+        "notListed": "This vote isn't part of this token's DAO, so it can't be voted on or applied here.",
         "notEnoughAe": "Not enough AE in your wallet for this.",
         "generic": "Something went wrong. Please try again."
       },

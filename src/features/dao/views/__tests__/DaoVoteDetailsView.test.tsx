@@ -258,4 +258,12 @@ describe('DaoVoteDetailsView ballot', () => {
     renderView();
     expect(await screen.findByRole('alert')).toHaveTextContent('You have already voted.');
   });
+
+  it('says why it refuses a vote contract the DAO does not list', async () => {
+    mockAccount = ACCOUNT;
+    mockHook = { actionError: new Error('VOTE_NOT_LISTED') };
+    renderView();
+    expect(await screen.findByRole('alert'))
+      .toHaveTextContent("This vote isn't part of this token's DAO, so it can't be voted on or applied here.");
+  });
 });

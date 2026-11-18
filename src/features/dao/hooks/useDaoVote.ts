@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { initDAOVote, Vote, VoteState } from 'bctsl-sdk';
 import { useAeSdk, useAccount } from '@/hooks';
 import { useDao } from './useDao';
+import { VOTE_NOT_LISTED } from '../utils/daoErrors';
 import {
   DaoVoteStatus, voterActions, voterPosition, voteStatus, voteTally,
 } from '../utils/voteRules';
@@ -40,14 +41,16 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
 
   const status = useMemo((): DaoVoteStatus | undefined => {
     if (!voteState || !dao.state || currentBlockHeight == null) return undefined;
+    const entry = dao.state.votes?.get(voteId);
     return voteStatus({
       voteState,
-      applied: !!dao.state.votes?.get(voteId)?.[0],
+      // The link may pair the id with another contract; only that vote's own flag counts.
+      applied: entry?.[1] === voteAddress && entry[0],
       height: currentBlockHeight,
       voteTimeout: Number(dao.state.vote_timeout),
       tokenSupply: dao.tokenSupply,
     });
-  }, [voteState, dao.state, dao.tokenSupply, currentBlockHeight, voteId]);
+  }, [voteState, dao.state, dao.tokenSupply, currentBlockHeight, voteId, voteAddress]);
 
   const position = useMemo(
     () => voterPosition(voteState, activeAccount),
@@ -101,9 +104,21 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
     await applyAction(() => vote.withdraw());
   }, [vote, applyAction]);
 
+  // The vote address comes from the link. Voting grants that contract an allowance and applying
+  // runs the DAO's vote `voteId`, so both need it to be that vote. Read fresh: the state this page
+  // loaded can predate a vote created moments ago. Revoke and withdraw grant nothing, and stay
+  // open so tokens can come back from the votes of a DAO that was replaced.
+  const ensureListed = useCallback(async () => {
+    const listed = (await dao.dao?.state())?.votes.get(voteId)?.[1];
+    if (listed !== voteAddress) throw new Error(VOTE_NOT_LISTED);
+  }, [dao.dao, voteId, voteAddress]);
+
   const applyVote = useCallback(async () => {
-    await applyAction(() => dao.applyVoteSubject(voteId));
-  }, [dao, voteId, applyAction]);
+    await applyAction(async () => {
+      await ensureListed();
+      await dao.applyVoteSubject(voteId);
+    });
+  }, [dao, voteId, applyAction, ensureListed]);
 
   // Votes with the account's whole token balance, which the vote contract then holds.
   const voteOption = useCallback(async (option: boolean) => {
@@ -111,8 +126,11 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
       return;
     }
 
-    await applyAction(async () => vote.vote(option, dao.userTokenBalance!, dao.tokenInstanceRef!));
-  }, [vote, dao.userTokenBalance, dao.tokenInstanceRef, applyAction]);
+    await applyAction(async () => {
+      await ensureListed();
+      await vote.vote(option, dao.userTokenBalance!, dao.tokenInstanceRef!);
+    });
+  }, [vote, dao.userTokenBalance, dao.tokenInstanceRef, applyAction, ensureListed]);
 
   // Initialize when tokenSaleAddress changes
   useEffect(() => {

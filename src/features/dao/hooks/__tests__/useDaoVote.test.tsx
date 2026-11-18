@@ -5,9 +5,11 @@ import {
   beforeEach, describe, expect, it, vi,
 } from 'vitest';
 import { useDaoVote } from '../useDaoVote';
+import { daoErrorKey } from '../../utils/daoErrors';
 
 const AK = 'ak_46WPtSJH9Mc1rNbRaWo6k2v6Bm8dc1FuCFxS2n6gFo7M27Ucu';
 const VOTE = 'ct_vote' as any;
+const TOKEN = { name: 'token contract' };
 // One instance, as the app's context gives: a new SDK means a wallet switch and a reload.
 const SDK = {};
 
@@ -18,6 +20,10 @@ let revokeError: Error | undefined;
 let voteReads: number;
 let daoInits: number;
 let invalidated: unknown[];
+// Calls that sign: vote, withdraw and apply.
+let calls: unknown[][];
+// The contract the DAO lists under the vote's id when read at the moment of voting or applying.
+let listed: string;
 
 vi.mock('@/hooks', () => ({
   useAeSdk: () => ({ sdk: SDK, currentBlockHeight: 150 }),
@@ -38,6 +44,8 @@ vi.mock('bctsl-sdk', async (importOriginal) => ({
         };
       },
       revokeVote: async () => { if (revokeError) throw revokeError; },
+      vote: async (...args: unknown[]) => { calls.push(['vote', ...args]); },
+      withdraw: async () => { calls.push(['withdraw']); },
     };
   },
 }));
@@ -65,11 +73,17 @@ beforeEach(() => {
   voteReads = 0;
   daoInits = 0;
   invalidated = [];
+  calls = [];
+  listed = VOTE;
   dao = {
     state: daoState(false),
     tokenSupply: 1000n,
     loaded: true,
     init: async () => { daoInits += 1; },
+    userTokenBalance: 7n,
+    tokenInstanceRef: TOKEN,
+    dao: { state: async () => ({ vote_timeout: 960n, votes: new Map([[3n, [false, listed]]]) }) },
+    applyVoteSubject: async (id: bigint) => { calls.push(['apply', id]); },
   };
 });
 
@@ -88,6 +102,13 @@ describe('useDaoVote', () => {
     const { result } = renderVote();
 
     await waitFor(() => expect(result.current.status).toBe('applied'));
+  });
+
+  it('ignores the applied flag of another contract listed under the id', async () => {
+    dao.state = { vote_timeout: 960n, votes: new Map([[3n, [true, 'ct_real']]]) };
+    const { result } = renderVote();
+
+    await waitFor(() => expect(result.current.status).toBe('open'));
   });
 
   it('keeps a failed wallet request for the page and still refreshes the vote', async () => {
@@ -118,5 +139,60 @@ describe('useDaoVote', () => {
 
     expect(result.current.status).toBeUndefined();
     expect(result.current.daoFailed).toBe(true);
+  });
+});
+
+describe('useDaoVote acting on the vote in the link', () => {
+  const renderLoaded = async () => {
+    const rendered = renderVote();
+    await waitFor(() => expect(rendered.result.current.vote).toBeDefined());
+    return rendered.result;
+  };
+
+  it('votes with the whole token balance once the DAO lists the contract under the id', async () => {
+    const result = await renderLoaded();
+
+    await act(() => result.current.voteOption(true));
+
+    expect(calls).toEqual([['vote', true, 7n, TOKEN]]);
+    expect(result.current.actionError).toBeUndefined();
+  });
+
+  it('applies the DAO vote of that id', async () => {
+    const result = await renderLoaded();
+
+    await act(() => result.current.applyVote());
+
+    expect(calls).toEqual([['apply', 3n]]);
+  });
+
+  it('neither votes nor applies when the DAO lists another contract under the id', async () => {
+    listed = 'ct_real';
+    const result = await renderLoaded();
+
+    await act(() => result.current.voteOption(true));
+    expect(daoErrorKey(result.current.actionError)).toBe('voting.errors.notListed');
+    await act(() => result.current.applyVote());
+
+    expect(daoErrorKey(result.current.actionError)).toBe('voting.errors.notListed');
+    expect(calls).toEqual([]);
+  });
+
+  it('checks the DAO when voting, so a vote newer than the loaded DAO state goes through', async () => {
+    dao.state = { vote_timeout: 960n, votes: new Map() };
+    const result = await renderLoaded();
+
+    await act(() => result.current.voteOption(false));
+
+    expect(calls).toEqual([['vote', false, 7n, TOKEN]]);
+  });
+
+  it('still lets a voter withdraw from a vote the DAO does not list', async () => {
+    listed = 'ct_real';
+    const result = await renderLoaded();
+
+    await act(() => result.current.withdraw());
+
+    expect(calls).toEqual([['withdraw']]);
   });
 });

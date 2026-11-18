@@ -7,6 +7,8 @@ export interface NavigationItem {
   id: string;
   labelKey: string;
   path?: string;
+  /** Other route prefixes that belong to this item's section. */
+  matchPaths?: string[];
   icon: LucideIcon;
   isExternal?: boolean;
 }
@@ -36,6 +38,7 @@ const DAO_ITEM: NavigationItem = {
   id: 'dao',
   labelKey: 'nav.dao',
   path: '/trends/daos',
+  matchPaths: ['/trends/dao', '/voting'],
   icon: Vote,
 };
 
@@ -109,12 +112,16 @@ export const getMobileMoreNavigationItems = (): NavigationItem[] => [
   GET_AE_ITEM,
 ];
 
+const isUnderPath = (pathname: string, path: string) => (path === '/'
+  ? pathname === '/'
+  : pathname === path || pathname.startsWith(`${path}/`));
+
 export const getActiveNavigationPath = (
   pathname: string,
   navigationItems: NavigationItem[],
 ): string | undefined => navigationItems
   .filter((item): item is NavigationItem & { path: string } => !!item?.path && !item?.isExternal)
-  .filter((item) => (item.path === '/'
-    ? pathname === '/'
-    : pathname === item.path || pathname.startsWith(`${item.path}/`)))
-  .sort((a, b) => b.path.length - a.path.length)[0]?.path;
+  .flatMap((item) => [item.path, ...(item.matchPaths ?? [])]
+    .filter((path) => isUnderPath(pathname, path))
+    .map((path) => ({ itemPath: item.path, matchedLength: path.length })))
+  .sort((a, b) => b.matchedLength - a.matchedLength)[0]?.itemPath;

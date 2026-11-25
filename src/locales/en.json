@@ -1460,6 +1460,26 @@
       "empty": "No posts in {{language}} yet",
       "showAll": "Show all languages",
       "error": "Couldn’t load posts in {{language}}. Try again or show posts in all languages."
+    },
+    "chainNameStep": {
+      "title": "Pick your .chain name",
+      "subtitle": "Your name on Superhero instead of a long wallet address.",
+      "titleFree": "Get your free .chain name",
+      "subtitleFree": "Your name on Superhero instead of a long wallet address. Superhero pays the network fee.",
+      "inputLabel": "Name",
+      "hint": "Letters, numbers and hyphens, at least 13 characters.",
+      "claimFree": "Claim for free",
+      "buyFor": "Buy for ≈ {{amount}} AE",
+      "notEnoughAe": "Not enough AE. Your balance is {{balance}} AE.",
+      "confirmInWallet": "Confirm in your wallet…",
+      "confirmStep": "Confirm step {{step}} of {{total}} in your wallet…",
+      "waitingForNetwork": "Waiting for the network…",
+      "processingTitle": "{{name}} is on its way",
+      "doneTitle": "{{name}} is yours",
+      "doneDesc": "It now shows on your profile and your posts.",
+      "continue": "Continue",
+      "later": "Later",
+      "laterHint": "You can claim a name any time from your profile."
     }
   },
   "dex": {

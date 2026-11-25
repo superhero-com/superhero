@@ -1397,6 +1397,26 @@
       "empty": "لا توجد منشورات بـ{{language}} حتى الآن",
       "showAll": "عرض كل اللغات",
       "error": "تعذّر تحميل المنشورات باللغة {{language}}. أعد المحاولة أو اعرض المنشورات بكل اللغات."
+    },
+    "chainNameStep": {
+      "title": "اختر اسم ‎.chain الخاص بك",
+      "subtitle": "اسمك على Superhero بدلاً من عنوان محفظة طويل.",
+      "titleFree": "احصل على اسم ‎.chain مجاناً",
+      "subtitleFree": "اسمك على Superhero بدلاً من عنوان محفظة طويل. تدفع Superhero رسوم الشبكة.",
+      "inputLabel": "الاسم",
+      "hint": "حروف وأرقام وشرطات، 13 حرفاً على الأقل.",
+      "claimFree": "احصل عليه مجاناً",
+      "buyFor": "اشترِ مقابل ≈ {{amount}} AE",
+      "notEnoughAe": "لا يوجد AE كافٍ. رصيدك {{balance}} AE.",
+      "confirmInWallet": "أكّد في محفظتك…",
+      "confirmStep": "أكّد الخطوة {{step}} من {{total}} في محفظتك…",
+      "waitingForNetwork": "بانتظار الشبكة…",
+      "processingTitle": "{{name}} قيد التسجيل",
+      "doneTitle": "{{name}} أصبح لك",
+      "doneDesc": "يظهر الآن في ملفك الشخصي ومنشوراتك.",
+      "continue": "متابعة",
+      "later": "لاحقاً",
+      "laterHint": "يمكنك الحصول على اسم في أي وقت من ملفك الشخصي."
     }
   },
   "dex": {

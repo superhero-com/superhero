@@ -15,6 +15,20 @@ const stripApiErrorPrefix = (value: string) => value.replace(/^superhero api err
 
 export const CLAIMABLE_CHAIN_NAME_LABEL_REGEX = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
 
+/**
+ * Why `label` (normalized, without `.chain`) can't be claimed, or null when it can.
+ * Names of 12 characters or less go to an AENS auction, so they are not offered here.
+ */
+export const getChainNameClaimValidationError = (
+  label: string,
+  t: (key: string) => string,
+): string | null => {
+  if (!label) return t('messages.chainNameClaimRequired');
+  if (!CLAIMABLE_CHAIN_NAME_LABEL_REGEX.test(label)) return t('messages.chainNameClaimInvalidChars');
+  if (label.length <= 12) return t('messages.chainNameClaimTooShort');
+  return null;
+};
+
 // Stub values used to build throwaway transactions purely for fee/cost estimation.
 const STUB_ADDRESS: `ak_${string}` = 'ak_11111111111111111111111111111111273Yts';
 const STUB_NONCE = 1;

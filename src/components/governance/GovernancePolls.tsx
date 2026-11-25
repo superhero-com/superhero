@@ -12,52 +12,39 @@ export default function GovernancePolls() {
 
   const [search, setSearch] = useState<string>('');
   const [status, setStatus] = useState<'all' | 'open' | 'closed'>('open');
-  const { data: polls, isLoading } = usePolls({ status, search });
-
-  if (isLoading) return <div>{t('polls.loading')}</div>;
+  // isPending, not isLoading: offline the query is paused, pending without fetching.
+  const {
+    data, isPending, error, refetch,
+  } = usePolls({ status, search });
+  const polls = data ?? [];
+  const openCount = polls.filter((p) => p.status === 'open').length;
+  const closedCount = polls.length - openCount;
 
   return (
     <div className="min-h-screen">
-      <div className="flex flex-col gap-6 px-4 md:px-6 py-6 max-w-6xl mx-auto">
-        {/* Enhanced Header Section */}
-        <div className="relative">
-          <div className="governance-decoration absolute inset-0 bg-gradient-to-r from-blue-500/10 via-blue-500/10 to-blue-500/10 rounded-3xl blur-3xl -z-10" />
-          <div className="ui-panel flex items-center justify-between mb-2 py-5 px-5 bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl">
-            <div className="flex flex-col md:flex-row items-center gap-6">
-              <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-blue-500/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/10">
-                  <span className="text-2xl">🗳️</span>
-                </div>
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full" />
-              </div>
-              <div className="header-text">
-                <h1 className="ui-page-title text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 via-blue-400 to-blue-400 bg-clip-text text-transparent m-0 leading-tight">
-                  {t('polls.title')}
-                </h1>
-                <p className="text-base text-slate-300 font-medium mt-2 mb-0 leading-relaxed">
-                  {t('polls.subtitle')}
-                </p>
-              </div>
-            </div>
-            <div className="hidden md:flex items-center gap-3">
-              <div
-                className={`px-4 py-2 rounded-2xl  ${
-                  status === 'open'
-                    ? 'to-emerald-500/20 bg-gradient-to-r border border-green-500/30 from-green-500/20'
-                    : 'to-red-500/20 bg-gradient-to-r border border-red-500/30 from-red-500/20'
-                }`}
-              >
-                <span
-                  className={`text-green-400 text-sm font-semibold ${
-                    status === 'open' ? 'text-green-400' : 'text-red-400'
-                  }`}
-                >
-                  {polls.length}
+      <div className="flex flex-col gap-6 pb-6">
+        <h1 className="sr-only">{t('pollsTab', { ns: 'dao' })}</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="ui-page-description m-0 max-w-2xl">{t('polls.intro')}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            {data && status !== 'closed' && (
+              <div className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30">
+                <span className="text-green-400 text-sm font-semibold whitespace-nowrap">
+                  {openCount}
                   {' '}
-                  {status === 'open' ? t('polls.active') : t('polls.closing')}
+                  {t('polls.active')}
                 </span>
               </div>
-            </div>
+            )}
+            {data && status !== 'open' && (
+              <div className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-red-500/20 to-red-500/20 border border-red-500/30">
+                <span className="text-red-400 text-sm font-semibold whitespace-nowrap">
+                  {closedCount}
+                  {' '}
+                  {t('polls.closed')}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -112,21 +99,6 @@ export default function GovernancePolls() {
                     }}
                     variant="filled"
                     size="large"
-                    rightIcon={(
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                    )}
                     className="transition-all duration-300 focus-within:scale-[1.02] focus-within:shadow-[0_0_0_3px_rgba(59,130,246,0.1)]"
                   >
                     <option value="all">{t('polls.allPolls')}</option>
@@ -141,7 +113,20 @@ export default function GovernancePolls() {
 
         {/* Enhanced Polls Grid */}
         <div className="space-y-6">
-          {polls.length === 0 ? (
+          {isPending ? (
+            <div className="text-center py-10 text-slate-300">{t('polls.loading')}</div>
+          ) : error && !data ? (
+            <div className="ui-panel text-center py-10 px-5">
+              <p className="m-0 mb-4 text-red-400">{t('polls.loadFailed')}</p>
+              <button
+                type="button"
+                className="ui-secondary px-4 py-2 text-sm"
+                onClick={() => refetch()}
+              >
+                {t('polls.retry')}
+              </button>
+            </div>
+          ) : polls.length === 0 ? (
             <div className="relative">
               <div className="governance-decoration absolute inset-0 bg-gradient-to-r from-blue-500/5 via-blue-500/5 to-blue-500/5 rounded-3xl blur-2xl -z-10" />
               <MobileCard
@@ -249,7 +234,7 @@ export default function GovernancePolls() {
                               </svg>
                             </div>
                             <span className="text-sm font-semibold">
-                              {new Date(p.endDate).toLocaleDateString()}
+                              {p.endDate ? p.endDate.toLocaleDateString() : t('polls.noEndDate')}
                             </span>
                           </div>
                         </div>

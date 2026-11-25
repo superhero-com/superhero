@@ -10,7 +10,7 @@ interface PollData {
   poll: Encoded.ContractAddress;
   totalStake: string;
   voteCount: number;
-  closeHeight: number;
+  closeHeight: number | null;
   delegationCount: number;
   score: number;
 }

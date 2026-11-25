@@ -29,7 +29,8 @@ vi.mock('../../features/transaction-notification', () => ({
   useTransactionNotification: () => notifications,
   TxPayloadType: { SocialGraph: 'social_graph' },
 }));
-vi.mock('../../api/socialGraphPolicy', () => ({
+vi.mock('../../api/socialGraphPolicy', async (original) => ({
+  ...await original<typeof import('../../api/socialGraphPolicy')>(),
   getCurrentSocialGraphConfig: (...args: any[]) => mockGetConfig(...args),
   getSocialGraphCounts: (...args: any[]) => mockCounts(...args),
 }));

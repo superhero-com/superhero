@@ -4,6 +4,7 @@ import { Globe } from 'lucide-react';
 import AddressCopyChip from './AddressCopyChip';
 
 interface ProfileIdentityProps {
+  headingAs?: 'h1' | 'h3';
   address: string;
   displayName: string;
   /** Resolved .chain handle. Teal, and only shown when it differs from the name. */
@@ -110,6 +111,7 @@ const ProfileBio = ({ text, ownProfile, onEditBio }: {
 
 /** Block 2 — identity: name (standard colour, D1), badge, handle, address chip, website, bio. */
 const ProfileIdentity = ({
+  headingAs: Heading = 'h1',
   address,
   displayName,
   handle,
@@ -127,7 +129,7 @@ const ProfileIdentity = ({
 
   return (
     <div className="min-w-0">
-      <h1
+      <Heading
         title={displayName}
         aria-label={isAddressName ? address : undefined}
         data-testid="profile-display-name"
@@ -137,7 +139,7 @@ const ProfileIdentity = ({
           {displayName}
         </span>
         {isVerified && <VerifiedBadge username={verifiedUsername} />}
-      </h1>
+      </Heading>
 
       <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1.5">
         {showHandle && (

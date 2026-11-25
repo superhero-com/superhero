@@ -114,3 +114,7 @@ banner-suggestions/
 .venv-docs/
 
 
+
+/node_modules
+.env.shorts-testnet
+.shorts-testnet/

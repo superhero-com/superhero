@@ -11,6 +11,7 @@ import { Decimal } from '@/libs/decimal';
 import { useAeSdk } from '@/hooks/useAeSdk';
 import { useWallet } from '@/hooks';
 import AddressAvatar from '@/components/AddressAvatar';
+import { postMediaUrls } from '../utils/postImages';
 import { Head } from '../../../seo/Head';
 import { PostsService, PostDto } from '../../../api/generated';
 import AeButton from '../../../components/AeButton';
@@ -273,6 +274,7 @@ const PostDetail = ({ standalone = true }: { standalone?: boolean } = {}) => {
     </div>
   );
 
+  const media = postMediaUrls(postData?.media);
   const content = (
     <div className="post-detail">
       {postData ? (
@@ -280,7 +282,7 @@ const PostDetail = ({ standalone = true }: { standalone?: boolean } = {}) => {
           title={`Post on Superhero.com: "${(postData as any)?.content?.slice(0, 100) || 'Post'}"`}
           description={(postData as any)?.content?.slice(0, 160) || t('social:viewPostDefaultDescription')}
           canonicalPath={`/post/${(postData as any)?.slug || String((postData as any)?.id || slug).replace(/_v3$/, '')}`}
-          ogImage={(Array.isArray((postData as any)?.media) && (postData as any).media[0]) || undefined}
+          ogImage={media[0]}
           jsonLd={{
             '@context': 'https://schema.org',
             '@type': 'SocialMediaPosting',
@@ -292,7 +294,7 @@ const PostDetail = ({ standalone = true }: { standalone?: boolean } = {}) => {
               name: (postData as any)?.sender_address,
               identifier: (postData as any)?.sender_address,
             },
-            image: Array.isArray((postData as any)?.media) ? (postData as any).media : undefined,
+            image: media,
             interactionStatistic: [
               {
                 '@type': 'InteractionCounter',

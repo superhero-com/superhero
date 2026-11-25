@@ -9,16 +9,21 @@ import {
   describe, expect, it, vi,
 } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import GovernanceVote from '../GovernanceVote';
 
 const POLL_ADDRESS = 'ct_1PnNLieJHnXKX3MShkSAMX9gcNgYEhxzqYqpQcqgFp75sWNWX';
 
 function renderGovernanceVote() {
+  const client = new QueryClient();
+  client.setQueryData(['profile-images-config'], { enabled: false });
   return render(
-    <MemoryRouter>
-      <GovernanceVote pollId={POLL_ADDRESS} setActiveTab={vi.fn()} />
-    </MemoryRouter>,
+    <QueryClientProvider client={client}>
+      <MemoryRouter>
+        <GovernanceVote pollId={POLL_ADDRESS} setActiveTab={vi.fn()} />
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 

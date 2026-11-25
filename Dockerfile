@@ -1,9 +1,32 @@
-# Build stage
-FROM node:20-alpine AS builder
+# Dependency and build images share an immutable Node/Alpine base.
+FROM node:22.23.4-alpine@sha256:0e1754758c2df4cfa3e68d59e2e1b7374bb7fd9ea6328eaaacf15cc934af8202 AS base
+
+# Only Express and its locked dependency tree are needed by the HTTP server.
+FROM base AS server-dependencies
+WORKDIR /app/server
+COPY server/package.json server/package-lock.json ./
+RUN npm ci --omit=dev --ignore-scripts --no-audit --no-fund \
+    && npm cache clean --force
+
+# Public media origins are used by Vite and the HTTP server (CSP and link previews).
+FROM base AS media-config
+ARG VITE_SUPERHERO_API_URL
+ARG VITE_SHORTS_API_URL
+ARG VITE_SHORTS_STREAM_URL
+ARG VITE_PROFILE_MEDIA_API_URL
+ARG VITE_PROFILE_MEDIA_PUBLIC_URL
+ENV VITE_SUPERHERO_API_URL=$VITE_SUPERHERO_API_URL \
+    VITE_SHORTS_API_URL=$VITE_SHORTS_API_URL \
+    VITE_SHORTS_STREAM_URL=$VITE_SHORTS_STREAM_URL \
+    VITE_PROFILE_MEDIA_API_URL=$VITE_PROFILE_MEDIA_API_URL \
+    VITE_PROFILE_MEDIA_PUBLIC_URL=$VITE_PROFILE_MEDIA_PUBLIC_URL
+
+FROM media-config AS builder
 WORKDIR /app
 
-# Install build dependencies for node-gyp
-RUN apk add --no-cache python3 make g++
+# Git-backed packages and node-gyp are build-time dependencies only.
+COPY docker/web-build-apk.lock /tmp/web-build-apk.lock
+RUN apk add --no-cache $(grep -v '^#' /tmp/web-build-apk.lock)
 
 ARG VITE_X_OAUTH_CLIENT_ID
 ENV VITE_X_OAUTH_CLIENT_ID=$VITE_X_OAUTH_CLIENT_ID
@@ -17,23 +40,51 @@ ENV VITE_WEBAUTHN_RP_ID=$VITE_WEBAUTHN_RP_ID
 ARG VITE_JOURNEY_ANALYTICS
 ENV VITE_JOURNEY_ANALYTICS=$VITE_JOURNEY_ANALYTICS
 
+ARG VITE_SUPERHERO_WS_URL
+ENV VITE_SUPERHERO_WS_URL=$VITE_SUPERHERO_WS_URL
+
+ARG VITE_NETWORK=ae_mainnet
+ENV VITE_NETWORK=$VITE_NETWORK
+ARG ENABLE_SHORTS=false
+ENV ENABLE_SHORTS=$ENABLE_SHORTS
+ARG VITE_SHORTS_RELEASE_HASH
+ENV VITE_SHORTS_RELEASE_HASH=$VITE_SHORTS_RELEASE_HASH
+
 COPY package.json package-lock.json ./
 COPY scripts ./scripts
-RUN npm ci
+# CI already provides this optional BuildKit secret. It is scoped to GitHub
+# requests in this RUN, never written to a Git URL, config file or image ENV.
+RUN --mount=type=secret,id=GITHUB_TOKEN \
+    export GIT_CONFIG_COUNT=2 \
+      GIT_CONFIG_KEY_0=url.https://github.com/.insteadOf \
+      GIT_CONFIG_VALUE_0=ssh://git@github.com/ \
+      GIT_CONFIG_KEY_1=url.https://github.com/.insteadOf \
+      GIT_CONFIG_VALUE_1=git@github.com: \
+    && if [ -s /run/secrets/GITHUB_TOKEN ]; then \
+      export GIT_CONFIG_COUNT=3 \
+        GIT_CONFIG_KEY_2=http.https://github.com/.extraHeader \
+        GIT_CONFIG_VALUE_2="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$(cat /run/secrets/GITHUB_TOKEN)" | base64 | tr -d '\n')"; \
+    fi \
+    && npm ci --no-audit --no-fund \
+    && npm cache clean --force
 COPY . .
 
-RUN npm run build
+# Keep Vite within a bounded heap on small builders; dedicated CI can override it.
+ARG BUILD_NODE_OPTIONS=--max-old-space-size=1152
+RUN NODE_OPTIONS="$BUILD_NODE_OPTIONS" npm run build
 
-# Production dependencies stage
-# Serve stage (Node SEO injector)
-FROM node:20-alpine
+# The runtime contains no frontend tooling, compilers, Git or package manager.
+FROM media-config AS runtime
+RUN --mount=type=bind,source=docker/web-build-apk.lock,target=/tmp/web-build-apk.lock \
+    apk add --no-cache "$(grep '^zlib=' /tmp/web-build-apk.lock)" \
+    && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn-v* \
+    && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg
 WORKDIR /app
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package.json /app/package-lock.json ./
-COPY --from=builder /app/node_modules ./node_modules
-# Convert dev install to production without reinstalling
-RUN npm prune --omit=dev
-COPY server ./server
-ENV NODE_ENV=production
+COPY --from=server-dependencies /app/server ./server
+COPY server/index.cjs ./server/index.cjs
+COPY server/lib/*.cjs ./server/lib/
+ENV NODE_ENV=production PORT=80
+USER node
 EXPOSE 80
 CMD ["node", "server/index.cjs"]

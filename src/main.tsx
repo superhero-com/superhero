@@ -12,6 +12,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import ToastProvider from './components/ToastProvider';
 import { TransactionNotificationProvider, TransactionNotificationBanner } from './features/transaction-notification';
 import { PendingTransactionsSync } from './features/pending-transactions/PendingTransactionsSync';
+import { ProfileImageProvider } from './features/profile-images/ProfileImageProvider';
 import { AeSdkProvider } from './context/AeSdkProvider';
 import { AePricePollingProvider } from './context/AePricePollingProvider';
 // Mint the single Trusted Types policy before any component mounts a DOM sink.
@@ -53,7 +54,9 @@ const queryClient = new QueryClient({
                     <PendingTransactionsSync />
                     <ErrorBoundary>
                       <AeSdkProvider>
-                        <App />
+                        <ProfileImageProvider>
+                          <App />
+                        </ProfileImageProvider>
                       </AeSdkProvider>
                     </ErrorBoundary>
                   </TransactionNotificationProvider>

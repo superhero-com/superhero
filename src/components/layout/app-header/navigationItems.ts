@@ -1,6 +1,7 @@
+import { SHORTS_ENABLED } from '@/shorts-enabled';
 import { TRENDING_ENABLED } from '@/config';
 import {
-  Home, Search, ArrowLeftRight, Gift, LucideIcon, User, Vote, Landmark, MessageCircle,
+  Clapperboard, Home, Search, ArrowLeftRight, Gift, LucideIcon, User, Vote, Landmark, MessageCircle,
 } from 'lucide-react';
 
 export interface NavigationItem {
@@ -10,6 +11,11 @@ export interface NavigationItem {
   icon: LucideIcon;
   isExternal?: boolean;
 }
+
+const SHORTS_ITEMS: NavigationItem[] = SHORTS_ENABLED
+  ? [{
+    id: 'shorts', labelKey: 'Shorts', path: '/shorts', icon: Clapperboard,
+  }] : [];
 
 const HOME_ITEM: NavigationItem = {
   id: 'home',
@@ -62,6 +68,7 @@ const GET_AE_ITEM: NavigationItem = {
 
 export const getNavigationItems = (): NavigationItem[] => [
   HOME_ITEM,
+  ...SHORTS_ITEMS,
   TRENDING_ENABLED && EXPLORE_ITEM,
   DEFI_ITEM,
   TRENDING_ENABLED && DAO_ITEM,
@@ -104,6 +111,7 @@ export const getMobileFooterNavigationItems = (
  * Items shown inside the mobile "More" dropdown.
  */
 export const getMobileMoreNavigationItems = (): NavigationItem[] => [
+  ...SHORTS_ITEMS,
   DEFI_ITEM,
   ...(TRENDING_ENABLED ? [DAO_ITEM] : []),
   GET_AE_ITEM,

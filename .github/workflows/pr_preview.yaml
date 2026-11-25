@@ -130,6 +130,7 @@ jobs:
           # production image, so a repo-wide secret would pin production to the
           # staging RP ID. This line comes after the collected args, so it wins.
           build-args: |
+            ENABLE_SHORTS=${{ vars.DEV_ENABLE_SHORTS || 'false' }}
             ${{ steps.vite_args.outputs.build_args }}
             VITE_WEBAUTHN_RP_ID=stg.service.aepps.com
 

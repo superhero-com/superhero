@@ -73,7 +73,7 @@ type Mode = 'passphrase' | 'recovery';
  * decode; the fail-closed decision — whether the user is allowed to approve at
  * all — is made by the prompt, not here.
  */
-const SummaryBlock = ({ summary, nested = false }: { summary: TxSummary; nested?: boolean }) => (
+const SummaryBlock = ({ summary, nested = false, sponsored = false }: { summary: TxSummary; nested?: boolean; sponsored?: boolean }) => (
   <div className={nested ? 'mt-2 rounded-lg border border-white/10 bg-white/[0.03] p-2.5' : ''}>
     <p className="text-sm font-medium mb-1">{summary.title}</p>
     {summary.effect && <p className="text-xs text-white/70 mb-2">{summary.effect}</p>}
@@ -86,7 +86,9 @@ const SummaryBlock = ({ summary, nested = false }: { summary: TxSummary; nested?
     <dl className="space-y-1.5">
       {summary.rows.map((row) => (
         <div key={row.label} className="flex items-start justify-between gap-3">
-          <dt className="text-xs text-muted-foreground shrink-0">{row.label}</dt>
+          <dt className="text-xs text-muted-foreground shrink-0">
+            {sponsored && ['Network fee', 'Gas, at most'].includes(row.label) ? `${row.label} (sponsor pays)` : row.label}
+          </dt>
           <dd className={cn(
             'text-xs font-mono break-all text-right',
             row.emphasis ? 'text-white' : 'text-white/70',
@@ -285,7 +287,12 @@ const WalletSignPrompt = () => {
                 {/* ---------- WYSIWYS: exactly what is about to be signed ---------- */}
                 {isSignatureContext(context) && (
                   <div className="mb-4 rounded-xl border border-white/10 bg-white/[0.03] p-3">
-                    {summary && <SummaryBlock summary={summary} />}
+                    {summary && <SummaryBlock summary={summary} sponsored={context.kind === 'transaction' && context.innerTx === true} />}
+                    {summary && context.kind === 'transaction' && context.innerTx === true && (
+                      <p className="mt-2 text-xs text-white/70">
+                        This signature requires a fee sponsor. Your wallet still pays any AE sent with the call.
+                      </p>
+                    )}
                     {context.kind === 'transaction' && !summary && (
                       <div className="flex items-start gap-2 text-xs text-amber-300">
                         <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />

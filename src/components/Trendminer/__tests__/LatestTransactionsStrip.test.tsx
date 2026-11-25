@@ -2,6 +2,7 @@ import {
   act, fireEvent, render, screen, within,
 } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   afterEach, beforeEach, describe, expect, it, vi,
 } from 'vitest';
@@ -16,8 +17,11 @@ const first: ActivityTransaction = {
   volume: '24800',
 };
 const incoming: ActivityTransaction = { ...first, id: 2, token: { name: 'NEW' } };
+let queryClient: QueryClient;
 const view = (transactions: ActivityTransaction[]) => (
-  <MemoryRouter><LatestTransactionsStrip transactions={transactions} /></MemoryRouter>
+  <QueryClientProvider client={queryClient}>
+    <MemoryRouter><LatestTransactionsStrip transactions={transactions} /></MemoryRouter>
+  </QueryClientProvider>
 );
 const getTrack = () => document.getElementById(
   screen.getByRole('button', { name: /Older activity|نشاطات أقدم/ }).getAttribute('aria-controls')!,
@@ -34,6 +38,8 @@ const measureTrack = (position: number, width = 320, contentWidth = 1100) => {
 };
 
 beforeEach(async () => {
+  queryClient = new QueryClient();
+  queryClient.setQueryData(['profile-images-config'], { enabled: false });
   await changeLanguage('en');
   vi.stubGlobal('ResizeObserver', class {
     observe = vi.fn();
@@ -42,7 +48,7 @@ beforeEach(async () => {
   });
 });
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => { queryClient.clear(); vi.restoreAllMocks(); });
 
 describe('latest activity strip', () => {
   it('preserves token destinations, actor identity, and transaction quantities', () => {

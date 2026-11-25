@@ -87,6 +87,16 @@ const contractCallTx = (callData: `cb_${string}`, amount: string | number = 0): 
 const rowMap = (summary: TxSummary | null): Record<string, string> => Object
   .fromEntries((summary?.rows ?? []).map((r) => [r.label, r.value]));
 
+it('names a versioned Like and retains its contract, value and policy version', () => {
+  const summary = summarizeTransaction(contractCallTx(forgeCall('like', [{ name: 'video', type: 'string' }, INT], ['video-id', 7n])));
+  expect(summary?.title).toBe('Like a Short');
+  expect(rowMap(summary)).toMatchObject({
+    Video: 'video-id', 'Policy version': '7', Contract: CONTRACT, 'AE sent with call': '0 AE',
+  });
+  const extra = summarizeTransaction(contractCallTx(forgeCall('like', [{ name: 'video', type: 'string' }, INT, INT], ['video-id', 7n, 8n])));
+  expect(extra?.caution).toBeTruthy();
+});
+
 describe('formatAe', () => {
   it('renders whole and fractional aettos exactly (no float round-trip)', () => {
     expect(formatAe(0n)).toBe('0 AE');

@@ -18,7 +18,11 @@ export default defineConfig({
     navigationTimeout: 60_000,
     screenshot: 'only-on-failure',
   },
-  projects: [{ name: 'chromium', use: devices['Desktop Chrome'] }],
+  projects: [
+    { name: 'chromium', use: devices['Desktop Chrome'] },
+    { name: 'webkit', testMatch: '**/shorts-viewer-layout.spec.ts', use: devices['Desktop Safari'] },
+    { name: 'firefox', testMatch: '**/shorts-viewer-layout.spec.ts', use: devices['Desktop Firefox'] },
+  ],
   webServer: {
     // VITE_WEBAUTHN_RP_ID is pinned into the bundle at build time and is never
     // derived from window.location (src/features/wallet/webauthn.ts), so it

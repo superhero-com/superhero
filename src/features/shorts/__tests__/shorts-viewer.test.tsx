@@ -1,0 +1,416 @@
+import {
+  act, fireEvent, render, screen, within,
+} from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import {
+  beforeEach, describe, expect, it, vi,
+} from 'vitest';
+import { ShortsViewer } from '../shorts-viewer';
+import type { Short } from '../types';
+import { defaultPreferences } from '../shorts-preferences';
+
+type EndCallback = (() => void) | undefined;
+const hlsCallbacks = vi.hoisted(() => new Map<string, EndCallback>());
+const qualityControls = vi.hoisted(() => ({ reset: vi.fn(), select: vi.fn() }));
+vi.mock('../shorts-creator', () => ({
+  ShortsCreator: ({ address }: { address: string }) => <div>{address}</div>,
+  ShortsCreatorAvatar: () => null,
+}));
+vi.mock('../shorts-follow', () => ({ ShortsFollow: () => null }));
+vi.mock('../api', async (original) => ({ ...await original<typeof import('../api')>(), request: vi.fn().mockResolvedValue({ comments: '4' }) }));
+vi.mock('../use-short-hls', async () => {
+  const { useEffect } = await import('react');
+  return {
+    useShortHls: (
+      ref: { current: HTMLVideoElement | null },
+      id: string,
+      warm: boolean,
+      _shouldPlay: () => boolean,
+      _session: string | undefined,
+      options: { onEnded?: () => void },
+    ) => {
+      hlsCallbacks.set(id, options.onEnded);
+      useEffect(() => {
+        const element = ref.current;
+        if (warm) element?.setAttribute('src', `blob:hls/${id}`);
+        return () => element?.removeAttribute('src');
+      }, [ref, id, warm]);
+      return {
+        status: 'ready',
+        token: warm ? 'measured-token' : '',
+        choices: [{
+          key: 'level:720', index: 0, size: 720, label: '720 × 1280',
+        }],
+        currentQuality: '720 × 1280',
+        resetQuality: qualityControls.reset,
+        selectLevel: qualityControls.select,
+        retry: vi.fn(),
+      };
+    },
+  };
+});
+
+const clips = ['one', 'two'].map((id) => ({
+  id,
+  title: `Video ${id}`,
+  creator: 'ak_full_creator_address',
+  topic: 'Art',
+  duration: 20,
+  status: 'active',
+  cid: `bafy-${id}`,
+  bytes: 100,
+  publicationStatus: 'published',
+  likes: 2,
+  views: 3,
+  liked: false,
+  mine: false,
+  moderation: 'approved',
+} satisfies Short));
+const makeProps = () => ({
+  pricing: { network: 'ae_uat' as const, likeFeeAetto: '0', treasuryBps: 2000 },
+  feed: clips,
+  topics: ['All', 'Art'],
+  topic: 'All',
+  onTopic: vi.fn(),
+  onLike: vi.fn(),
+  onPlayback: vi.fn(),
+  personal: { preferences: { ...defaultPreferences }, update: vi.fn(), toggle: vi.fn() },
+  onReport: vi.fn(),
+  onStudio: vi.fn(),
+  onUpload: vi.fn(),
+  onRetry: vi.fn(),
+  busy: false,
+  suspended: false,
+  ready: true,
+});
+
+it('offers accessible pagination retry and a latest-feed action without replacing the current player', () => {
+  const props = { ...makeProps(), feed: [clips[0]] };
+  const pagination = {
+    next: 'next-page', loading: false, error: 'Please try again.', more: vi.fn(), restart: vi.fn(), focus: vi.fn(),
+  };
+  const view = render(<MemoryRouter><ShortsViewer {...props} pagination={pagination} /></MemoryRouter>);
+  const video = view.container.querySelector('video');
+  expect(pagination.more).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Try again' })); expect(pagination.more).toHaveBeenCalledOnce();
+  fireEvent.click(screen.getByRole('button', { name: 'Refresh Shorts feed' })); expect(pagination.restart).toHaveBeenCalledOnce();
+  view.rerender(<MemoryRouter><ShortsViewer {...props} feed={[...clips]} pagination={{ ...pagination, error: '', next: null }} /></MemoryRouter>);
+  expect(view.container.querySelector('video')).toBe(video);
+  expect(pagination.focus).toHaveBeenCalledWith('one');
+});
+let playing: WeakMap<HTMLMediaElement, boolean>;
+beforeEach(() => {
+  hlsCallbacks.clear();
+  HTMLDialogElement.prototype.showModal = function showModal() { this.open = true; };
+  HTMLDialogElement.prototype.close = function close() { this.open = false; };
+  playing = new WeakMap();
+  vi.spyOn(document, 'hidden', 'get').mockReturnValue(false);
+  vi.spyOn(HTMLMediaElement.prototype, 'paused', 'get').mockImplementation(function pausedState(this: HTMLMediaElement) { return !playing.get(this); });
+  vi.spyOn(HTMLMediaElement.prototype, 'play').mockImplementation(function play(this: HTMLMediaElement) {
+    playing.set(this, true); this.dispatchEvent(new Event('play')); return Promise.resolve();
+  });
+  vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(function pause(this: HTMLMediaElement) {
+    playing.set(this, false); this.dispatchEvent(new Event('pause'));
+  });
+  Element.prototype.scrollTo = vi.fn();
+});
+const mount = (props = makeProps()) => {
+  const view = render(<MemoryRouter><ShortsViewer {...props} /></MemoryRouter>);
+  const region = screen.getByRole('region', { name: 'Shorts video feed' });
+  Object.defineProperty(region, 'clientHeight', { value: 700 });
+  return { ...view, region, videos: [...view.container.querySelectorAll('video')] };
+};
+describe('Shorts playback lifecycle', () => {
+  it('reserves the player layout only while the feed is loading', () => {
+    const props = { ...makeProps(), feed: [], ready: false };
+    const view = render(<MemoryRouter><ShortsViewer {...props} /></MemoryRouter>);
+    expect(screen.getByRole('status', { name: 'Loading Shorts' })).toBeVisible();
+    expect(screen.queryByText('No Shorts in this feed yet')).not.toBeInTheDocument();
+    view.rerender(<MemoryRouter><ShortsViewer {...props} ready /></MemoryRouter>);
+    expect(screen.queryByRole('status', { name: 'Loading Shorts' })).not.toBeInTheDocument();
+    expect(screen.getByText('No Shorts in this feed yet')).toBeVisible();
+    view.rerender(
+      <MemoryRouter>
+        <ShortsViewer
+          {...props}
+          pagination={{
+            error: 'Offline', more: vi.fn(), restart: vi.fn(), focus: vi.fn(),
+          }}
+        />
+      </MemoryRouter>,
+    );
+    expect(screen.queryByRole('status', { name: 'Loading Shorts' })).not.toBeInTheDocument();
+    expect(screen.getByText('Couldn’t load Shorts')).toBeVisible();
+    view.rerender(<MemoryRouter><ShortsViewer {...props} loadError="Check your connection" /></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    expect(props.onRetry).toHaveBeenCalledOnce();
+  });
+  it('waits for a decoded frame and keeps it visible during buffering', () => {
+    const { videos } = mount({ ...makeProps(), feed: [clips[0]] });
+    expect(screen.getByRole('status', { name: 'Loading video…' })).toHaveTextContent('Loading video');
+    fireEvent.canPlay(videos[0]);
+    expect(screen.queryByRole('status', { name: /video…/ })).not.toBeInTheDocument();
+    fireEvent.waiting(videos[0]);
+    expect(screen.getByRole('status', { name: 'Buffering video…' })).toHaveTextContent('Buffering video');
+    expect(videos[0]).toBeVisible();
+    fireEvent.playing(videos[0]);
+    expect(screen.queryByRole('status', { name: /video…/ })).not.toBeInTheDocument();
+  });
+  it('shows a regular free Like and sponsored network fee, then disables an unavailable offer', () => {
+    const props = {
+      ...makeProps(),
+      feed: [clips[0]],
+      pricing: {
+        network: 'ae_mainnet' as const, likeFeeAetto: '0', treasuryBps: 2500,
+      },
+    };
+    const view = render(<MemoryRouter><ShortsViewer {...props} /></MemoryRouter>);
+    expect(screen.getByRole('button', { name: 'Like' })).toBeEnabled();
+    expect(screen.getByText('Mainnet')).toBeVisible();
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Playback settings' }), { key: 'Enter' });
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Video details and report' }));
+    expect(screen.getByText('Likes are free. Superhero covers the network fee.')).toBeVisible();
+    expect(screen.queryByText(/Each Like costs|to the creator and/)).not.toBeInTheDocument();
+    view.rerender(<MemoryRouter><ShortsViewer {...props} pricing={undefined} /></MemoryRouter>);
+    expect(screen.queryByText('Mainnet')).not.toBeInTheDocument();
+    expect(screen.getByText('Likes are temporarily unavailable.')).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Close details' }));
+    const unavailable = screen.getByRole('button', { name: 'Likes temporarily unavailable' });
+    expect(unavailable).toBeDisabled();
+    fireEvent.click(unavailable);
+    expect(props.onLike).not.toHaveBeenCalled();
+  });
+
+  it('has no playback opt-in controls and never starts measurement for an unplayed video', () => {
+    const props = makeProps();
+    mount(props);
+    fireEvent(window, new Event('pagehide'));
+    expect(props.onPlayback.mock.calls.every((call) => call[0] === 'one')).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'For you' }));
+    expect(screen.queryByRole('checkbox', { name: /playback/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Delete my playback/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reset feed preferences' })).toBeVisible();
+  });
+  it('hands playback to the visible clip and pauses every clip while a wallet interaction is open', () => {
+    const props = makeProps();
+    const { region, videos, rerender } = mount(props);
+    expect(videos.map((video) => video.paused)).toEqual([false, true]);
+    fireEvent.scroll(region, { target: { scrollTop: 700 } });
+    expect(videos.map((video) => video.paused)).toEqual([true, false]);
+    rerender(<MemoryRouter><ShortsViewer {...props} suspended /></MemoryRouter>);
+    expect(videos.map((video) => video.paused)).toEqual([true, true]);
+    rerender(<MemoryRouter><ShortsViewer {...props} /></MemoryRouter>);
+    expect(videos.map((video) => video.paused)).toEqual([true, false]);
+  });
+  it('preserves an explicit pause when closing an overlay and pauses on browser backgrounding', () => {
+    const props = makeProps();
+    const { videos, rerender } = mount(props);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Pause video' })[0]);
+    rerender(<MemoryRouter><ShortsViewer {...props} suspended /></MemoryRouter>);
+    rerender(<MemoryRouter><ShortsViewer {...props} /></MemoryRouter>);
+    expect(videos[0].paused).toBe(true);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Play video' })[0]);
+    expect(videos[0].paused).toBe(false);
+    vi.spyOn(document, 'hidden', 'get').mockReturnValue(true);
+    fireEvent(document, new Event('visibilitychange'));
+    expect(videos.every((video) => video.paused)).toBe(true);
+  });
+  it('requires actual playback time rather than seeking to count a preview view', () => {
+    const props = makeProps();
+    const { videos } = mount(props);
+    videos[0].currentTime = 10;
+    fireEvent.seeking(videos[0]); fireEvent.timeUpdate(videos[0]);
+    expect(props.onPlayback.mock.calls.every((call) => call[1] === 0)).toBe(true);
+    let now = performance.now();
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    [10.5, 11, 11.5, 12].forEach((position) => {
+      now += 500;
+      videos[0].currentTime = position; fireEvent.timeUpdate(videos[0]);
+    });
+    expect(props.onPlayback).toHaveBeenCalledWith('one', 2, 'measured-token');
+  });
+  it('measures the playing video automatically and flushes a partial heartbeat on pause', () => {
+    const props = makeProps();
+    const { videos, rerender } = mount(props);
+    expect(screen.getAllByText('3 views')).toHaveLength(2);
+    expect(props.onPlayback).toHaveBeenCalledWith('one', 0, 'measured-token');
+    expect(props.onPlayback.mock.calls.every((call) => call[0] === 'one')).toBe(true);
+    let now = performance.now();
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    [0.5, 1, 1.5, 2, 2.5].forEach((position) => {
+      now += 500; videos[0].currentTime = position; fireEvent.timeUpdate(videos[0]);
+    });
+    fireEvent.click(screen.getAllByRole('button', { name: 'Pause video' })[0]);
+    expect(props.onPlayback).toHaveBeenLastCalledWith('one', 2.5, 'measured-token');
+    const callback = vi.fn();
+    rerender(<MemoryRouter><ShortsViewer {...props} onPlayback={callback} /></MemoryRouter>);
+    fireEvent.play(videos[0]);
+    expect(callback).not.toHaveBeenCalledWith('one', 0, 'measured-token');
+  });
+  it('counts the final segment of a two-second Short before looping, without adding another completion', () => {
+    const props = { ...makeProps(), feed: [{ ...clips[0], duration: 2 }] };
+    const { videos } = mount(props);
+    let now = performance.now();
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    [0.5, 1, 1.5].forEach((position) => {
+      now += 500; videos[0].currentTime = position; fireEvent.timeUpdate(videos[0]);
+    });
+    now += 500; videos[0].currentTime = 2; fireEvent.ended(videos[0]);
+    expect(props.onPlayback).toHaveBeenLastCalledWith('one', 2, 'measured-token');
+    expect(videos[0].currentTime).toBe(0);
+    [0.5, 1, 1.5, 2].forEach((position) => {
+      now += 500; videos[0].currentTime = position; fireEvent.timeUpdate(videos[0]);
+    });
+    expect(props.onPlayback.mock.calls.filter((call) => call[1] === 2)).toHaveLength(1);
+  });
+  it('uses the same loop for a confirmed HLS EOF stall without counting the unplayed tail', () => {
+    const props = { ...makeProps(), feed: [{ ...clips[0], duration: 2 }] };
+    const { videos } = mount(props);
+    let now = performance.now();
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    [0.5, 1, 1.5, 1.973].forEach((position) => {
+      now += 500; videos[0].currentTime = position; fireEvent.timeUpdate(videos[0]);
+    });
+    fireEvent.waiting(videos[0]);
+    act(() => hlsCallbacks.get('one')?.());
+    expect(videos[0].currentTime).toBe(0);
+    expect(videos[0].paused).toBe(false);
+    expect(props.onPlayback).toHaveBeenLastCalledWith('one', 1.973, 'measured-token');
+    fireEvent.playing(videos[0]);
+    expect(screen.queryByText('Loading video…')).not.toBeInTheDocument();
+    now += 500; videos[0].currentTime = 0.5; fireEvent.timeUpdate(videos[0]);
+    expect(props.onPlayback.mock.calls.filter((call) => call[1] === 1.973)).toHaveLength(1);
+  });
+});
+
+describe('Shared video content cover', () => {
+  it('keeps rejected content blurred without loading video or audio until the viewer chooses to reveal it', () => {
+    const props = { ...makeProps(), feed: [{ ...clips[0], moderation: 'rejected', contentWarning: 'feed-excluded' as const }], shared: true };
+    const { container } = render(<MemoryRouter><ShortsViewer {...props} /></MemoryRouter>);
+    expect(screen.getByRole('heading', { name: 'Not eligible for the feed' })).toBeInTheDocument();
+    expect(container.querySelector('.sv-warning-poster')).toBeInTheDocument();
+    expect(container.querySelector('video')).not.toBeInTheDocument();
+    fireEvent.keyDown(window, { key: 'k' });
+    expect(HTMLMediaElement.prototype.play).not.toHaveBeenCalled();
+    expect(props.onPlayback).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'View video' }));
+    expect(container.querySelector('video')).toHaveAttribute('src', 'blob:hls/one');
+    fireEvent.click(screen.getByRole('button', { name: 'Hide video' }));
+    expect(container.querySelector('video')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'View video' })).toBeInTheDocument();
+  });
+
+  it('explains incomplete checks and resets the cover for a different shared video', () => {
+    const props = { ...makeProps(), feed: [{ ...clips[0], contentWarning: 'unreviewed' as const }], shared: true };
+    const { container, rerender } = render(<MemoryRouter><ShortsViewer {...props} /></MemoryRouter>);
+    expect(screen.getByRole('heading', { name: 'This video is under review' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'View video' }));
+    expect(container.querySelector('video')).toBeInTheDocument();
+    rerender(<MemoryRouter><ShortsViewer {...props} feed={[{ ...clips[1], contentWarning: 'feed-excluded' }]} /></MemoryRouter>);
+    expect(container.querySelector('video')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Not eligible for the feed' })).toBeInTheDocument();
+  });
+});
+
+describe('Long feed memory bounds', () => {
+  it('retains the current player and restores its position after reordering and window eviction', () => {
+    const feed = Array.from({ length: 60 }, (_, i) => ({ ...clips[0], id: `short-${i}` }));
+    const props = { ...makeProps(), feed };
+    const { container, region, rerender } = mount(props);
+    fireEvent.scroll(region, { target: { scrollTop: 700 * 39 } });
+    const video = container.querySelector('[data-short-id="short-39"] video');
+    // New candidates evict older metadata; ranking can also move the current ID.
+    const next = [...feed.slice(20, 39), ...feed.slice(40), feed[39]];
+    rerender(<MemoryRouter><ShortsViewer {...props} feed={next} /></MemoryRouter>);
+    expect(container.querySelector('[data-short-id="short-39"] video')).toBe(video);
+    expect(container.querySelector('article:not([inert])')).toHaveAttribute('data-short-id', 'short-39');
+    expect(region.scrollTo).toHaveBeenLastCalledWith({ top: 700 * 39, behavior: 'instant' });
+    rerender(<MemoryRouter><ShortsViewer {...props} feed={[feed[39], ...next.slice(0, -1)]} /></MemoryRouter>);
+    expect(container.querySelector('[data-short-id="short-39"] video')).toBe(video);
+    expect(region.scrollTo).toHaveBeenLastCalledWith({ top: 0, behavior: 'instant' });
+  });
+
+  it('mounts only nearby cards and keeps the correct absolute position after a long scroll', () => {
+    const props = { ...makeProps(), feed: Array.from({ length: 1000 }, (_, i) => ({ ...clips[0], id: `short-${i}`, title: `Clip ${i}` })) };
+    const { container, region } = mount(props);
+    expect(container.querySelectorAll('article')).toHaveLength(3);
+    expect(container.querySelectorAll('video').length).toBeLessThanOrEqual(5);
+    fireEvent.scroll(region, { target: { scrollTop: 700 * 500 } });
+    expect(container.querySelectorAll('article')).toHaveLength(5);
+    expect(container.querySelector('article:not([inert])')).toHaveAttribute('data-short-id', 'short-500');
+    expect(container.querySelector('[data-short-id="short-0"]')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Previous Short' })).not.toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Next Short' })).not.toBeDisabled();
+  });
+});
+
+it('warms only the active and next video; Data Saver and backgrounding release extra sources', () => {
+  const props = {
+    ...makeProps(),
+    personal: undefined,
+    feed: [...clips, { ...clips[0], id: 'three' }, { ...clips[1], id: 'four' }],
+  };
+  const view = render(<MemoryRouter><ShortsViewer {...props} /></MemoryRouter>);
+  const scroller = screen.getByRole('region', { name: 'Shorts video feed' });
+  Object.defineProperty(scroller, 'clientHeight', { value: 600 });
+  fireEvent.scroll(scroller, { target: { scrollTop: 600 } });
+  const sources = () => Array.from(view.container.querySelectorAll('video[src]')).map((video) => video.getAttribute('src'));
+  expect(sources()).toEqual(['blob:hls/two', 'blob:hls/three']);
+  fireEvent.keyDown(within(view.container.querySelector('[data-short-id="two"]')! as HTMLElement).getByRole('button', { name: 'Playback settings' }), { key: 'Enter' });
+  fireEvent.click(screen.getByRole('menuitemradio', { name: /Data Saver/ }));
+  expect(sources()).toEqual(['blob:hls/two']);
+  vi.spyOn(document, 'hidden', 'get').mockReturnValue(true);
+  fireEvent(document, new Event('visibilitychange'));
+  expect(sources()).toEqual([]);
+});
+
+it('warms the next eligible clip within the window without loading a covered video', () => {
+  const feed: Short[] = [clips[0], { ...clips[1], contentWarning: 'unreviewed' }, { ...clips[0], id: 'three' }];
+  const view = render(<MemoryRouter><ShortsViewer {...makeProps()} feed={feed} /></MemoryRouter>);
+  expect(view.container.querySelector('[data-short-id="one"] video')).toHaveAttribute('src', 'blob:hls/one');
+  expect(view.container.querySelector('[data-short-id="two"] video')).toBeNull();
+  expect(view.container.querySelector('[data-short-id="three"] video')).toHaveAttribute('src', 'blob:hls/three');
+});
+
+it('shows Play immediately after pausing, before a source change can cancel the queued pause event', () => {
+  const view = render(<MemoryRouter><ShortsViewer {...makeProps()} feed={[clips[0]]} /></MemoryRouter>);
+  const video = view.container.querySelector('video')!;
+  vi.spyOn(video, 'paused', 'get').mockReturnValue(false);
+  fireEvent.play(video);
+  fireEvent.click(screen.getByRole('button', { name: 'Pause video' }));
+  expect(screen.getByRole('button', { name: 'Play video' })).not.toBeDisabled();
+});
+
+it('keeps quality on demand, preserves Auto reset, and groups the primary social actions', async () => {
+  const props = { ...makeProps(), feed: [clips[0]], onComments: vi.fn() };
+  const { videos, region, rerender } = mount(props);
+  const actions = within(screen.getByRole('group', { name: 'Video actions' }));
+  expect(await actions.findByLabelText('4 comments')).toHaveTextContent('4');
+  expect(actions.queryByText(/^(Comments|Save|Saved|Share)$/)).not.toBeInTheDocument();
+  expect(actions.getAllByRole('button').map((button) => button.getAttribute('aria-label')))
+    .toEqual(['Like', 'Video comments', 'Save Short', 'Copy Short link']);
+  fireEvent.click(actions.getByRole('button', { name: 'Video comments' }));
+  expect(props.onComments).toHaveBeenCalledWith(clips[0]);
+  expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  const settings = screen.getByRole('button', { name: 'Playback settings' });
+  vi.mocked(region.scrollTo).mockClear();
+  fireEvent.keyDown(settings, { key: 'ArrowDown' });
+  expect(region.scrollTo).not.toHaveBeenCalled();
+  expect(screen.getByRole('menuitemradio', { name: /Auto/ })).toHaveAttribute('aria-checked', 'true');
+  expect(videos[0].paused).toBe(false);
+  vi.mocked(region.scrollTo).mockClear();
+  fireEvent.keyDown(screen.getByRole('menuitemradio', { name: /Auto/ }), { key: 'ArrowDown' });
+  expect(region.scrollTo).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Resolution' }));
+  expect(screen.getByRole('menu', { name: 'Video resolution' })).toContainElement(document.activeElement as HTMLElement);
+  fireEvent.click(screen.getByRole('menuitemradio', { name: '720 × 1280' }));
+  expect(qualityControls.select).toHaveBeenCalledWith('level:720');
+  expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  fireEvent.keyDown(settings, { key: 'Enter' });
+  fireEvent.click(screen.getByRole('menuitemradio', { name: /Auto/ }));
+  expect(qualityControls.reset).toHaveBeenCalledOnce();
+  expect(props.personal.update).toHaveBeenCalledWith({ quality: 'auto' });
+  fireEvent.keyDown(settings, { key: 'Enter' });
+  rerender(<MemoryRouter><ShortsViewer {...props} suspended /></MemoryRouter>);
+  expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+});

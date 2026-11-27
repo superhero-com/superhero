@@ -1,0 +1,44 @@
+// Onboarding "Pick your .chain name" step. Built on the .ui-page tokens so it
+// follows the app theme (light-dark() resolves from :root[data-theme]).
+.ui-page.chain-name-step {
+  --cns-ok: light-dark(#047857, #4ade80);
+  --cns-warn: light-dark(#92400e, #fcd34d);
+  --cns-bad: light-dark(#b91c1c, #fca5a5);
+
+  // Opaque in light so the step reads the same over any page behind the sheet.
+  .ui-panel {
+    background: light-dark(#ffffff, rgb(255 255 255 / 3%));
+  }
+
+  .ui-secondary { background: light-dark(#ffffff, transparent); }
+
+  .chain-name-step__input {
+    color: var(--ui-text);
+    background: light-dark(#ffffff, rgb(0 0 0 / 25%));
+    border-color: var(--ui-border);
+  }
+
+  .chain-name-step__input:focus-visible {
+    border-color: var(--ui-blue);
+    box-shadow: 0 0 0 1px var(--ui-blue);
+  }
+
+  .chain-name-step__suffix { color: var(--ui-muted); }
+  .chain-name-step__ok { color: var(--cns-ok); }
+  .chain-name-step__warn { color: var(--cns-warn); }
+  .chain-name-step__bad { color: var(--cns-bad); }
+  .chain-name-step__price { color: var(--cns-warn); }
+  .chain-name-step__progress { color: var(--ui-blue); }
+
+  .chain-name-step__free {
+    color: var(--cns-ok);
+    background: light-dark(rgb(4 120 87 / 12%), rgb(74 222 128 / 14%));
+  }
+
+  .ui-primary:disabled { cursor: not-allowed; }
+}
+
+// The progress line already says what is happening; drop the spinning mark.
+@media (prefers-reduced-motion: reduce) {
+  .ui-page.chain-name-step svg[aria-label] { display: none; }
+}

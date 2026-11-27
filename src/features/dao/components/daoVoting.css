@@ -1,11 +1,13 @@
+@import '../../../components/governance/governance.css';
+
 /* Token DAO voting. Colours follow the page's color-scheme (light-dark), so the same rules
    serve the dark app and :root[data-theme='light']. */
 .dao-v {
-  --dv-surface: light-dark(#fff, #11161d);
-  --dv-surface-2: light-dark(#f6f8fb, #0d1219);
-  --dv-border: light-dark(#dce2e9, #29313b);
-  --dv-text: light-dark(#1d2b3e, #edf1f7);
-  --dv-muted: light-dark(#56657a, #a3b0c3);
+  --dv-surface: var(--ui-surface);
+  --dv-surface-2: light-dark(#f6f8fb, hsl(var(--muted) / .35));
+  --dv-border: var(--ui-border);
+  --dv-text: var(--ui-text);
+  --dv-muted: var(--ui-muted);
   --dv-blue: light-dark(#2357a7, #a8caff);
   --dv-blue-bg: light-dark(#e9f0fc, #1c304f);
   --dv-blue-border: light-dark(#adc4e6, #42618d);
@@ -49,7 +51,6 @@
 .dao-v-topline a:hover { text-decoration: underline; }
 .dao-v-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
 .dao-v-eyebrow { margin: 0 0 4px; color: var(--dv-blue); font-size: 13px; font-weight: 600; }
-.dao-v-head h1 span { color: var(--dv-muted); font-weight: 500; }
 .dao-v-head p { margin: 6px 0 0; font-size: 14px; }
 .dao-v-treasury { min-width: 170px; padding: 12px 16px; border: 1px solid var(--dv-border); border-radius: 14px; background: var(--dv-surface); text-align: end; }
 .dao-v-treasury span { display: block; color: var(--dv-muted); font-size: 12px; }
@@ -207,4 +208,46 @@
 
 @media (prefers-reduced-motion: reduce) {
   .dao-v-meter > span { transition: none; }
+}
+
+/* The community workspace uses the same restrained hierarchy as network polls. */
+.dao-v.dao-page { max-width: 1400px; padding: 24px 24px 100px; }
+.dao-v .dao-v-card { border-radius: 12px; padding: 20px; }
+.dao-v-head { align-items: center; margin: 12px 0 24px; gap: 24px; }
+.dao-v-head h1 { font-size: clamp(24px, 2.2vw, 30px); letter-spacing: -.8px; line-height: 1.2; margin: 0; min-width: 0; }
+.dao-v .dao-v-eyebrow { color: var(--dv-muted); font-size: 11px; text-transform: uppercase; letter-spacing: .07em; margin: 0; }
+.dao-v-treasury { padding: 16px 20px; border-radius: 12px; }
+.dao-v-treasury strong { font-size: 24px; margin-top: 6px; }
+.dao-v-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; padding: 20px 0; margin-bottom: 24px; border-radius: 0; border-width: 1px 0; background: none; }
+.dao-v-stats div { display: flex; flex-direction: column; gap: 8px; padding-inline: 24px; }
+.dao-v-stats div:first-child { padding-inline-start: 0; }
+.dao-v-stats div + div { border-inline-start: 1px solid var(--dv-border); }
+.dao-v-stats dd { font-size: 22px; line-height: 1.2; }
+.dao-v-grid { gap: 24px; }
+.dao-v-list-head { margin-bottom: 24px; }
+.dao-v-filters { border: 1px solid var(--dv-border); background: var(--dv-surface-2); width: fit-content; padding: 3px; border-radius: 10px; gap: 2px; }
+.dao-v-chip { border: 0; border-radius: 7px; font-size: 12px; padding-inline: 12px; color: var(--dv-muted); }
+.dao-v-chip[aria-pressed='true'] { background: var(--dv-surface); color: var(--dv-text); box-shadow: 0 1px 3px #0001; }
+.dao-v-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 180px; padding: 32px 24px; }
+.dao-v-empty > svg { color: var(--dv-muted); width: 32px; height: 32px; margin-bottom: 18px; }
+.dao-v-empty p { max-width: 340px; line-height: 1.65; margin: 4px 0 16px; }
+.dao-v-empty strong { font-size: 16px; font-weight: 600; }
+.dao-v-panel-head { padding-bottom: 20px; margin-bottom: 24px; border-bottom: 1px solid var(--dv-border); }
+.dao-v-panel-head > span { font-size: 12px; padding: 5px 9px; border: 1px solid var(--dv-border); border-radius: 6px; }
+.dao-v-types { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.dao-v-type { border-radius: 10px; padding: 16px; }
+.dao-v-type.is-checked { box-shadow: inset 0 0 0 1px var(--dv-blue-border); }
+.dao-v-type strong { font-size: 13px; }
+.dao-v .dao-v-input { background: var(--dv-surface-2); border-radius: 9px; min-height: 46px; }
+.dao-v-field { gap: 9px; margin-bottom: 22px; }
+.dao-v-btn { min-height: 44px; border-radius: 10px; font-size: 13px; }
+@media (min-width: 1100px) { .dao-v-grid { grid-template-columns: minmax(0, 1fr) 300px; } }
+@media (max-width: 800px) { .dao-v.dao-page { padding: 24px 20px 100px; } }
+@media (max-width: 540px) {
+  .dao-v.dao-page { padding: 20px 16px 100px; }
+  .dao-v .dao-v-card { padding: 20px 16px; }
+  .dao-v-stats div { padding-inline: 12px; }
+  .dao-v-stats dt { font-size: 11px; }
+  .dao-v-stats dd { font-size: 20px; }
+  .dao-v-types { grid-template-columns: minmax(0, 1fr); }
 }

@@ -10,7 +10,7 @@ import {
 } from '@aeternity/aepp-sdk';
 
 /**
- * The æternity governance polls under the DAO section, through the real app.
+ * The governance polls and their separate navigation entry, through the real app.
  *
  * The poll list joins two sources: titles from the on-chain registry (a dry-run of
  * `Registry.polls()`) and ordering/vote counts from the governance server. Both are faked
@@ -175,22 +175,29 @@ test.describe('æternity governance polls', () => {
     await page.addInitScript(() => window.localStorage.setItem('onboarding:skip', 'true'));
   });
 
-  test('the DAO page opens the polls tab and the DAO section stays current', async ({ page }) => {
+  test('DAO and Governance have separate navigation and active states', async ({ page }) => {
     await fakeGovernance(page);
     await page.goto('/trends/daos');
 
-    await page.getByRole('link', { name: 'æternity polls' }).click();
+    const daoLink = page.getByRole('link', { name: 'DAO', exact: true }).filter({ visible: true });
+    const governanceLink = page.getByRole('link', { name: 'Governance', exact: true })
+      .filter({ visible: true });
+    await expect(daoLink).toHaveAttribute('aria-current', 'page');
+    await expect(governanceLink).not.toHaveAttribute('aria-current', 'page');
+    await governanceLink.click();
 
     await expect(page).toHaveURL(/\/voting$/);
     await expect(page.getByText('Fund the explorer')).toBeVisible();
     await expect(page.getByText('Raise the gas limit')).toBeVisible();
     await expect(page.getByText('No end date')).toBeVisible();
-    await expect(page.getByText('2 Active')).toBeVisible();
-    await expect(page.getByRole('link', { name: 'DAO', exact: true }).filter({ visible: true }))
-      .toHaveAttribute('aria-current', 'page');
+    await expect(page.getByLabel('4 results')).toBeVisible();
+    await expect(governanceLink).toHaveAttribute('aria-current', 'page');
+    await expect(daoLink).not.toHaveAttribute('aria-current', 'page');
 
-    await page.getByRole('link', { name: 'Token DAOs' }).click();
+    await daoLink.click();
     await expect(page).toHaveURL(/\/trends\/daos$/);
+    await expect(daoLink).toHaveAttribute('aria-current', 'page');
+    await expect(governanceLink).not.toHaveAttribute('aria-current', 'page');
   });
 
   test('the closed filter lists each closed poll once', async ({ page }) => {
@@ -198,12 +205,11 @@ test.describe('æternity governance polls', () => {
     await page.goto('/voting');
     await expect(page.getByText('Fund the explorer')).toBeVisible();
 
-    await page.getByRole('combobox').filter({ hasText: 'Open polls' }).click();
-    await page.getByRole('option', { name: /Closed polls/ }).click();
+    await page.getByRole('button', { name: 'Closed', exact: true }).click();
 
     await expect(page.getByText('Adopt the new logo')).toBeVisible();
     await expect(page.getByText('Rename the testnet')).toHaveCount(1);
-    await expect(page.getByText('2 Closed')).toBeVisible();
+    await expect(page.getByLabel('2 results')).toBeVisible();
     await expect(page.getByText('Fund the explorer')).toBeHidden();
 
     await page.getByLabel('Search polls').fill('LOGO');
@@ -222,9 +228,10 @@ test.describe('æternity governance polls', () => {
     await expect(page.getByText('Pay for two more years of explorer hosting.')).toBeVisible();
     await expect(page.getByRole('link', { name: 'https://forum.aeternity.com/t/explorer' }))
       .toHaveAttribute('rel', 'noopener noreferrer');
-    await expect(page.getByRole('button', { name: /Yes\s*Click to vote/ })).toBeEnabled();
-    await expect(page.getByRole('button', { name: /No\s*Click to vote/ })).toBeEnabled();
-    await expect(page.getByText('Total Votes').locator('xpath=following-sibling::p')).toHaveText('4');
+    await expect(page.getByRole('radio', { name: 'Yes' })).toBeVisible();
+    await expect(page.getByRole('radio', { name: 'No' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /connect wallet to vote/i })).toBeVisible();
+    await expect(page.getByText('4 voters', { exact: true })).toBeVisible();
   });
 
   test('a governance server outage shows a retry that recovers', async ({ page }) => {

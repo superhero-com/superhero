@@ -1,6 +1,6 @@
 import { TRENDING_ENABLED } from '@/config';
 import {
-  Home, Search, ArrowLeftRight, Gift, LucideIcon, User, Vote, Landmark, MessageCircle,
+  Home, Search, ArrowLeftRight, Gift, LucideIcon, User, Users, Vote, Landmark, MessageCircle,
 } from 'lucide-react';
 
 export interface NavigationItem {
@@ -38,7 +38,14 @@ const DAO_ITEM: NavigationItem = {
   id: 'dao',
   labelKey: 'nav.dao',
   path: '/trends/daos',
-  matchPaths: ['/trends/dao', '/voting'],
+  matchPaths: ['/trends/dao'],
+  icon: Users,
+};
+
+const GOVERNANCE_ITEM: NavigationItem = {
+  id: 'governance',
+  labelKey: 'nav.governance',
+  path: '/voting',
   icon: Vote,
 };
 
@@ -68,6 +75,7 @@ export const getNavigationItems = (): NavigationItem[] => [
   TRENDING_ENABLED && EXPLORE_ITEM,
   DEFI_ITEM,
   TRENDING_ENABLED && DAO_ITEM,
+  TRENDING_ENABLED && GOVERNANCE_ITEM,
   TRENDING_ENABLED && REFER_EARN_ITEM,
 ].filter(Boolean) as NavigationItem[];
 
@@ -82,7 +90,7 @@ export const getAppNavigationItems = (activeAccount?: string | null): Navigation
 ];
 
 /**
- * Items rendered directly in the mobile footer bar. DeFi and DAO are moved
+ * Items rendered directly in the mobile footer bar. DeFi, DAO and Governance are moved
  * into the "More" dropdown to keep the bar compact on small screens.
  *
  * In PWA standalone mode, the Chat item is always shown.
@@ -108,7 +116,7 @@ export const getMobileFooterNavigationItems = (
  */
 export const getMobileMoreNavigationItems = (): NavigationItem[] => [
   DEFI_ITEM,
-  ...(TRENDING_ENABLED ? [DAO_ITEM] : []),
+  ...(TRENDING_ENABLED ? [DAO_ITEM, GOVERNANCE_ITEM] : []),
   GET_AE_ITEM,
 ];
 

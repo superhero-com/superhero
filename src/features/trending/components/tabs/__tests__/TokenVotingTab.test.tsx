@@ -37,10 +37,10 @@ beforeEach(() => { mockVotes = []; });
 describe('TokenVotingTab', () => {
   it('links to the DAO page and to creating a vote', () => {
     renderTab();
-    expect(screen.getByRole('heading', { name: '#WORD-CRAFT votes' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Proposals' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Open the DAO' })).toHaveAttribute('href', `/trends/dao/${SALE}`);
-    expect(screen.getByRole('link', { name: /Create a vote/ })).toHaveAttribute('href', `/trends/dao/${SALE}?create=1`);
-    expect(screen.getByText('No votes yet')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Create proposal' })).toHaveAttribute('href', `/trends/dao/${SALE}?create=1`);
+    expect(screen.getByText('No proposals yet.')).toBeInTheDocument();
   });
 
   it('shows open votes with the count', () => {
@@ -58,7 +58,7 @@ describe('TokenVotingTab', () => {
       },
     }];
     renderTab();
-    expect(screen.getByText('Open votes: 1. Holders vote with their tokens.')).toBeInTheDocument();
+    expect(screen.getByText('Active proposals: 1')).toBeInTheDocument();
     expect(screen.getByText('Make a moderator:')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Vote #3' })).toHaveAttribute('href', `/trends/dao/${SALE}/vote/3/ct_v3`);
   });

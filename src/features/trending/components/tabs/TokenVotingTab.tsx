@@ -14,7 +14,6 @@ export const TokenVotingTab = ({ token }: { token: TokenDto }) => {
     votes, openCount, data, isLoading, isError, currentBlockHeight,
   } = useDaoVotes(token.sale_address);
   const daoPath = `/trends/dao/${token.sale_address}`;
-  const label = `#${token.name || token.symbol}`;
 
   // Open votes first, then the latest closed ones, so the tab stays short.
   const shown = useMemo(() => {
@@ -32,7 +31,6 @@ export const TokenVotingTab = ({ token }: { token: TokenDto }) => {
     body = (
       <div className="dao-v-empty">
         <p><strong>{t('voting.list.emptyTitle')}</strong></p>
-        <p className="dao-v-muted">{t('voting.tab.emptyText', { token: label })}</p>
       </div>
     );
   } else {
@@ -58,10 +56,8 @@ export const TokenVotingTab = ({ token }: { token: TokenDto }) => {
       <div className="dao-v-card">
         <div className="dao-v-tab-head">
           <div>
-            <h2 id="token-voting-title">{t('voting.tab.title', { token: label })}</h2>
-            <p className="dao-v-muted">
-              {data ? t('voting.tab.subtitle', { count: openCount }) : t('voting.page.intro')}
-            </p>
+            <h2 id="token-voting-title">{t('voting.list.title')}</h2>
+            {data && <p className="dao-v-muted">{`${t('voting.page.openVotes')}: ${openCount}`}</p>}
           </div>
           <div className="dao-v-tab-actions">
             <Link to={`${daoPath}?create=1`} className="dao-v-chip">

@@ -382,6 +382,7 @@ const DaoVoteDetailsView = () => {
 
   return (
     <DaoVoteDetailsContent
+      key={`${saleAddress}:${voteAddress}:${voteId}`}
       saleAddress={saleAddress}
       voteAddress={voteAddress}
       voteId={voteId}

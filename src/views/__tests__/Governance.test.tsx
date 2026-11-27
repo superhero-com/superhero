@@ -29,7 +29,7 @@ function renderAt(pathname: string) {
   );
 }
 
-const tab = (name: RegExp) => screen.queryByRole('button', { name });
+const pageLink = (name: RegExp) => screen.queryByRole('link', { name });
 
 describe('Governance page', () => {
   it.each([
@@ -37,54 +37,26 @@ describe('Governance page', () => {
     ['/voting/account', 'account view'],
     ['/voting/create', 'create view'],
     ['/voting/p/ct_poll', 'vote view ct_poll'],
-  ])('opens %s on its own tab', (pathname, content) => {
+  ])('opens the bookmarkable route %s', (pathname, content) => {
     renderAt(pathname);
 
     expect(screen.getByText(content)).toBeInTheDocument();
   });
 
-  it('offers the Vote tab only on a poll page', () => {
-    const { unmount } = renderAt('/voting');
-    expect(tab(/Vote$/)).not.toBeInTheDocument();
-    unmount();
-
-    renderAt('/voting/p/ct_poll');
-    expect(tab(/Vote$/)).toBeInTheDocument();
-  });
-
-  it('switches tabs without leaving the page', () => {
+  it('navigates between bookmarkable governance pages', () => {
     renderAt('/voting');
 
-    fireEvent.click(tab(/My Account/)!);
+    fireEvent.click(pageLink(/Voting power/)!);
     expect(screen.getByText('account view')).toBeInTheDocument();
 
-    fireEvent.click(tab(/Create Poll/)!);
+    fireEvent.click(pageLink(/Create poll/)!);
     expect(screen.getByText('create view')).toBeInTheDocument();
-
-    fireEvent.click(tab(/Polls/)!);
-    expect(screen.getByText('polls view')).toBeInTheDocument();
   });
 
   it('returns from a poll to the list through the poll page itself', () => {
     renderAt('/voting/p/ct_poll');
 
     fireEvent.click(screen.getByText('vote view ct_poll'));
-
-    expect(screen.getByText('polls view')).toBeInTheDocument();
-  });
-
-  it('sits under the DAO section with the polls tab current', () => {
-    renderAt('/voting/p/ct_poll');
-
-    expect(screen.getByRole('link', { name: 'æternity polls' })).toHaveAttribute('aria-current', 'page');
-    expect(screen.getByRole('link', { name: 'Token DAOs' })).toHaveAttribute('href', '/trends/daos');
-  });
-
-  it('goes back to the poll list from the section tab while another tab is open', () => {
-    renderAt('/voting');
-    fireEvent.click(tab(/My Account/)!);
-
-    fireEvent.click(screen.getByRole('link', { name: 'æternity polls' }));
 
     expect(screen.getByText('polls view')).toBeInTheDocument();
   });

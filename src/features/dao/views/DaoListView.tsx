@@ -1,330 +1,181 @@
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
-  useEffect, useMemo, useRef, useState,
-} from 'react';
-
+  ArrowRight, Search, Users,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { TokensService } from '@/api/generated';
-import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { useAeSdk } from '@/hooks';
-import { TokenDto } from '@/api/generated/models/TokenDto';
-import { Decimal } from '@/libs/decimal';
-import { toAe } from '@/utils/bondingCurve';
-import { LivePriceFormatter } from '@/features/shared/components';
+import { TokensService } from '@/api/generated';
+import type { TokenDto } from '@/api/generated/models/TokenDto';
+import '@/components/governance/governance.css';
 import { AddressChip } from '@/components/AddressChip';
 import { TokenLineChart } from '@/features/trending/components/TokenLineChart';
-import Spinner from '@/components/Spinner';
-import DaoSectionTabs from '@/features/dao/components/DaoSectionTabs';
+import { LivePriceFormatter } from '@/features/shared/components';
+import { useAccount } from '@/hooks';
+import { Decimal } from '@/libs/decimal';
+import { toAe } from '@/utils/bondingCurve';
+import { CONFIG } from '@/config';
 
-type TokensListOrderBy = NonNullable<
-  Parameters<typeof TokensService.listAll>[0]['orderBy']
->;
+type CommunityPage = { items: TokenDto[]; meta: { currentPage: number; totalPages: number } };
 
-type SelectOptions<T> = Array<{
-  title: string;
-  disabled?: boolean;
-  value: T;
-}>;
-
-const SORT = {
-  marketCap: 'market_cap',
-  treasury: 'treasury',
-  newest: 'newest',
-  holdersCount: 'holders_count',
-} as const;
-type OrderByOption = (typeof SORT)[keyof typeof SORT];
-
+type OrderBy = 'market_cap' | 'treasury' | 'created_at' | 'holders_count';
 const Daos = () => {
-  const { t: translate } = useTranslation('dao');
-  const { activeAccount } = useAeSdk();
+  const { t, i18n } = useTranslation('governance');
+  const { t: daoT } = useTranslation('dao');
+  const { activeAccount } = useAccount();
   const [search, setSearch] = useState('');
-  const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
-
-  const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.marketCap);
-  const [searchThrottled, setSearchThrottled] = useState('');
-  const loadMoreBtn = useRef<HTMLButtonElement>(null);
-
-  const orderByOptions: SelectOptions<OrderByOption> = [
-    {
-      title: translate('explore:marketCapLabel'),
-      value: SORT.marketCap,
-    },
-    {
-      title: translate('treasury'),
-      value: SORT.treasury,
-    },
-    {
-      title: translate('explore:newest'),
-      value: SORT.newest,
-    },
-    {
-      title: translate('explore:holdersCount'),
-      value: SORT.holdersCount,
-    },
-  ];
-
-  const orderByMapped = useMemo((): TokensListOrderBy => {
-    if (orderBy === SORT.newest || orderBy === SORT.holdersCount) {
-      return 'created_at';
-    }
-    return orderBy;
-  }, [orderBy]);
-
-  const finalOrderDirection = useMemo((): 'ASC' | 'DESC' => {
-    // For date-based sorting, override the direction
-    if (orderBy === SORT.holdersCount) return 'ASC';
-    if (orderBy === SORT.newest) return 'DESC';
-    // For other fields, use the state
-    return orderDirection;
-  }, [orderBy, orderDirection]);
-
+  const [query, setQuery] = useState('');
+  const [orderBy, setOrderBy] = useState<OrderBy>('treasury');
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setSearchThrottled(search);
-    }, 2000);
-
-    return () => clearTimeout(timeoutId);
+    const timeout = setTimeout(() => setQuery(search.trim()), 300);
+    return () => clearTimeout(timeout);
   }, [search]);
-
   const {
-    data, isFetching, fetchNextPage, hasNextPage, error,
+    data, isPending, isFetching, fetchNextPage, hasNextPage, error, refetch,
   } = useInfiniteQuery({
     initialPageParam: 1,
-    queryFn: ({ pageParam = 1 }) => TokensService.listAll({
-      orderBy: orderByMapped,
-      orderDirection: finalOrderDirection,
-      search: searchThrottled || undefined,
-      limit: 20,
-      page: pageParam,
-    }) as unknown as TokenDto[],
-    getNextPageParam: (lastPage: any, allPages, lastPageParam) => (
-      lastPage?.meta?.currentPage === lastPage?.meta?.totalPages
-        ? undefined
-        : lastPageParam + 1
-    ),
-    queryKey: [
-      'TokensService.listAll',
-      orderBy,
-      orderByMapped,
-      finalOrderDirection,
-      searchThrottled,
-    ],
-    staleTime: 1000 * 60, // 1 minute
+    queryKey: ['governance-communities', orderBy, query],
+    queryFn: async ({ pageParam }) => await TokensService.listAll({
+      orderBy, orderDirection: 'DESC', search: query || undefined, limit: 12, page: pageParam,
+    }) as CommunityPage,
+    getNextPageParam: (lastPage, _pages, page) => {
+      const meta = lastPage.meta as { currentPage?: number; totalPages?: number } | undefined;
+      return Number(meta?.currentPage) < Number(meta?.totalPages) ? page + 1 : undefined;
+    },
+    staleTime: 60_000,
   });
-
-  function updateOrderBy(val: OrderByOption) {
-    setOrderBy(val);
-    setOrderDirection('DESC'); // Reset to default direction when using dropdown
-  }
-
-  // handleSort removed (unused)
-
-  const allItems = useMemo(
-    () => (data?.pages?.length ? data.pages.map((page) => page.items).flat() : []),
-    [data?.pages],
-  );
-
-  return (
-    <div className="ui-page dao-page max-w-6xl mx-auto p-4 text-white">
-      <div className="flex justify-between items-center gap-3 flex-wrap mb-4">
-        <DaoSectionTabs />
-        <div className="flex flex-wrap items-center gap-2 min-w-0">
-          <input
-            placeholder={translate('search')}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="h-10 min-h-10 min-w-0 w-full sm:w-auto box-border px-3 text-sm rounded-xl border border-white/15 bg-[#11161d] text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50"
-          />
-          <AppSelect
-            value={orderBy}
-            onValueChange={(v) => updateOrderBy(v as OrderByOption)}
-            triggerClassName="h-10 min-h-10 w-auto min-w-[10rem] shrink-0 rounded-2xl border border-white/10 bg-white/[0.02] px-3 py-0 text-sm text-white backdrop-blur-[10px] transition-all duration-300 hover:bg-white/[0.05] focus:outline-none data-[placeholder]:text-white/60"
-            contentClassName="bg-gray-900 border-white/10"
-          >
-            {orderByOptions.map((option) => (
-              <AppSelectItem key={option.value} value={option.value}>
-                {option.title}
-              </AppSelectItem>
-            ))}
-          </AppSelect>
+  const communities = useMemo(() => {
+    const items = data?.pages.flatMap((page) => page.items ?? []) as TokenDto[] | undefined;
+    const unique = new Map((items ?? []).map((token) => [token.sale_address || token.address, token]));
+    return [...unique.values()];
+  }, [data]);
+  const sorts: { value: OrderBy; label: string }[] = [
+    { value: 'treasury', label: daoT('treasury') },
+    { value: 'holders_count', label: t('experience.membership') },
+    { value: 'market_cap', label: daoT('explore:marketCapLabel') },
+    { value: 'created_at', label: daoT('explore:newest') },
+  ];
+  const renderCommunities = () => {
+    if (isPending) return <div className="gov-empty" role="status"><p>{daoT('loading')}</p></div>;
+    if (error && !data) {
+      return (
+        <div className="gov-empty" role="alert">
+          <p>{t('experience.refreshError')}</p>
+          <button type="button" className="gov-button ui-secondary" onClick={() => refetch()}>{t('experience.retry')}</button>
         </div>
-      </div>
-
-      {isFetching && (
-        <div className="text-center py-8 text-white/80">{translate('loading')}</div>
-      )}
-      {error && (
-        <div className="text-center py-8 text-red-400">{error.message}</div>
-      )}
-
-      <div className="text-sm opacity-80 mt-2 mb-4 text-white/85">
-        {translate('listIntro')}
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
-        {allItems.map((t) => (
-          <div
-            className={`ui-panel p-4 text-white transition-colors duration-150 ${
-              activeAccount === t.owner_address
-                ? 'border-blue-500/50 relative'
-                : 'border-black/20'
-            }`}
-            key={t.address}
-          >
-            <div className="flex justify-between items-start gap-2 mb-2">
-              <div className="flex flex-col gap-1.5">
-                <div className="font-semibold text-white text-base tracking-tight">
-                  {`#${t.symbol}`}
-                </div>
-                {activeAccount === t.owner_address && (
-                <div className="text-xs px-2 py-1 rounded-full bg-blue-500/15 border border-blue-500/30 text-white w-fit">
-                  {translate('owned')}
-                </div>
-                )}
+      );
+    }
+    return (
+      <div className="gov-community-list">
+        {communities.map((token) => (
+          <article className="gov-community" key={token.sale_address || token.address}>
+            <div className="gov-community-head">
+              <div>
+                <h2>
+                  <Link to={`/trends/dao/${token.sale_address}`}>
+                    <bdi>
+                      #
+                      {token.symbol || token.name}
+                    </bdi>
+                  </Link>
+                </h2>
+                {activeAccount === token.owner_address && <span className="gov-status gov-community-owned">{daoT('owned')}</span>}
               </div>
-              <a
-                className="ui-secondary px-3 py-2 text-xs whitespace-nowrap no-underline"
-                href={`/trends/dao/${encodeURIComponent(
-                  t.sale_address || '',
-                )}`}
-              >
-                {translate('openDao')}
-              </a>
+              <Link to={`/trends/dao/${token.sale_address}`} className="gov-button ui-secondary">
+                {daoT('openDao')}
+              </Link>
             </div>
-
-            <div className="pb-2 border-b border-white/10">
+            <div className="gov-community-chart">
               <TokenLineChart
-                saleAddress={t.sale_address || t.address}
-                height={48}
+                saleAddress={token.sale_address || token.address}
+                width={320}
+                height={56}
               />
             </div>
-
-            <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+            <dl>
               <div>
-                <div className="text-xs opacity-80 text-white/80">
-                  {translate('treasury')}
-                </div>
-                <div className="font-bold text-white">
-                  {t.sale_address && t.dao_balance != null ? (
+                <dt>{daoT('treasury')}</dt>
+                <dd>
+                  {token.dao_balance != null ? (
                     <LivePriceFormatter
-                      aePrice={Decimal.from(toAe(t.dao_balance))}
-                      watchKey={t.sale_address}
-                      className="text-xs sm:text-base"
+                      aePrice={Decimal.from(toAe(token.dao_balance))}
+                      watchKey={token.sale_address}
                       hideFiatPrice
                     />
-                  ) : (
-                    '—'
-                  )}
-                </div>
+                  ) : '—'}
+                </dd>
               </div>
               <div>
-                <div className="text-xs opacity-80 text-white/80">
-                  {translate('explore:holders')}
-                </div>
-                <div className="font-bold text-white">
-                  {t.holders_count ?? 0}
-                </div>
+                <dt>{daoT('voting.page.holders')}</dt>
+                <dd>{token.holders_count != null ? Number(token.holders_count).toLocaleString(i18n.language) : '—'}</dd>
               </div>
               <div>
-                <div className="text-xs opacity-80 text-white/80">
-                  {translate('created')}
-                </div>
-                <div className="font-bold text-white">
-                  {t.created_at
-                    ? new Date(t.created_at).toLocaleDateString()
-                    : '—'}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs opacity-80 text-white/80">
-                  {translate('explore:marketCapLabel')}
-                </div>
-                <div className="font-bold text-white">
-                  {t.market_cap != null ? (
+                <dt>{daoT('explore:marketCapLabel')}</dt>
+                <dd>
+                  {token.market_cap != null ? (
                     <LivePriceFormatter
-                      aePrice={Decimal.from(toAe(t.market_cap))}
-                      watchKey={t.sale_address}
-                      className="text-xs sm:text-base"
+                      aePrice={Decimal.from(toAe(token.market_cap))}
+                      watchKey={token.sale_address}
                       hideFiatPrice
                     />
-                  ) : (
-                    '—'
-                  )}
-                </div>
+                  ) : '—'}
+                </dd>
               </div>
               <div>
-                <div className="text-xs opacity-80 text-white/80">
-                  {translate('trending')}
-                </div>
-                <div className="font-bold text-white">
-                  {(t as any).trending_score != null
-                    ? Math.round(
-                      Number((t as any).trending_score),
-                    ).toLocaleString()
-                    : '—'}
-                </div>
+                <dt>{daoT('created')}</dt>
+                <dd>{token.created_at ? new Date(token.created_at).toLocaleDateString(i18n.language, { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}</dd>
               </div>
+            </dl>
+            <div className="gov-community-contract">
+              <span>{daoT('sale')}</span>
+              <AddressChip address={token.sale_address || token.address} hideAvatar />
             </div>
-
-            <div className="flex justify-between items-center gap-2 mt-2">
-              <div className="text-xs opacity-80 text-white/80">{translate('sale')}</div>
-              <AddressChip address={t.sale_address} />
+            <div className="gov-community-foot">
+              <Link to={`/trends/tokens/${encodeURIComponent(token.name)}`}>
+                {daoT('viewToken')}
+                <ArrowRight size={14} aria-hidden="true" />
+              </Link>
+              {CONFIG.EXPLORER_URL && (
+                <a href={`${CONFIG.EXPLORER_URL}/contracts/${encodeURIComponent(token.sale_address || token.address)}?type=call-transactions`} target="_blank" rel="noopener noreferrer">
+                  {daoT('aescanLink')}
+                </a>
+              )}
             </div>
-
-            <div className="flex justify-between items-center gap-2 mt-2">
-              <a
-                className="text-xs opacity-95 text-white no-underline px-3 py-2 rounded-xl border-0 bg-white/5 backdrop-blur-md shadow-lg hover:bg-white/10 transition-all duration-150"
-                href={`/trends/tokens/${encodeURIComponent(
-                  t.name,
-                )}`}
-              >
-                {translate('viewToken')}
-              </a>
-              <a
-                className="text-xs opacity-95 text-white no-underline px-3 py-2 rounded-xl border-0 bg-white/5 backdrop-blur-md shadow-lg hover:bg-white/10 transition-all duration-150"
-                href={`https://aescan.io/contracts/${encodeURIComponent(
-                  t.sale_address || t.address,
-                )}?type=call-transactions`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {translate('aescanLink')}
-              </a>
-            </div>
-          </div>
+          </article>
         ))}
-        {!isFetching && !allItems.length && (
-          <div className="col-span-full text-center py-8 opacity-80 text-white/85">
-            {translate('noDaosFound')}
-          </div>
-        )}
       </div>
+    );
+  };
 
-      {hasNextPage && (
-        <div className="text-center pt-2 pb-4">
-          <button
-            type="button"
-            ref={loadMoreBtn}
-            onClick={() => fetchNextPage()}
-            disabled={isFetching}
-            className={`px-6 py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide transition-all duration-300 ease-in-out ${
-              isFetching
-                ? 'bg-white/10 cursor-not-allowed opacity-60'
-                : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0'
-            }`}
-          >
-            {isFetching ? (
-              <div className="flex items-center justify-center gap-2">
-                <Spinner className="w-4 h-4" />
-                {translate('trending:tokenList.loadingEllipsis')}
-              </div>
-            ) : (
-              translate('trending:tokenList.loadMore')
-            )}
-          </button>
-        </div>
-      )}
-    </div>
+  return (
+    <main className="ui-page gov-page">
+      <div className="gov-directory">
+        <section className="gov-main" aria-labelledby="gov-communities-title">
+          <h1 id="gov-communities-title" className="sr-only">{t('experience.communitiesTitle')}</h1>
+          <div className="gov-toolbar">
+            <label className="gov-search" htmlFor="community-search">
+              <Search size={17} aria-hidden="true" />
+              <span className="sr-only">{t('experience.searchCommunities')}</span>
+              <input id="community-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t('experience.searchCommunities')} />
+            </label>
+            <label className="gov-sort" htmlFor="community-sort">
+              <span>{t('experience.sortLabel')}</span>
+              <select id="community-sort" value={orderBy} onChange={(event) => setOrderBy(event.target.value as OrderBy)}>{sorts.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}</select>
+            </label>
+          </div>
+          {renderCommunities()}
+          {!isPending && !error && !communities.length && (
+          <div className="gov-empty">
+            <Users aria-hidden="true" />
+            <h2>{daoT('noDaosFound')}</h2>
+            <button type="button" className="gov-button ui-secondary" onClick={() => setSearch('')}>{t('experience.clearFilters')}</button>
+          </div>
+          )}
+          {hasNextPage && <div className="gov-load-more"><button type="button" className="gov-button ui-secondary" disabled={isFetching} onClick={() => fetchNextPage()}>{isFetching ? daoT('loading') : daoT('trending:tokenList.loadMore')}</button></div>}
+        </section>
+
+      </div>
+    </main>
   );
 };
-
 export default Daos;

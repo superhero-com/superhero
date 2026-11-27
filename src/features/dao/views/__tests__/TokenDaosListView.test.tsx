@@ -117,9 +117,9 @@ beforeEach(() => {
 describe('TokenDaosListView', () => {
   it('lists votes in plain words with status, bars and counts', async () => {
     renderAt(`/trends/dao/${SALE}`);
-    expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('#WORD-CRAFT DAO');
+    expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('#WORD-CRAFT');
     expect(screen.getByTestId('dao-open-votes')).toHaveTextContent('1');
-    const items = within(screen.getByRole('region', { name: 'Votes' })).getAllByRole('listitem');
+    const items = within(screen.getByRole('region', { name: 'Proposals' })).getAllByRole('listitem');
     expect(items).toHaveLength(2);
     expect(within(items[0]).getByText('Send 1,500 AE from the treasury to')).toBeInTheDocument();
     expect(within(items[0]).getByText('Open')).toBeInTheDocument();
@@ -136,7 +136,7 @@ describe('TokenDaosListView', () => {
     ev.state.metadata.description = 'Event: Superhero Meetup | Sofia | 2099-03-14\nVenue and snacks';
     mockVotes = [ev];
     renderAt(`/trends/dao/${SALE}`);
-    const [item] = within(await screen.findByRole('region', { name: 'Votes' })).getAllByRole('listitem');
+    const [item] = within(await screen.findByRole('region', { name: 'Proposals' })).getAllByRole('listitem');
     expect(within(item).getByText('Fund Superhero Meetup: send 300 AE to')).toBeInTheDocument();
     expect(within(item).getByText('Event')).toBeInTheDocument();
     expect(within(item).getByText('Superhero Meetup · Sofia · Mar 14, 2099')).toBeInTheDocument();
@@ -147,15 +147,15 @@ describe('TokenDaosListView', () => {
   it('filters open and closed votes', async () => {
     renderAt(`/trends/dao/${SALE}`);
     fireEvent.click(await screen.findByRole('button', { name: /^Closed/ }));
-    expect(within(screen.getByRole('region', { name: 'Votes' })).getAllByRole('listitem')).toHaveLength(1);
+    expect(within(screen.getByRole('region', { name: 'Proposals' })).getAllByRole('listitem')).toHaveLength(1);
     expect(screen.getByRole('button', { name: /^Closed/ })).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('shows an empty state that leads to creating a vote', async () => {
     mockVotes = [];
     renderAt(`/trends/dao/${SALE}`);
-    fireEvent.click(await screen.findByRole('button', { name: 'Create the first vote' }));
-    expect(await screen.findByRole('heading', { name: 'Create a vote' })).toBeInTheDocument();
+    fireEvent.click(await screen.findByRole('button', { name: 'Create proposal' }));
+    expect(await screen.findByRole('heading', { name: 'Create proposal' })).toBeInTheDocument();
   });
 
   it('shows the contract rules, including the apply window from the DAO', async () => {
@@ -166,14 +166,14 @@ describe('TokenDaosListView', () => {
   });
 });
 
-describe('Create a vote', () => {
+describe('Create proposal', () => {
   const fillPayout = async (amount = '150') => {
     renderAt(`/trends/dao/${SALE}?create=1`);
     fireEvent.click(await screen.findByRole('radio', { name: /^Send AE from the treasury/ }));
     fireEvent.change(await screen.findByLabelText('How much AE?'), { target: { value: amount } });
     fireEvent.change(screen.getByLabelText('Who receives the AE?'), { target: { value: AK } });
     fireEvent.change(screen.getByLabelText('Why should holders say yes?'), { target: { value: 'Fund the meetup' } });
-    fireEvent.click(screen.getByRole('button', { name: /Review vote/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Review proposal/ }));
   };
 
   it('uses plain labels per type, not contract names', async () => {
@@ -186,7 +186,7 @@ describe('Create a vote', () => {
 
   it('keeps validation and shows errors next to the fields', async () => {
     renderAt(`/trends/dao/${SALE}?create=1`);
-    fireEvent.click(await screen.findByRole('button', { name: /Review vote/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /Review proposal/ }));
     expect(screen.getByText('Enter the event name.')).toBeInTheDocument();
     expect(screen.getByText('Enter the city.')).toBeInTheDocument();
     expect(screen.getByText('Pick the event date.')).toBeInTheDocument();
@@ -215,7 +215,7 @@ describe('Create a vote', () => {
   it('creates the vote after the fee is acknowledged and opens it', async () => {
     mockAccount = AK;
     await fillPayout();
-    const submit = await screen.findByRole('button', { name: 'Create vote · 555 AE' });
+    const submit = await screen.findByRole('button', { name: 'Create proposal · 555 AE' });
     expect(submit).toBeDisabled();
     fireEvent.click(screen.getByRole('checkbox'));
     fireEvent.click(submit);
@@ -238,11 +238,11 @@ describe('Create a vote', () => {
     fireEvent.change(screen.getByLabelText('How much AE?'), { target: { value: '150' } });
     fireEvent.change(screen.getByLabelText('Who receives the AE?'), { target: { value: AK } });
     fireEvent.change(screen.getByLabelText('Why should holders say yes?'), { target: { value: 'Venue and snacks' } });
-    fireEvent.click(screen.getByRole('button', { name: /Review vote/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Review proposal/ }));
     expect(await screen.findByText('Send 150 AE from the treasury to fund the event')).toBeInTheDocument();
     expect(screen.getByText(/Superhero Meetup · Sofia · /)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('checkbox'));
-    fireEvent.click(screen.getByRole('button', { name: 'Create vote · 555 AE' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create proposal · 555 AE' }));
     expect(await screen.findByText('vote page')).toBeInTheDocument();
     expect(created).toEqual([{
       subject: { VotePayoutAmount: [AK, 150n * E18] },
@@ -262,7 +262,7 @@ describe('Create a vote', () => {
     createError = new Error('Invocation failed: "ADD_VOTE_TOKEN_HOLDER_MISSMATCH"');
     await fillPayout();
     fireEvent.click(await screen.findByRole('checkbox'));
-    fireEvent.click(screen.getByRole('button', { name: 'Create vote · 555 AE' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create proposal · 555 AE' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('You need more tokens to create a vote here.');
     expect(screen.getByRole('heading', { name: 'Review and create' })).toBeInTheDocument();

@@ -3,7 +3,7 @@ import { Encoded, Encoding, isAddressValid } from '@aeternity/aepp-sdk';
 import BigNumber from 'bignumber.js';
 import { VOTE_TYPE, VoteMetadata, VoteSubject } from 'bctsl-sdk';
 import {
-  CalendarDays, ChevronLeft, ChevronRight, Coins, HandCoins, Repeat, SlidersHorizontal, UserMinus, UserPlus,
+  Info, CalendarDays, ChevronLeft, ChevronRight, Coins, HandCoins, Repeat, SlidersHorizontal, UserMinus, UserPlus,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -344,6 +344,10 @@ const VoteCreateForm = ({
       <div className="dao-v-panel-head">
         <h2 id="dao-v-create-title">{t('voting.create.title')}</h2>
         <span className="dao-v-muted">{t('voting.create.step', { step: 1, total: 2 })}</span>
+      </div>
+      <div className="dao-v-note">
+        <Info aria-hidden="true" />
+        <p>{t('governance:experience.feeUpfront')}</p>
       </div>
       <fieldset className="dao-v-types">
         <legend>{t('voting.create.whatLabel')}</legend>

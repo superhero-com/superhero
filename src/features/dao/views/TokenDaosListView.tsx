@@ -100,11 +100,6 @@ const TokenDaosListView = () => {
     list = (
       <div className="dao-v-empty">
         <p><strong>{t('voting.list.emptyTitle')}</strong></p>
-        <p className="dao-v-muted">{t('voting.list.emptyText')}</p>
-        <Button type="button" className="dao-v-btn ui-primary" onClick={() => setCreating(true)}>
-          <Plus aria-hidden="true" />
-          {t('voting.list.createFirst')}
-        </Button>
       </div>
     );
   } else if (shown.length === 0) {
@@ -154,15 +149,7 @@ const TokenDaosListView = () => {
       {token && (
         <>
           <header className="dao-v-head">
-            <div>
-              <p className="dao-v-eyebrow">{t('voting.page.eyebrow')}</p>
-              <h1 className="ui-page-title break-words">
-                {tokenLabel}
-                {' '}
-                <span>{t('badge')}</span>
-              </h1>
-              <p className="dao-v-muted">{t('voting.page.intro')}</p>
-            </div>
+            <h1 className="ui-page-title break-words"><bdi>{tokenLabel}</bdi></h1>
             <div className="dao-v-treasury">
               <span>{t('treasury')}</span>
               <strong>
@@ -211,7 +198,6 @@ const TokenDaosListView = () => {
                   <div className="dao-v-list-head">
                     <div>
                       <h2 id="dao-v-list-title">{t('voting.list.title')}</h2>
-                      <p className="dao-v-muted">{t('voting.list.subtitle')}</p>
                     </div>
                     <Button type="button" className="dao-v-btn ui-primary" onClick={() => setCreating(true)}>
                       <Plus aria-hidden="true" />

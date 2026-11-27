@@ -26,8 +26,8 @@ const mockRefetch = vi.fn();
 
 vi.mock('@/hooks', () => ({
   useGovernance: () => ({
-    usePolls: ({ status }: { status: 'all' | 'open' | 'closed' }) => {
-      const data = status === 'all' ? mockPolls : mockPolls?.filter((p) => p.status === status);
+    usePolls: ({ status, search = '' }: { status: 'all' | 'open' | 'closed'; search?: string }) => {
+      const data = mockPolls?.filter((p) => (status === 'all' || p.status === status) && p.title.toLowerCase().includes(search.toLowerCase()));
       // React Query's flags: pending until data or an error arrives, loading only while
       // fetching. Offline the fetch is paused, so a pending query is not loading.
       const isPending = data === undefined && !mockError;
@@ -40,18 +40,6 @@ vi.mock('@/hooks', () => ({
       };
     },
   }),
-}));
-
-// A native select stands in for the Radix one, which jsdom cannot open.
-vi.mock('@/components/inputs/AppSelect', () => ({
-  default: ({ value, onValueChange, children }: {
-    value: string; onValueChange: (v: string) => void; children: React.ReactNode;
-  }) => (
-    <select value={value} onChange={(e) => onValueChange(e.target.value)}>{children}</select>
-  ),
-  Item: ({ value, children }: { value: string; children: React.ReactNode }) => (
-    <option value={value}>{children}</option>
-  ),
 }));
 
 function renderPolls() {
@@ -69,19 +57,18 @@ describe('GovernancePolls', () => {
     mockRefetch.mockReset();
   });
 
-  it('counts open and closed polls separately instead of one total', () => {
+  it('filters by status and search, and clears an empty search', () => {
     mockPolls = [makePoll(1, 'open'), makePoll(2, 'closed'), makePoll(3, 'closed')];
     renderPolls();
-
-    // Default filter is "open": only the open count is shown.
-    expect(screen.getByText(/^1\s+Active$/)).toBeInTheDocument();
-    expect(screen.queryByText(/Closed$/)).not.toBeInTheDocument();
-
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'all' } });
-
-    expect(screen.getByText(/^1\s+Active$/)).toBeInTheDocument();
-    expect(screen.getByText(/^2\s+Closed$/)).toBeInTheDocument();
-    expect(screen.queryByText(/Closing$/)).not.toBeInTheDocument();
+    expect(screen.getByLabelText('3 results')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Closed' }));
+    expect(screen.queryByRole('link', { name: /Poll #1/ })).not.toBeInTheDocument();
+    expect(screen.getByLabelText('2 results')).toBeInTheDocument();
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'nothing' } });
+    expect(screen.getByText('No polls found')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+    expect(screen.getByLabelText('3 results')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'All polls' })).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('keeps the filter controls on screen while polls load, without a count', () => {
@@ -90,8 +77,7 @@ describe('GovernancePolls', () => {
     renderPolls();
 
     expect(screen.getByText('Loading…')).toBeInTheDocument();
-    expect(screen.getByRole('combobox')).toBeInTheDocument();
-    expect(screen.queryByText(/Active$/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'All polls' })).toBeInTheDocument();
   });
 
   it('keeps loading rather than reporting no polls while offline', () => {
@@ -110,7 +96,6 @@ describe('GovernancePolls', () => {
 
     expect(screen.getByText("Couldn't load polls.")).toBeInTheDocument();
     expect(screen.queryByText('No polls found')).not.toBeInTheDocument();
-    expect(screen.queryByText(/Active$/)).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(mockRefetch).toHaveBeenCalledTimes(1);
@@ -126,6 +111,6 @@ describe('GovernancePolls', () => {
   it('gives the list a page heading for screen readers', () => {
     renderPolls();
 
-    expect(screen.getByRole('heading', { level: 1, name: 'æternity polls' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Governance polls' })).toBeInTheDocument();
   });
 });

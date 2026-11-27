@@ -15,10 +15,14 @@ export const useGovernance = () => {
 
   // Polls query (combined smart contract + backend ordering/metrics)
   const usePolls = (params: { status: 'all' | 'open' | 'closed'; search?: string }) => useQuery({
-    queryKey: ['governance', 'polls', params],
+    // Search is applied client-side (select), so typing does not refetch the
+    // registry and both orderings on every keystroke.
+    queryKey: ['governance', 'polls', { status: params.status }],
     queryFn: async () => {
-      const registry = await Contract.initialize<{
-          polls:() => Map<number, {
+      // Independent reads: fetch them together rather than one after another.
+      const [{ decodedResult: contractPolls }, orderings, height] = await Promise.all([
+        Contract.initialize<{
+          polls:() => Map<bigint, {
             close_height: bigint;
             is_listed: boolean;
             title: string;
@@ -28,28 +32,37 @@ export const useGovernance = () => {
               ...sdk.getContext(),
               aci: REGISTRY_WITH_EVENTS_ACI,
               address: CONFIG.GOVERNANCE_CONTRACT_ADDRESS,
-            });
-      const contractPolls = (await registry.polls()).decodedResult;
+            }).then((registry) => registry.polls()),
+        Promise.all(params.status === 'all'
+          ? [GovernanceApi.getPollOrdering(false), GovernanceApi.getPollOrdering(true)]
+          : [GovernanceApi.getPollOrdering(params.status === 'closed')]),
+        sdk.getHeight(),
+      ]);
 
-      const { data } = await GovernanceApi.getPollOrdering(params.status === 'closed');
-      if (params.status === 'all') data.push(...(await GovernanceApi.getPollOrdering(true)).data);
+      // The registry can list one poll contract under several ids; show it once.
+      const seen = new Set<string>();
+      const data = orderings
+        .flatMap((o) => o.data)
+        .filter((p) => {
+          if (seen.has(p.poll)) return false;
+          seen.add(p.poll);
+          return true;
+        });
 
-      const height = await sdk.getHeight();
-      let merged = data.map(({ id, ...others }) => ({
+      return data.map(({ id, ...others }) => ({
         id,
         ...others,
-        title: contractPolls.get(BigInt(id)).title,
-        endDate: new Date(Date.now() + (others.closeHeight - height) * 3 * 60 * 1000),
+        title: contractPolls.get(BigInt(id))?.title ?? '',
+        endDate: others.closeHeight == null
+          ? undefined
+          : new Date(Date.now() + (others.closeHeight - height) * 3 * 60 * 1000),
         status: (others.closeHeight == null || others.closeHeight > height
           ? 'open' : 'closed') as 'open' | 'closed',
       }));
-
+    },
+    select: (polls) => {
       const search = params.search?.trim().toLowerCase();
-      if (search) {
-        merged = merged.filter((p) => p.title.toLowerCase().includes(search));
-      }
-
-      return merged;
+      return search ? polls.filter((p) => p.title.toLowerCase().includes(search)) : polls;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -63,10 +76,11 @@ export const useGovernance = () => {
   });
 
   // Poll results query
-  const usePollResults = (id: Encoded.ContractAddress) => useQuery({
-    queryKey: ['governance', 'pollResults', id],
+  const usePollResults = (id?: Encoded.ContractAddress) => useQuery({
+    queryKey: ['governance', 'pollResults', id, activeAccount],
+    enabled: !!id,
     queryFn: async () => {
-      const overview = await GovernanceApi.getPollOverview(id);
+      const overview = await GovernanceApi.getPollOverview(id!);
 
       // Shape results for UI consumption
       const voteOptions: Record<string, string> = overview.pollState.vote_options || {};
@@ -94,6 +108,7 @@ export const useGovernance = () => {
   // Delegation query
   const useDelegation = () => useQuery<Encoded.AccountAddress | null>({
     queryKey: ['governance', 'delegation', activeAccount],
+    enabled: !!activeAccount,
     queryFn: async () => {
       const registry = await Contract.initialize<{
           delegatee:(account: Encoded.AccountAddress) => Encoded.AccountAddress | undefined
@@ -110,9 +125,22 @@ export const useGovernance = () => {
   // Delegators query
   const useDelegators = () => useQuery({
     queryKey: ['governance', 'delegators', activeAccount],
+    enabled: !!activeAccount,
     queryFn: async () => (await GovernanceApi.getDelegatedPower(activeAccount)).flattenedDelegationTree,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
+
+  // SDK calls wait for a mined transaction and reject failed contract execution.
+  // Indexer notifications are best effort and must not turn a confirmed vote into a failure.
+  const notifyIndexer = (topic: string, pollAddress?: Encoded.ContractAddress) => {
+    GovernanceApi.submitContractEvent(topic, pollAddress).then(() => {
+      queryClient.invalidateQueries({
+        queryKey: pollAddress
+          ? ['governance', 'pollResults', pollAddress]
+          : ['governance', 'delegation'],
+      });
+    }).catch(() => { /* Normal query refresh recovers if the indexer is temporarily unavailable. */ });
+  };
 
   // Submit vote mutation
   const useSubmitVote = () => useMutation({
@@ -126,13 +154,16 @@ export const useGovernance = () => {
               aci: GOVERNANCE_POLL_ACI as any,
               address: pollAddress,
             });
-      await poll.vote(option);
+      await poll.vote(option, { waitMined: true, confirm: false });
       track('governance_vote_done');
-      await GovernanceApi.submitContractEvent('Vote', pollAddress);
+      return activeAccount;
     },
-    onSuccess: (_, { pollAddress }) => {
-      // Invalidate related queries
-      queryClient.invalidateQueries({ queryKey: ['governance', 'pollResults', pollAddress] });
+    onSuccess: (account, { pollAddress, option }) => {
+      queryClient.setQueryData(
+        ['governance', 'pollResults', pollAddress, account],
+        (previous: { myVote?: number } | undefined) => previous && ({ ...previous, myVote: option }),
+      );
+      notifyIndexer('Vote', pollAddress);
     },
   });
 
@@ -148,12 +179,15 @@ export const useGovernance = () => {
               aci: GOVERNANCE_POLL_ACI as any,
               address: pollAddress,
             });
-      await poll.revoke_vote();
-      await GovernanceApi.submitContractEvent('RevokeVote', pollAddress);
+      await poll.revoke_vote({ waitMined: true, confirm: false });
+      return activeAccount;
     },
-    onSuccess: (_, pollAddress) => {
-      // Invalidate related queries
-      queryClient.invalidateQueries({ queryKey: ['governance', 'pollResults', pollAddress] });
+    onSuccess: (account, pollAddress) => {
+      queryClient.setQueryData(
+        ['governance', 'pollResults', pollAddress, account],
+        (previous: { myVote?: number } | undefined) => previous && ({ ...previous, myVote: undefined }),
+      );
+      notifyIndexer('RevokeVote', pollAddress);
     },
   });
 
@@ -170,12 +204,12 @@ export const useGovernance = () => {
               address: CONFIG.GOVERNANCE_CONTRACT_ADDRESS,
             });
 
-      await registry.delegate(delegateTo);
-      await GovernanceApi.submitContractEvent('Delegation');
+      await registry.delegate(delegateTo, { waitMined: true, confirm: false });
+      return activeAccount;
     },
-    onSuccess: () => {
-      // Invalidate delegation query
-      queryClient.invalidateQueries({ queryKey: ['governance', 'delegation', activeAccount] });
+    onSuccess: (account, delegateTo) => {
+      queryClient.setQueryData(['governance', 'delegation', account], delegateTo);
+      notifyIndexer('Delegation');
     },
   });
 
@@ -192,12 +226,12 @@ export const useGovernance = () => {
               address: CONFIG.GOVERNANCE_CONTRACT_ADDRESS,
             });
 
-      await registry.revoke_delegation();
-      await GovernanceApi.submitContractEvent('RevokeDelegation');
+      await registry.revoke_delegation({ waitMined: true, confirm: false });
+      return activeAccount;
     },
-    onSuccess: () => {
-      // Invalidate delegation query
-      queryClient.invalidateQueries({ queryKey: ['governance', 'delegation', activeAccount] });
+    onSuccess: (account) => {
+      queryClient.setQueryData(['governance', 'delegation', account], null);
+      notifyIndexer('RevokeDelegation');
     },
   });
 

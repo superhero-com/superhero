@@ -1,10 +1,11 @@
 /* eslint-disable */
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
-import AeButton from '@/components/AeButton';
-import MobileInput from '@/components/MobileInput';
-import MobileCard from '@/components/MobileCard';
+import { useNavigate, Link } from 'react-router-dom';
+import {
+  ArrowLeft, Plus, X,
+} from 'lucide-react';
+import { ConnectWalletButton } from '@/components/ConnectWalletButton';
 import { useAeSdk } from '@/hooks/useAeSdk';
 import { CONFIG } from '@/config';
 import REGISTRY_WITH_EVENTS_ACI from '@/api/GovernanceRegistryACI.json';
@@ -192,91 +193,87 @@ export default function GovernanceCreate() {
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="flex flex-col gap-6 px-4 md:px-6 py-6 max-w-3xl mx-auto">
-        <div className="relative">
-          <div className="governance-decoration absolute inset-0 bg-gradient-to-r from-blue-500/20 via-blue-500/20 to-blue-500/20 rounded-3xl blur-xl" />
-          <div className="ui-panel relative bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 md:p-8">
-            <h1 className="ui-page-title text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-400 via-blue-400 to-blue-400 bg-clip-text text-transparent m-0">{t('createPoll')}</h1>
-            <p className="text-slate-300 mt-2">{t('description')}</p>
-          </div>
-        </div>
-
-        {(Object.values(errors).some(Boolean)) && (
-          <MobileCard variant="outlined" padding="small" className="bg-red-500/10 border-red-500/30">
-            <div className="text-red-300 font-medium mb-1">{t('messages.issuesWithInput')}</div>
-            <ul className="m-0 ps-5 text-red-200 text-sm">
-              {Object.values(errors).filter(Boolean).map((e, i) => (
-                <li key={i} className="list-disc">{e}</li>
-              ))}
-            </ul>
-          </MobileCard>
-        )}
-
-        <MobileInput label={t('form.title')} value={title} onChange={(e) => setTitle(e.target.value)} error={errors.title || undefined} />
-        <MobileInput label={t('form.description')} value={description} onChange={(e) => setDescription(e.target.value)} error={errors.description || undefined} />
-
-        {showForumHint && (
-          <MobileCard variant="outlined" padding="small" className="ui-panel bg-[var(--glass-bg)] border-[var(--glass-border)] text-slate-200 backdrop-blur-2xl">
-            {t('messages.forumHint')}
-          </MobileCard>
-        )}
-
-        <MobileInput label={t('form.link')} value={link} onChange={(e) => setLink(e.target.value)} onBlur={handleLinkBlur} error={errors.link || undefined} />
-
-        <div className="flex gap-2">
-          <AeButton onClick={() => setIsListed(true)} className={isListed ? 'bg-[#1c304f] text-blue-200' : 'bg-white/10'}>{t('buttons.publiclyListed')}</AeButton>
-          <AeButton onClick={() => setIsListed(false)} className={!isListed ? 'bg-[#1c304f] text-blue-200' : 'bg-white/10'}>{t('buttons.notListed')}</AeButton>
-        </div>
-
-        <div className="space-y-2">
-          {options.map((opt, idx) => (
-            <div key={idx} className="flex items-center gap-2">
-              <MobileInput
-                label={idx === 0 ? t('form.options') : undefined}
-                placeholder={t('form.addOption')}
-                value={opt}
-                onChange={(e) => addOptionRow(idx, e.target.value)}
-                error={errors.options || undefined}
-              />
-              {opt && (
-                <AeButton onClick={() => removeOption(idx)} className="bg-white/10">✕</AeButton>
-              )}
+    <>
+      <Link className="gov-back" to="/voting">
+        <ArrowLeft size={16} aria-hidden="true" />
+        {t('experience.backToPolls')}
+      </Link>
+      <div className="gov-layout">
+        <section className="gov-panel gov-form">
+          <h1>{t('experience.newPoll')}</h1>
+          <form onSubmit={(event) => { event.preventDefault(); onSubmit(); }} noValidate>
+            {Object.values(errors).some(Boolean) && (
+            <div role="alert" className="gov-inline-error">
+              {t('messages.issuesWithInput')}
+              <ul>{Object.values(errors).filter(Boolean).map((error, index) => <li key={index}>{error}</li>)}</ul>
             </div>
-          ))}
-        </div>
-
-        <div>
-          <MobileInput label={t('form.closeAtHeight')} type="number" value={closeHeight} onChange={(e) => setCloseHeight(e.target.value)} error={errors.closeHeight || undefined} />
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            <MobileInput label={t('form.estCloseDate')} type="date" value={dateString} onChange={(e) => setDateString(e.target.value)} onBlur={updateCloseHeightFromDate} />
-            <MobileInput label={t('form.estCloseTime')} type="time" value={timeString} onChange={(e) => setTimeString(e.target.value)} onBlur={updateCloseHeightFromDate} />
-          </div>
-          <div className="text-slate-400 text-sm p-2">
-            {closeHeight && Number(closeHeight) > height && (
-              <span>{t('messages.neverClosingHint')}</span>
             )}
-            {closeHeight && Number(closeHeight) < height && closeHeight !== '0' && (
+            <label className="gov-field">
               <span>
+                {t('form.title')}
                 {' '}
-                {t('messages.closeHeightPast', { current: height, close: closeHeight })}
+                <small>
+                  {title.length}
+                  /50
+                </small>
               </span>
-            )}
-            {closeHeight === '0' && (
-              <span>
-                {' '}
-                {t('messages.neverClosing')}
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div className="sticky bottom-4">
-          <AeButton onClick={onSubmit} disabled={submitting} className="w-full ui-primary">
-            {submitting ? t('buttons.creating') : t('buttons.createPoll')}
-          </AeButton>
-        </div>
+              <input value={title} maxLength={50} onChange={(event) => setTitle(event.target.value)} aria-invalid={!!errors.title} />
+            </label>
+            <label className="gov-field">
+              <span>{t('form.description')}</span>
+              <textarea rows={5} value={description} onChange={(event) => setDescription(event.target.value)} aria-invalid={!!errors.description} />
+            </label>
+            <label className="gov-field">
+              <span>{t('form.link')}</span>
+              <input type="url" value={link} onChange={(event) => setLink(event.target.value)} onBlur={handleLinkBlur} placeholder="https://" aria-invalid={!!errors.link} />
+            </label>
+            {showForumHint && <p className="gov-form-hint">{t('messages.forumHint')}</p>}
+            <fieldset className="gov-form-options">
+              <legend>{t('form.options')}</legend>
+              {options.map((option, index) => (
+                <div className="gov-option-field" key={index}>
+                  <label className="gov-field">
+                    <span className="sr-only">{t('experience.optionNumber', { number: index + 1 })}</span>
+                    <input placeholder={t('experience.optionNumber', { number: index + 1 })} value={option} onChange={(event) => addOptionRow(index, event.target.value)} aria-invalid={!!errors.options} />
+                  </label>
+                  {option && <button type="button" className="gov-button ui-secondary" aria-label={t('experience.removeOption', { number: index + 1 })} onClick={() => removeOption(index)}><X size={16} aria-hidden="true" /></button>}
+                </div>
+              ))}
+            </fieldset>
+            <fieldset className="gov-form-options">
+              <legend>{t('experience.visibility')}</legend>
+              <div className="gov-filters">{[true, false].map((listed) => <button type="button" key={String(listed)} aria-pressed={isListed === listed} onClick={() => setIsListed(listed)}>{t(listed ? 'buttons.publiclyListed' : 'buttons.notListed')}</button>)}</div>
+            </fieldset>
+            <label className="gov-field">
+              <span>{t('form.closeAtHeight')}</span>
+              <input type="number" min="0" value={closeHeight} onChange={(event) => setCloseHeight(event.target.value)} aria-invalid={!!errors.closeHeight} />
+            </label>
+            <div className="gov-form-two">
+              <label className="gov-field">
+                <span>{t('form.estCloseDate')}</span>
+                <input type="date" value={dateString} onChange={(event) => setDateString(event.target.value)} onBlur={updateCloseHeightFromDate} />
+              </label>
+              <label className="gov-field">
+                <span>{t('form.estCloseTime')}</span>
+                <input type="time" value={timeString} onChange={(event) => setTimeString(event.target.value)} onBlur={updateCloseHeightFromDate} />
+              </label>
+            </div>
+            <p className="gov-form-hint">{t(closeHeight === '0' ? 'messages.neverClosing' : 'messages.neverClosingHint')}</p>
+            <div className="gov-form-actions">
+              {activeAccount ? (
+                <button type="submit" className="gov-button ui-primary" disabled={submitting || !sdkInitialized}>
+                  <Plus size={16} aria-hidden="true" />
+                  {t(submitting ? 'buttons.creating' : 'buttons.createPoll')}
+                </button>
+              ) : <ConnectWalletButton className="gov-button ui-primary" />}
+            </div>
+          </form>
+        </section>
+        <aside className="gov-panel">
+          <h2>{t('experience.beforePublish')}</h2>
+          <p>{t('experience.createTransactions')}</p>
+        </aside>
       </div>
-    </div>
+    </>
   );
 }

@@ -1,351 +1,122 @@
-/* eslint-disable */
-import { HeaderLogo as IconGovernance } from '@/icons';
-import { useAccount, useAeSdk, useGovernance } from '@/hooks';
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Encoding, isAddressValid, toAe } from '@aeternity/aepp-sdk';
-import MobileCard from '../MobileCard';
-import MobileInput from '../MobileInput';
-import AeButton from '../AeButton';
+import { Encoded, Encoding, isAddressValid } from '@aeternity/aepp-sdk';
+import { useAccount, useAeSdk, useGovernance } from '@/hooks';
+import { ConnectWalletButton } from '@/components/ConnectWalletButton';
+import { formatUnits } from '@/features/dao/utils/voteRules';
 
-export default function GovernanceAccount() {
-  const { t } = useTranslation('governance');
+const GovernanceAccount = () => {
+  const { t, i18n } = useTranslation('governance');
   const { activeAccount } = useAeSdk();
   const { decimalBalance } = useAccount();
   const {
-    useDelegation,
-    useDelegators,
-    useSetDelegation,
-    useRevokeDelegation,
+    useDelegation, useDelegators, useSetDelegation, useRevokeDelegation,
   } = useGovernance();
-
-  const { data: delegation } = useDelegation();
-  const { data: delegators = [], isLoading: delegatorsLoading } = useDelegators();
-
-  // Mutations
-  const setDelegationMutation = useSetDelegation();
-  const revokeDelegationMutation = useRevokeDelegation();
-
-  const [delegateAddress, setDelegateAddress] = useState<string>(
-    delegation || '',
-  );
-
-  // Update delegate address when delegation changes
-  useEffect(() => {
-    setDelegateAddress(delegation || '');
-  }, [delegation]);
-
-  const handleSaveDelegation = () => {
-    const to = delegateAddress.trim();
-    if (isAddressValid(to, Encoding.AccountAddress)) {
-      setDelegationMutation.mutate(to);
-    }
-  };
-
-  const handleRevokeDelegation = () => {
-    revokeDelegationMutation.mutate();
-    setDelegateAddress('');
-  };
-
-  const isSaving = setDelegationMutation.isPending;
-  const isRevoking = revokeDelegationMutation.isPending;
+  const { data: delegation, error: delegationError } = useDelegation();
+  const { data: delegators = [], isLoading, error: delegatorsError } = useDelegators();
+  const save = useSetDelegation();
+  const revoke = useRevokeDelegation();
+  const [address, setAddress] = useState(delegation || '');
+  useEffect(() => { setAddress(delegation || ''); }, [delegation]);
+  const pending = save.isPending || revoke.isPending;
+  const valid = isAddressValid(address.trim(), Encoding.AccountAddress) && address.trim() !== activeAccount;
 
   return (
-    <div className="min-h-screen">
-      <div className="flex flex-col gap-6 px-4 md:px-6 py-6 max-w-6xl mx-auto">
-        {/* Enhanced Header Section */}
-        <div className="text-left mb-4 animate-slideInUp">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 via-blue-500 to-blue-500 shadow-2xl shadow-blue-500/25 mb-6">
-            <IconGovernance className="w-6 h-6 text-white" />
-          </div>
-          <h1 className="ui-page-title text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 via-blue-400 to-blue-400 bg-clip-text text-transparent mb-4 leading-tight">
-            {t('account.title')}
-          </h1>
-          <p className="text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            {t('account.subtitle')}
-          </p>
-        </div>
-
-        {/* Account Information Card */}
-        {activeAccount && (
-          <div className="mb-8 animate-fadeInUp">
-            <MobileCard
-              variant="elevated"
-              padding="large"
-              className="ui-panel bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl shadow-2xl shadow-blue-500/10 hover:shadow-blue-500/20 transition-all duration-500"
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg">
-                  <span className="text-lg">👤</span>
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-white mb-1">{t('account.accountInformation')}</h2>
-                  <p className="text-sm text-slate-400">{t('account.accountDetails')}</p>
-                </div>
-              </div>
-
-              {delegatorsLoading ? (
-                <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-16 bg-white/5 rounded-2xl" />
-                  ))}
-                </div>
-              ) : activeAccount ? (
-                <div className="grid gap-4">
-                  {/* Address */}
-                  <div className="ui-panel group p-4 bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:shadow-lg">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
-                          <span className="text-sm">📍</span>
-                        </div>
-                        <span className="text-sm font-medium text-slate-300">{t('account.walletAddress')}</span>
-                      </div>
-                      <div className="text-right">
-                        <div className="break-all text-xs font-mono text-white bg-black/20 px-3 py-2 rounded-lg">
-                          {activeAccount}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Balance */}
-                  <div className="ui-panel group p-4 bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:shadow-lg">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center">
-                          <span className="text-sm">💰</span>
-                        </div>
-                        <span className="text-sm font-medium text-slate-300">{t('account.aeBalance')}</span>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-white">
-                          {decimalBalance.prettify()}
-                          {' '}
-                          AE
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Delegators Count */}
-                  {delegators.length > 0 && (
-                    <div className="ui-panel group p-4 bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:shadow-lg">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-400 to-blue-500 flex items-center justify-center">
-                            <span className="text-sm">🤝</span>
-                          </div>
-                          <span className="text-sm font-medium text-slate-300">{t('account.activeDelegators')}</span>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-lg font-bold text-white">
-                            {delegators.length}
-                          </div>
-                          <div className="text-xs text-slate-400">{t('account.peopleTrustYou')}</div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl">⚠️</span>
-                  </div>
-                  <p className="text-slate-400">{t('account.unableToLoadAccount')}</p>
-                </div>
-              )}
-            </MobileCard>
-          </div>
-        )}
-
-        {/* Vote Delegation Section */}
-        <div className="mb-8 animate-fadeInUp">
-          <MobileCard
-            variant="elevated"
-            padding="large"
-            className="ui-panel bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl shadow-2xl shadow-blue-500/10 hover:shadow-blue-500/20 transition-all duration-500"
-          >
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-400 to-blue-500 flex items-center justify-center shadow-lg">
-                <span className="text-lg">🤝</span>
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-white mb-1">{t('account.voteDelegation')}</h2>
-                <p className="text-sm text-slate-400">{t('account.delegatePowerDescription')}</p>
-              </div>
+    <>
+      <Link className="gov-back" to="/voting">
+        <ArrowLeft size={16} aria-hidden="true" />
+        {t('experience.backToPolls')}
+      </Link>
+      <div className="gov-layout">
+        <div className="gov-detail-stack">
+          <div className="gov-section-heading">
+            <div>
+              <h1>{t('experience.votingPower')}</h1>
             </div>
-
-            <div className="space-y-6">
-              {/* Current Delegation Status */}
-              {delegation && (
-                <div className="p-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 rounded-2xl">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                      <span className="text-sm">✅</span>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-emerald-300">{t('account.currentlyDelegated')}</p>
-                      <p className="text-xs text-slate-400 font-mono">
-                        {delegation.slice(0, 12)}
-                        ...
-                        {delegation.slice(-12)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Delegation Input */}
-              <div className="space-y-3">
-                <MobileInput
-                  label={t('account.delegateToAddress')}
-                  placeholder={t('delegateAddressPlaceholder')}
-                  value={delegateAddress}
-                  onChange={(e) => setDelegateAddress(e.target.value)}
-                  variant="filled"
-                  size="large"
-                  className="transition-all duration-300"
-                  disabled={isSaving || isRevoking}
-                />
-
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  {t('account.delegationHint')}
-                </p>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-col gap-3">
-                <AeButton
-                  onClick={handleSaveDelegation}
-                  disabled={!delegateAddress.trim() || isSaving || isRevoking}
-                  variant="primary"
-                  size="large"
-                  fullWidth
-                  loading={isSaving}
-                  className="h-14 text-base font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/25"
-                >
-                  {isSaving ? t('account.savingDelegation') : t('account.saveDelegation')}
-                </AeButton>
-
-                {delegation && (
-                  <AeButton
-                    onClick={handleRevokeDelegation}
-                    disabled={isSaving || isRevoking}
-                    variant="secondary"
-                    size="large"
-                    fullWidth
-                    loading={isRevoking}
-                    className="h-14 text-base font-semibold rounded-2xl transition-all duration-300"
-                  >
-                    {isRevoking ? t('account.revokingDelegation') : t('account.revokeDelegation')}
-                  </AeButton>
-                )}
-              </div>
-            </div>
-
-            {/* Delegators List */}
-            {delegators.length > 0 && (
-              <div className="mt-8 pt-6 border-t border-white/10">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
-                    <span className="text-sm">👥</span>
+          </div>
+          {!activeAccount ? (
+            <section className="gov-empty">
+              <p>{t('experience.connectForPower')}</p>
+              <ConnectWalletButton />
+            </section>
+          ) : (
+            <>
+              <section className="gov-panel gov-account">
+                <h2>{t('account.accountInformation')}</h2>
+                <p>{t('account.walletAddress')}</p>
+                <code dir="ltr">{activeAccount}</code>
+                <dl className="gov-account-stats">
+                  <div>
+                    <dt>{t('account.aeBalance')}</dt>
+                    <dd>
+                      {decimalBalance.toString()}
+                      {' '}
+                      <small>AE</small>
+                    </dd>
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-white">{t('account.yourDelegators')}</h3>
-                    <p className="text-sm text-slate-400">
-                      {t('account.peopleTrustYouWithVotes', { count: delegators.length })}
-                    </p>
+                    <dt>{t('account.activeDelegators')}</dt>
+                    <dd>{isLoading ? '…' : delegators.length}</dd>
                   </div>
+                </dl>
+              </section>
+              <section className="gov-panel gov-form">
+                <h2>{t('account.voteDelegation')}</h2>
+                <p>{t('experience.delegateHelp')}</p>
+                {delegationError && <p role="alert" className="gov-inline-error">{t('account.unableToLoadAccount')}</p>}
+                {delegation && (
+                <div className="gov-current-delegate">
+                  <span>{t('account.currentlyDelegated')}</span>
+                  <code dir="ltr">{delegation}</code>
                 </div>
-
-                <div className="grid gap-3">
-                  {delegators.map((delegator: any, idx: number) => (
-                    <div
-                      key={idx}
-                      className="ui-panel group p-4 bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-2xl rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:shadow-lg"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center flex-shrink-0">
-                            <span className="text-xs font-bold text-white">
-                              {(delegator.delegator).slice(3, 5).toUpperCase()}
-                            </span>
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-mono text-white truncate">
-                              {delegator.delegator}
-                            </p>
-                            <p className="text-xs text-slate-400">
-                              {t('account.delegatorNumber', { number: idx + 1 })}
-                            </p>
-                          </div>
-                        </div>
+                )}
+                <form onSubmit={(event) => { event.preventDefault(); if (valid && !pending) { revoke.reset(); save.mutate(address.trim() as Encoded.AccountAddress); } }}>
+                  <label className="gov-field" htmlFor="governance-delegate">
+                    <span>{t('account.delegateToAddress')}</span>
+                    <input id="governance-delegate" value={address} onChange={(event) => setAddress(event.target.value)} placeholder="ak_…" autoComplete="off" spellCheck={false} dir="ltr" />
+                  </label>
+                  <div className="gov-form-actions">
+                    <button className="gov-button ui-primary" type="submit" disabled={!valid || pending}>{save.isPending ? t('account.savingDelegation') : t('account.saveDelegation')}</button>
+                    {delegation && <button type="button" className="gov-button ui-secondary" disabled={pending} onClick={() => { save.reset(); revoke.mutate(); }}>{revoke.isPending ? t('account.revokingDelegation') : t('account.revokeDelegation')}</button>}
+                  </div>
+                </form>
+                {(save.isError || revoke.isError) && <p role="alert" className="gov-inline-error">{t('account.transactionFailedDesc')}</p>}
+                {(save.isSuccess || revoke.isSuccess) && <p role="status">{t(save.isSuccess ? 'account.delegationSavedDesc' : 'account.delegationRevokedDesc')}</p>}
+              </section>
+              <section className="gov-panel">
+                <h2>{t('account.yourDelegators')}</h2>
+                {delegatorsError ? <p role="alert">{t('account.unableToLoadAccount')}</p> : <p>{t('account.peopleTrustYouWithVotes', { count: delegators.length })}</p>}
+                <ul className="gov-delegators">
+                  {delegators.map((item) => {
+                    const delegator = item as { delegator: string; balance?: string };
+                    return (
+                      <li key={delegator.delegator}>
+                        <code dir="ltr">{delegator.delegator}</code>
                         {delegator.balance && (
-                          <div className="text-right flex-shrink-0">
-                            <p className="text-sm font-bold text-white">
-                              {Number(toAe(delegator.balance)).toLocaleString(undefined, {
-                                maximumFractionDigits: 6,
-                              })}
-                              {' '}
-                              AE
-                            </p>
-                            <p className="text-xs text-slate-400">{t('account.votingPower')}</p>
-                          </div>
+                        <strong>
+                          {formatUnits(delegator.balance, 18, i18n.language)}
+                          {' '}
+                          AE
+                        </strong>
                         )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </MobileCard>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            </>
+          )}
         </div>
-
-        {/* Success/Error Messages */}
-        {setDelegationMutation.isSuccess && (
-          <div className="fixed top-20 right-4 z-50 animate-slideInUp">
-            <div className="p-4 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-2xl shadow-2xl">
-              <div className="flex items-center gap-3">
-                <span className="text-lg">✅</span>
-                <div>
-                  <p className="font-semibold">{t('account.delegationSaved')}</p>
-                  <p className="text-sm opacity-90">{t('account.delegationSavedDesc')}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {revokeDelegationMutation.isSuccess && (
-          <div className="fixed top-20 right-4 z-50 animate-slideInUp">
-            <div className="p-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-2xl shadow-2xl">
-              <div className="flex items-center gap-3">
-                <span className="text-lg">🔄</span>
-                <div>
-                  <p className="font-semibold">{t('account.delegationRevoked')}</p>
-                  <p className="text-sm opacity-90">{t('account.delegationRevokedDesc')}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {(setDelegationMutation.isError || revokeDelegationMutation.isError) && (
-          <div className="fixed top-20 right-4 z-50 animate-slideInUp">
-            <div className="p-4 bg-gradient-to-r from-red-500 to-blue-500 text-white rounded-2xl shadow-2xl">
-              <div className="flex items-center gap-3">
-                <span className="text-lg">❌</span>
-                <div>
-                  <p className="font-semibold">{t('account.transactionFailed')}</p>
-                  <p className="text-sm opacity-90">{t('account.transactionFailedDesc')}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <aside className="gov-panel">
+          <h2>{t('experience.yourVoice')}</h2>
+          <p>{t('experience.powerIntro')}</p>
+          <p>{t('experience.delegateHelp')}</p>
+        </aside>
       </div>
-    </div>
+    </>
   );
-}
+};
+
+export default GovernanceAccount;

@@ -1,429 +1,191 @@
-/* eslint-disable */
-import { Encoding, isAddressValid } from '@aeternity/aepp-sdk';
-import { useAccount, useAeSdk, useGovernance } from '@/hooks';
 import { useState } from 'react';
+import { Encoding, isAddressValid } from '@aeternity/aepp-sdk';
+import {
+  ArrowLeft, ArrowUpRight, Check, Clock3, Vote,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/lib/utils';
+import { useAeSdk, useGovernance } from '@/hooks';
 import { safeHref } from '@/utils/safeHref';
-import Spinner from '@/components/Spinner';
+import { ConnectWalletButton } from '@/components/ConnectWalletButton';
+import { formatUnits } from '@/features/dao/utils/voteRules';
 import { AddressChip } from '../AddressChip';
-import AeButton from '../AeButton';
 
 interface GovernanceVoteProps {
   pollId: string;
   setActiveTab: (tab: string) => void;
 }
-export default function GovernanceVote({
-  pollId,
-  setActiveTab,
-}: GovernanceVoteProps) {
-  const { t } = useTranslation('governance');
-  const { activeAccount } = useAeSdk();
-  const { decimalBalance } = useAccount();
+
+const GovernanceVote = ({ pollId, setActiveTab }: GovernanceVoteProps) => {
+  const { t, i18n } = useTranslation('governance');
+  const { activeAccount, currentBlockHeight } = useAeSdk();
   const {
-    usePoll,
-    usePollResults,
-    useRevokeVote,
-    useSubmitVote,
-    useDelegation,
-    useDelegators,
+    usePoll, usePollResults, useRevokeVote, useSubmitVote,
   } = useGovernance();
-  const submitVoteMutation = useSubmitVote();
-  const revokeVoteMutation = useRevokeVote();
-  const { data: delegation } = useDelegation();
-  const { data: delegators = [] } = useDelegators();
   const pollAddress = isAddressValid(pollId, Encoding.ContractAddress) ? pollId : undefined;
-  if (!pollAddress) throw new Error('Invalid poll address');
-  const { data: poll } = usePoll(pollAddress);
-
-  const { data: results } = usePollResults(pollAddress);
-
-  const [votingFor, setVotingFor] = useState<number | null>(null);
-
-  // `poll.pollState.metadata.link` is free-text supplied by whoever created the poll — no scheme
-  // validation happens on-chain, so a `javascript:`/`data:` payload must be rejected here before
-  // it can ever reach an `href`.
+  const { data: poll, error: pollError, refetch } = usePoll(pollAddress);
+  const { data: results, error: resultsError } = usePollResults(pollAddress);
+  const submit = useSubmitVote();
+  const revoke = useRevokeVote();
+  const [choice, setChoice] = useState<number | null>(null);
+  const [actionError, setActionError] = useState(false);
+  const [working, setWorking] = useState(false);
+  const [completedAction, setCompletedAction] = useState<{ kind: 'vote' | 'revoke'; account: string } | null>(null);
+  const closeHeight = poll?.pollState.close_height;
+  const heightKnown = currentBlockHeight != null;
+  const closed = closeHeight != null && heightKnown && currentBlockHeight >= closeHeight;
+  const canVote = !!poll && (closeHeight == null || (heightKnown && !closed));
   const proposalLink = safeHref(poll?.pollState.metadata.link);
 
-  const handleVote = async (option: number) => {
-    if (votingFor != null) return;
-    setVotingFor(option);
+  const castVote = async () => {
+    if (choice == null || !pollAddress || !activeAccount || !canVote || working) return;
+    setWorking(true);
+    setActionError(false);
+    setCompletedAction(null);
+    const account = activeAccount;
     try {
-      await submitVoteMutation.mutateAsync({
-        pollAddress,
-        option,
-      });
+      await submit.mutateAsync({ pollAddress, option: choice });
+      setChoice(null);
+      setCompletedAction({ kind: 'vote', account });
+    } catch {
+      setActionError(true);
     } finally {
-      setVotingFor(null);
+      setWorking(false);
+    }
+  };
+  const revokeVote = async () => {
+    if (!pollAddress || !activeAccount || !canVote || working) return;
+    setWorking(true);
+    setActionError(false);
+    setCompletedAction(null);
+    const account = activeAccount;
+    try {
+      await revoke.mutateAsync(pollAddress);
+      setCompletedAction({ kind: 'revoke', account });
+    } catch {
+      setActionError(true);
+    } finally {
+      setWorking(false);
     }
   };
 
-  const handleRevokeVote = () => {
-    revokeVoteMutation.mutate(pollAddress);
-  };
-
-  const getVotePercentage = (votes: number, total: number) => {
-    if (total === 0) return 0;
-    return Math.round((votes / total) * 100);
-  };
-  return (
-    <div className="min-h-screen">
-      <div className="flex flex-col gap-6 px-4 md:px-6 py-6 max-w-6xl mx-auto">
-        {/* Enhanced Header */}
-        <div className="relative mb-8">
-          <div className="governance-decoration absolute inset-0 bg-gradient-to-r from-blue-500/20 via-blue-500/20 to-blue-500/20 rounded-3xl blur-xl" />
-          <div className="ui-panel relative bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 md:p-8">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-2 h-8 bg-gradient-to-b from-blue-400 to-blue-400 rounded-full" />
-                  <h1 className="ui-page-title text-2xl md:text-4xl font-bold bg-gradient-to-r from-blue-400 via-blue-400 to-blue-400 bg-clip-text text-transparent">
-                    {poll?.pollState.metadata.title || t('vote.defaultPollTitle')}
-                  </h1>
-                </div>
-                <p className="text-slate-300 text-sm md:text-base leading-relaxed max-w-2xl">
-                  {poll?.pollState.metadata.description || t('vote.defaultPollDescription')}
-                </p>
-                {proposalLink && (
-                  <a
-                    href={proposalLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-2 inline-block text-blue-400 hover:text-blue-300 hover:underline break-all"
-                  >
-                    {proposalLink}
-                  </a>
-                )}
-                {poll?.pollState.author && (
-                  <div className="mt-3 flex items-center gap-2 text-slate-400 text-xs">
-                    <span>{t('vote.byLabel')}</span>
-                    <AddressChip address={poll.pollState.author} linkToProfile />
-                  </div>
-                )}
-              </div>
-              <AeButton
-                onClick={() => setActiveTab('polls')}
-                className="shrink-0 px-6 py-3 text-sm font-medium bg-white/5 backdrop-blur-2xl text-white border border-white/20 rounded-2xl transition-all hover:bg-white/10 hover:border-white/30 hover:shadow-xl hover:shadow-blue-500/20"
-              >
-                <span className="flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                  {t('vote.backToPolls')}
-                </span>
-              </AeButton>
-            </div>
-          </div>
-        </div>
-
-        {/* Enhanced Voting Section */}
-        <div className="mb-8">
-          <div className="relative">
-            <div className="governance-decoration absolute inset-0 bg-gradient-to-r from-blue-500/10 via-blue-500/10 to-blue-500/10 rounded-3xl blur-xl" />
-            <div className="ui-panel relative bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 md:p-8">
-              <div className="mb-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-400 rounded-xl flex items-center justify-center">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <h2 className="text-xl md:text-2xl font-bold text-white">{t('vote.castYourVote')}</h2>
-                </div>
-              </div>
-
-              <div className="grid gap-4">
-                {Object.values(poll?.pollState.vote_options ?? {}).map(
-                  (opt, idx) => {
-                    const lbl = opt;
-                    const isSelected = results?.myVote === idx;
-                    const isVotingThis = votingFor === idx;
-
-                    return (
-                      <button
-                        key={idx}
-                        onClick={() => handleVote(idx)}
-                        disabled={votingFor != null}
-                        className={cn(
-                          'group relative p-4 text-left bg-[#11161d] border border-white/15 rounded-xl transition-colors cursor-pointer touch-manipulation vote-button',
-                          'hover:bg-white/5 hover:border-blue-400/40',
-                          'focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50',
-                          isSelected && 'bg-blue-500/20 text-white border-blue-400/50',
-                          isVotingThis && 'bg-gradient-to-r from-cyan-400 to-blue-400 text-white border-transparent animate-pulse',
-                          votingFor && !isVotingThis && 'opacity-50 cursor-not-allowed transform-none hover:transform-none hover:shadow-none',
-                        )}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className={cn(
-                              'w-12 h-12 rounded-xl flex items-center justify-center transition-all',
-                              isSelected ? 'bg-white/20' : 'bg-white/5 group-hover:bg-white/10',
-                            )}
-                            >
-                              {isVotingThis ? (
-                                <Spinner className="w-6 h-6" />
-                              ) : isSelected ? (
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                              ) : (
-                                <span className="text-lg font-bold">{String.fromCharCode(65 + idx)}</span>
-                              )}
-                            </div>
-                            <div>
-                              <p className="text-base md:text-lg font-semibold text-white mb-1">{lbl}</p>
-                              <p className="text-sm text-slate-400">{t('vote.clickToVoteOption')}</p>
-                            </div>
-                          </div>
-                          {isSelected && (
-                            <div className="flex items-center gap-2 text-sm font-medium">
-                              <span>{t('vote.selected')}</span>
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                            </div>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  },
-                )}
-              </div>
-              {results?.myVote != null && (
-                <div className="mt-6">
-                  <AeButton
-                    onClick={handleRevokeVote}
-                    className="w-full md:w-auto bg-transparent text-white border border-white/20 rounded-xl px-6 py-3 transition-all hover:bg-white/5 hover:border-white/30 hover:shadow-lg"
-                  >
-                    <span className="flex items-center justify-center gap-2">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      {t('vote.revokeVote')}
-                    </span>
-                  </AeButton>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Enhanced Results Section */}
-        {results && (
-          <div className="mb-8">
-            <div className="relative">
-              <div className="governance-decoration absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-blue-500/10 rounded-3xl blur-xl" />
-              <div className="ui-panel relative bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 md:p-8">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-cyan-400 to-blue-400 rounded-xl flex items-center justify-center">
-                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
-                    </div>
-                    <h2 className="text-xl md:text-2xl font-bold text-white">{t('vote.liveResults')}</h2>
-                  </div>
-                  <div className="flex items-center gap-3 px-4 py-3 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-lg">
-                    <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                      <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-400 font-medium">{t('vote.totalVotes')}</p>
-                      <p className="text-lg font-bold text-white">{results.totalVotes || 0}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  {(results.options || []).map((opt: any, idx: number) => {
-                    const lbl = opt.label || opt;
-                    const votes = opt.votes || 0;
-                    const total = results.totalVotes || 1;
-                    const percentage = getVotePercentage(votes, total);
-                    const isWinning = percentage != 0 && percentage === Math.max(
-                      ...(results.options || []).map((o: any) => getVotePercentage(o.votes || 0, total)),
-                    );
-
-                    return (
-                      <div
-                        key={idx}
-                        className={cn(
-                          'group relative p-6 bg-white/5 border border-white/10 rounded-2xl transition-all hover:bg-white/10 hover:border-white/20 hover:-translate-y-1',
-                          isWinning && 'bg-gradient-to-br from-yellow-500/10 to-amber-500/5 border-yellow-500/30 shadow-xl shadow-yellow-500/20 animate-winning-pulse',
-                        )}
-                      >
-                        {isWinning && (
-                          <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-yellow-400 to-amber-400 rounded-full flex items-center justify-center shadow-lg">
-                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                            </svg>
-                          </div>
-                        )}
-
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center gap-4">
-                            <div className={cn(
-                              'w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg transition-all',
-                              isWinning ? 'bg-yellow-500/20 text-yellow-400' : 'bg-white/10 text-slate-300 group-hover:bg-white/20',
-                            )}
-                            >
-                              {String.fromCharCode(65 + idx)}
-                            </div>
-                            <div>
-                              <h3 className="text-lg font-semibold text-white mb-1">{lbl}</h3>
-                              <p className="text-sm text-slate-400">
-                                {isWinning ? t('vote.leadingOption') : t('vote.voteOption')}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-2xl font-bold text-white">
-                              {percentage}
-                              %
-                            </p>
-                            <p className="text-sm text-slate-400">
-                              {votes}
-                              {' '}
-                              {t('polls.votes')}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="relative">
-                          <div className="h-4 bg-white/10 rounded-full overflow-hidden">
-                            <div
-                              className={cn(
-                                'h-full rounded-full transition-all duration-1000 ease-out relative',
-                                isWinning
-                                  ? 'bg-gradient-to-r from-yellow-400 to-amber-400'
-                                  : 'bg-gradient-to-r from-pink-500 to-purple-500',
-                              )}
-                              style={{ width: `${percentage}%` }}
-                            >
-                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
-                            </div>
-                          </div>
-                          {percentage > 0 && (
-                            <div className="absolute top-0 left-0 h-full w-full">
-                              <div
-                                className="h-full bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                                style={{ width: `${percentage}%` }}
-                              />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Enhanced Account Section */}
-        {activeAccount && (
-          <div className="mb-8">
-            <div className="relative">
-              <div className="governance-decoration absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 rounded-3xl blur-xl" />
-              <div className="ui-panel relative bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 md:p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-xl flex items-center justify-center">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </div>
-                  <h2 className="text-xl md:text-2xl font-bold text-white">{t('vote.yourGovernancePower')}</h2>
-                </div>
-
-                {decimalBalance && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div className="group p-6 bg-white/5 border border-white/10 rounded-2xl transition-all hover:bg-white/10 hover:border-white/20">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center">
-                          <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                          </svg>
-                        </div>
-                        <div>
-                          <p className="text-sm text-slate-400 font-medium mb-1">{t('vote.accountBalance')}</p>
-                          <p className="text-2xl font-bold text-white">
-                            {decimalBalance.prettify()}
-                            {' '}
-                            AE
-                          </p>
-                          <p className="text-xs text-slate-500">{t('vote.availableForVoting')}</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {delegators.length > 0 && (
-                      <div className="group p-6 bg-white/5 border border-white/10 rounded-2xl transition-all hover:bg-white/10 hover:border-white/20">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                            <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
-                          </div>
-                          <div>
-                            <p className="text-sm text-slate-400 font-medium mb-1">{t('account.yourDelegators')}</p>
-                            <p className="text-2xl font-bold text-white">{delegators.length}</p>
-                            <p className="text-xs text-slate-500">{t('vote.trustingYourVote')}</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div className="p-6 bg-white/5 border border-white/10 rounded-2xl">
-                  <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                    <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    {t('vote.delegationStatus')}
-                  </h3>
-
-                  {delegation ? (
-                    <div className="flex items-start gap-4 p-4 bg-gradient-to-br from-green-500/10 to-emerald-500/5 border border-green-500/20 rounded-xl">
-                      <div className="w-10 h-10 bg-green-500/20 rounded-xl flex items-center justify-center shrink-0">
-                        <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm text-slate-300 font-medium mb-2">{t('vote.votesDelegatedTo')}</p>
-                        <p className="text-white font-mono text-sm break-all bg-black/20 px-3 py-2 rounded-lg border border-white/10">
-                          {delegation}
-                        </p>
-                        <p className="text-xs text-slate-500 mt-2">
-                          {t('vote.votingPowerUsedByDelegate')}
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-start gap-4 p-4 bg-gradient-to-br from-yellow-500/10 to-amber-500/5 border border-yellow-500/20 rounded-xl">
-                      <div className="w-10 h-10 bg-yellow-500/20 rounded-xl flex items-center justify-center shrink-0">
-                        <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                        </svg>
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm text-slate-300 font-medium mb-2">{t('vote.noDelegationSet')}</p>
-                        <p className="text-xs text-slate-500">
-                          {t('vote.noDelegationHint')}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+  if (!pollAddress || pollError) {
+    return (
+      <div className="gov-empty" role="alert">
+        <h2>{t('experience.pollLoadError')}</h2>
+        <button type="button" className="gov-button ui-secondary" onClick={() => refetch()}>{t('experience.retry')}</button>
       </div>
-    </div>
+    );
+  }
+  if (!poll) {
+    return (
+      <div className="gov-empty" role="status">
+        <Vote aria-hidden="true" />
+        <p>{t('polls.loading')}</p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <button type="button" className="gov-back" onClick={() => setActiveTab('polls')}>
+        <ArrowLeft size={16} aria-hidden="true" />
+        {t('experience.backToPolls')}
+      </button>
+      <div className="gov-layout">
+        <div className="gov-detail-stack">
+          <header>
+            <div className="gov-proposal-meta">
+              <span className={`gov-status gov-status-${closed ? 'closed' : 'open'}`}>
+                {closed ? <Check size={12} aria-hidden="true" /> : <span className="gov-status-dot" />}
+                {t(closed ? 'experience.filters.closed' : 'experience.filters.open')}
+              </span>
+            </div>
+            <h1 className="gov-detail-title">{poll.pollState.metadata.title || t('vote.defaultPollTitle')}</h1>
+            {poll.pollState.author && (
+            <div className="gov-proposal-meta">
+              <span>{t('vote.byLabel')}</span>
+              <AddressChip address={poll.pollState.author} linkToProfile />
+            </div>
+            )}
+          </header>
+          <section className="gov-panel">
+            <h2>{t('experience.aboutPoll')}</h2>
+            <div className="gov-description" dir="auto">{poll.pollState.metadata.description}</div>
+            {proposalLink && (
+            <a href={proposalLink} target="_blank" rel="noopener noreferrer" className="gov-detail-link">
+              <span className="break-all">{proposalLink}</span>
+              <ArrowUpRight size={16} aria-hidden="true" />
+            </a>
+            )}
+          </section>
+          <section className="gov-panel" aria-labelledby="gov-results-title">
+            <div className="gov-section-heading">
+              <h2 id="gov-results-title">{t('experience.resultsTitle')}</h2>
+              {results && <span className="gov-status">{t('experience.voterCount', { count: results.totalVotes })}</span>}
+            </div>
+            <p>{t('experience.weightedResults')}</p>
+            {resultsError && <p role="alert" className="gov-inline-error">{t('experience.refreshError')}</p>}
+            {!results && !resultsError && <p role="status">{t('polls.loading')}</p>}
+            {results && (
+              <div className="gov-results">
+                {Object.entries(poll.pollState.vote_options).map(([key, label]) => {
+                  const option = results.options.find((item) => item.value === Number(key));
+                  // Governance is AE-weighted. Voter headcount is participation, not the result.
+                  const percentage = Number.isFinite(option?.percentageOfTotal) ? Math.max(0, Math.min(100, option!.percentageOfTotal)) : 0;
+                  return (
+                    <div key={key}>
+                      <div className="gov-result-label">
+                        <span>{label}</span>
+                        <strong>
+                          {percentage.toLocaleString(i18n.language, { maximumFractionDigits: 2 })}
+                          %
+                        </strong>
+                      </div>
+                      <div className="gov-result-track" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={percentage}><span style={{ width: `${percentage}%` }} /></div>
+                      <div className="gov-result-meta">
+                        <span>
+                          {formatUnits(option?.optionStake ?? '0', 18, i18n.language)}
+                          {' '}
+                          AE
+                        </span>
+                        <span>{t('experience.voterCount', { count: option?.votes ?? 0 })}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        </div>
+        <aside className="gov-panel gov-ballot" aria-busy={working}>
+          <h2>{t(closed ? 'experience.voteClosed' : 'vote.castYourVote')}</h2>
+          {closed ? <p>{t('experience.voteClosedText')}</p> : (
+            <>
+              <fieldset className="gov-ballot-options" disabled={working || !canVote}>
+                <legend>{t('experience.chooseOption')}</legend>
+                {Object.entries(poll.pollState.vote_options).map(([value, label]) => (
+                  <label key={value} htmlFor={`governance-choice-${value}`} className="gov-ballot-choice">
+                    <input id={`governance-choice-${value}`} type="radio" name="governance-choice" checked={choice === Number(value)} onChange={() => setChoice(Number(value))} />
+                    <span>{label}</span>
+                    {results?.myVote === Number(value) && <Check size={16} aria-label={t('experience.voteRecorded')} />}
+                  </label>
+                ))}
+              </fieldset>
+              {activeAccount ? <button type="button" className="gov-button ui-primary" disabled={working || choice == null || !canVote} onClick={castVote}>{t(working ? 'experience.sendingVote' : 'experience.submitVote')}</button> : <ConnectWalletButton className="gov-button ui-primary" label={t('experience.connectToVote')} />}
+              {results?.myVote != null && activeAccount && <button type="button" className="gov-button ui-secondary mt-3" disabled={working || !canVote} onClick={revokeVote}>{t('vote.revokeVote')}</button>}
+            </>
+          )}
+          {working && <p role="status" className="gov-ballot-note">{t('experience.sendingVote')}</p>}
+          {completedAction?.account === activeAccount && completedAction && <p role="status" className="gov-ballot-note">{t(completedAction.kind === 'vote' ? 'experience.voteRecorded' : 'experience.voteRevoked')}</p>}
+          {actionError && <p role="alert" className="gov-inline-error">{t('experience.voteError')}</p>}
+          <div className="gov-info-note mt-6">
+            <Clock3 size={16} aria-hidden="true" />
+            <p>{t('experience.pollsNote')}</p>
+          </div>
+        </aside>
+      </div>
+    </>
   );
-}
+};
+
+export default GovernanceVote;

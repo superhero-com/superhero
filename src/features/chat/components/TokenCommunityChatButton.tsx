@@ -1,8 +1,6 @@
 /**
  * Entry point from a token page into its token-gated Communities room (the
- * ported Nostr stack). This sits *beside* the read-only Matrix/quali.chat
- * feed (`Trendminer/TokenChat.tsx`) — a deliberate CTO decision to add, not
- * replace: the two are independent chat surfaces on the same token.
+ * ported Nostr stack).
  *
  * The room is keyed by the token's sale address, matching the
  * `/chat/:saleAddress` route; access is resolved default-DENY inside the room.

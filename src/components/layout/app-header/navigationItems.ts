@@ -65,6 +65,7 @@ export const getNavigationItems = (): NavigationItem[] => [
   TRENDING_ENABLED && EXPLORE_ITEM,
   DEFI_ITEM,
   TRENDING_ENABLED && DAO_ITEM,
+  CHAT_ITEM,
   TRENDING_ENABLED && REFER_EARN_ITEM,
 ].filter(Boolean) as NavigationItem[];
 

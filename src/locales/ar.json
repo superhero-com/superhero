@@ -2624,25 +2624,6 @@
       "createTokenSidebarHint": "هذا الرمز غير موجود بعد. كن أول من ينشئه!",
       "addNewPost": "إضافة منشور جديد"
     },
-    "tokenChat": {
-      "noMessages": "لا توجد رسائل دردشة عامة بعد",
-      "beFirst": "كن أول من يشارك أفكاره!",
-      "chatForHolders": "دردشة لمالكي #{{name}}",
-      "thisToken": "هذا الرمز",
-      "buyToJoin": "اشترِ هذا الرمز للانضمام إلى غرف الدردشة الحصرية. محفظتك تثبت الملكية؛ والوصول مقيّد بالرمز.",
-      "openPublicChatTitle": "افتح الدردشة العامة على Quali.chat",
-      "publicChat": "دردشة عامة",
-      "publicChatDesc": "القراءة للجميع • الكتابة للمالكين فقط",
-      "openPrivateChatTitle": "افتح الدردشة الخاصة على Quali.chat (للمالكين فقط)",
-      "privateChat": "دردشة خاصة",
-      "privateChatDesc": "القراءة والكتابة للمالكين فقط",
-      "serviceProvidedBy": "الخدمة مقدّمة من",
-      "failedAfterAttempts": "فشل تحميل التعليقات بعد عدة محاولات. يرجى المحاولة لاحقًا.",
-      "retryingInSeconds": "فشل تحميل الرسائل. إعادة المحاولة خلال 5 ثوانٍ... ({{current}}/{{max}})",
-      "unableAfterAttempts": "تعذّر تحميل الرسائل بعد عدة محاولات. يرجى المحاولة لاحقًا.",
-      "loading": "جارٍ التحميل…",
-      "loadMore": "تحميل المزيد"
-    },
     "tokenTrades": {
       "justNow": "الآن",
       "buy": "شراء",

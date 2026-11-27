@@ -2616,25 +2616,6 @@
       "createTokenSidebarHint": "该代币尚不存在。成为第一个创建它的人！",
       "addNewPost": "添加新帖子"
     },
-    "tokenChat": {
-      "noMessages": "尚无公开聊天消息",
-      "beFirst": "成为第一个分享想法的人！",
-      "chatForHolders": "#{{name}} 持有者聊天",
-      "thisToken": "此代币",
-      "buyToJoin": "购买此代币以加入专属聊天室。你的钱包证明所有权；访问采用代币门控。",
-      "openPublicChatTitle": "在 Quali.chat 上打开公开聊天",
-      "publicChat": "公开聊天",
-      "publicChatDesc": "所有人可阅读 • 仅持有者可发言",
-      "openPrivateChatTitle": "在 Quali.chat 上打开私密聊天（仅限持有者）",
-      "privateChat": "私密聊天",
-      "privateChatDesc": "仅持有者可阅读和发言",
-      "serviceProvidedBy": "服务提供方",
-      "failedAfterAttempts": "多次尝试后加载评论失败。请稍后再试。",
-      "retryingInSeconds": "加载消息失败。将在 5 秒后重试…（{{current}}/{{max}}）",
-      "unableAfterAttempts": "多次尝试后无法加载消息。请稍后再试。",
-      "loading": "加载中…",
-      "loadMore": "加载更多"
-    },
     "tokenTrades": {
       "justNow": "刚刚",
       "buy": "买入",

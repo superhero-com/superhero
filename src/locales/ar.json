@@ -127,6 +127,8 @@
       "profileBio": "أخبر العالم عن نفسك…"
     },
     "messages": {
+      "txCompletedInWalletTab": "تم تأكيد معاملتك من علامة تبويب المحفظة. حدّث هذه الصفحة لرؤية النتيجة.",
+      "txSendFromCallbackFailed": "تعذّر إرسال المعاملة الموقّعة: {{error}}",
       "somethingWentWrong": "حدث خطأ ما",
       "success": "تم بنجاح",
       "savingProfile": "جارٍ حفظ الملف الشخصي…",

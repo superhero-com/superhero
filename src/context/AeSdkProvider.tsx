@@ -28,6 +28,14 @@ import { CURRENT_NETWORK, IS_MOBILE } from '../utils/constants';
 import { safeLocalStringStorage } from '../utils/jotaiSafeLocalStorage';
 import { INetwork } from '../utils/types';
 import { createDeepLinkUrl, openDeepLink } from '../utils/url';
+import {
+  TX_QUEUE_BROADCAST_PARAM,
+  clearSignRequestPending,
+  getTxNonce,
+  isNonceUsed,
+  markSignRequestPending,
+} from '../utils/txQueueRelay';
+import i18n from '../i18n';
 
 type TxQueueEntry = {
   status: string;
@@ -381,6 +389,16 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
       const successUrl = new URL(`${currentDomain}/tx-queue/${uniqueId}`);
       successUrl.searchParams.set('transaction', '{transaction}');
       successUrl.searchParams.set('status', 'completed');
+      // Lets the callback tab post the tx itself when it can't reach this tab
+      // (iOS Safari Private Browsing isolates storage per tab). Inner txs are
+      // wrapped and sent by someone else, so never post those directly.
+      const broadcastAllowed = options?.innerTx !== true;
+      if (broadcastAllowed) {
+        successUrl.searchParams.set(TX_QUEUE_BROADCAST_PARAM, '1');
+        // Where the callback tab goes once it is done, so the user lands back on
+        // the page they started from instead of the home page.
+        successUrl.searchParams.set('returnUrl', `${currentUrl.pathname}${currentUrl.search}`);
+      }
 
       // append transaction parameter for failed case
       const cancelUrl = new URL(`${currentDomain}/tx-queue/${uniqueId}`);
@@ -426,11 +444,17 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
         let isCleanedUp = false;
         let unloadHandler: (() => void) | null = null;
         const storedResultKey = `${TX_QUEUE_RESULT_PREFIX}${uniqueId}`;
+        const txNonce = IS_MOBILE && broadcastAllowed ? getTxNonce(tx) : null;
+        let pollTicks = 0;
+        let nonceCheckInFlight = false;
+        let visibilityHandler: (() => void) | null = null;
+        markSignRequestPending(uniqueId);
 
         // Cleanup function to prevent memory leaks
         const cleanup = () => {
           if (isCleanedUp) return;
           isCleanedUp = true;
+          clearSignRequestPending(uniqueId);
 
           if (interval) {
             clearInterval(interval);
@@ -444,11 +468,36 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
             window.removeEventListener('beforeunload', unloadHandler);
             unloadHandler = null;
           }
+          if (visibilityHandler && typeof document !== 'undefined') {
+            document.removeEventListener('visibilitychange', visibilityHandler);
+            visibilityHandler = null;
+          }
           if (newWindow) {
             newWindow.close();
             newWindow = null;
           }
           ackChannel?.close();
+        };
+
+        // The wallet result may land in a tab that can't hand it back to this one
+        // (iOS Safari Private Browsing). That tab posts the tx itself, so watch
+        // the account nonce and stop waiting once the tx has been used on chain.
+        const checkNonce = () => {
+          if (txNonce == null || nonceCheckInFlight || isCleanedUp) return;
+          if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+          nonceCheckInFlight = true;
+          isNonceUsed(nodes[0].instance as any, address, txNonce)
+            .then((used) => {
+              if (!used || isCleanedUp) return;
+              cleanup();
+              const newQueue = { ...transactionsQueueRef.current };
+              delete newQueue[uniqueId];
+              setTransactionsQueue(newQueue);
+              reject(new Error(i18n.t('common.messages.txCompletedInWalletTab')));
+            })
+            .finally(() => {
+              nonceCheckInFlight = false;
+            });
         };
 
         openModal({
@@ -502,6 +551,15 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
           window.addEventListener('beforeunload', unloadHandler);
         }
 
+        // Check right away when the user switches back to this tab, rather than
+        // waiting for the next poll.
+        if (txNonce != null && typeof document !== 'undefined') {
+          visibilityHandler = () => {
+            if (document.visibilityState === 'visible') checkNonce();
+          };
+          document.addEventListener('visibilitychange', visibilityHandler);
+        }
+
         interval = setInterval(() => {
           const currentQueue = transactionsQueueRef.current;
           const storedResult = safeLocalStringStorage.getItem(storedResultKey);
@@ -512,6 +570,9 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
             safeLocalStringStorage.removeItem(storedResultKey);
           }
           const queueEntry = parsedStoredResult ?? currentQueue[uniqueId];
+          pollTicks += 1;
+
+          if (!queueEntry && pollTicks % 10 === 0) checkNonce();
 
           if (queueEntry) {
             if (queueEntry.status === 'cancelled') {

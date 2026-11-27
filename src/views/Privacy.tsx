@@ -106,6 +106,11 @@ const Privacy = () => {
           </li>
         </ul>
 
+        <h3 className="text-xl font-semibold text-white mb-2">{t('common.views.privacy.usageStatsHeading')}</h3>
+        <p className="text-white/80 mb-4 leading-relaxed">
+          {t('common.views.privacy.usageStatsP1')}
+        </p>
+
         <h3 className="text-xl font-semibold text-white mb-2">{t('common.views.privacy.supportHeading')}</h3>
         <p className="text-white/80 mb-4 leading-relaxed">
           {t('common.views.privacy.supportP1')}

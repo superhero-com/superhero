@@ -293,6 +293,9 @@ export function useAddressByChainName(chainNameInput?: string) {
   const [chainNames, setChainNames] = useAtom(chainNamesAtom);
   const [resolvedAddress, setResolvedAddress] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  // True only once the middleware answered that no active name points anywhere,
+  // never while loading or after a failed request.
+  const [notFound, setNotFound] = useState(false);
   const chainName = normalizeChainName(chainNameInput);
   const chainNameKey = chainName.toLowerCase();
 
@@ -307,17 +310,20 @@ export function useAddressByChainName(chainNameInput?: string) {
   useEffect(() => {
     if (!chainName || cachedAddress) {
       setResolvedAddress(null);
+      setNotFound(false);
       setIsLoading(false);
       return undefined;
     }
 
     const controller = new AbortController();
     setResolvedAddress(null);
+    setNotFound(false);
     setIsLoading(true);
     fetchAddressByChainName(chainName, controller.signal)
       .then((address) => {
         if (!address) {
           setResolvedAddress(null);
+          setNotFound(true);
           return;
         }
         setResolvedAddress(address);
@@ -339,5 +345,9 @@ export function useAddressByChainName(chainNameInput?: string) {
     };
   }, [cachedAddress, chainName, chainNameKey, setChainNames]);
 
-  return { address: cachedAddress || resolvedAddress, isLoading };
+  return {
+    address: cachedAddress || resolvedAddress,
+    isLoading,
+    notFound: !cachedAddress && notFound,
+  };
 }

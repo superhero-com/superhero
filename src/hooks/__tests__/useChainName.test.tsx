@@ -11,7 +11,9 @@ import {
   chainNameLookupCheckedAtAtom, chainNamesAtom, preferredChainNamesAtom,
 } from '@/atoms/walletAtoms';
 import { AccountsService } from '@/api/generated/services/AccountsService';
-import { useChainName, useStorePostSenderChainNames } from '@/hooks/useChainName';
+import {
+  useAddressByChainName, useChainName, useStorePostSenderChainNames,
+} from '@/hooks/useChainName';
 import { PREFERRED_CHAIN_NAME_SEEN_TTL_MS, setPendingChainName } from '@/utils/preferredChainName';
 
 type TestPost = {
@@ -222,5 +224,49 @@ describe('useStorePostSenderChainNames preferred names', () => {
       { wrapper },
     );
     expect(store.get(preferredChainNamesAtom).ak_erin.seenAt! > seenAt).toBe(restamped);
+  });
+});
+
+describe('useAddressByChainName', () => {
+  const ADDRESS = 'ak_2swhLkgBPeeADxVTAVCJnZLY5NZtCFiM93JxsEaMuC59euuFRQ';
+
+  function renderLookup(name: string) {
+    const store = createStore();
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      createElement(Provider, { store }, children)
+    );
+    return renderHook(() => useAddressByChainName(name), { wrapper }).result;
+  }
+
+  beforeEach(() => window.localStorage.clear());
+  afterEach(() => vi.restoreAllMocks());
+
+  it('reports notFound once the middleware has no such name', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('{}', { status: 404 }));
+    const result = renderLookup('nobody.chain');
+
+    expect(result.current.notFound).toBe(false);
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current).toMatchObject({ address: null, notFound: true });
+  });
+
+  it('does not report notFound when the request fails', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('', { status: 500 }));
+    const result = renderLookup('someone.chain');
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.notFound).toBe(false);
+  });
+
+  it('resolves an active name to its account', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({
+      name: 'someone.chain',
+      active: true,
+      pointers: [{ key: 'account_pubkey', id: ADDRESS }],
+    }), { status: 200 }));
+    const result = renderLookup('someone.chain');
+
+    await waitFor(() => expect(result.current.address).toBe(ADDRESS));
+    expect(result.current.notFound).toBe(false);
   });
 });

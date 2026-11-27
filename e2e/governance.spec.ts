@@ -113,15 +113,16 @@ const json = (route: Route, body: unknown) => route.fulfill({
   status: 200, contentType: 'application/json', body: JSON.stringify(body),
 });
 
-/** Fakes the governance data; set `server.down` to make the governance server fail. */
-async function fakeGovernance(page: Page, server = { down: false }) {
+/** Fakes governance data and both chain-height reads; `server.down` simulates an outage. */
+async function fakeGovernance(page: Page, server: { down?: boolean; height?: number } = {}) {
+  const height = server.height ?? HEIGHT;
   await page.route((url) => url.hostname.startsWith('governance-server'), (route) => {
     const url = new URL(route.request().url());
     if (server.down) return route.fulfill({ status: 503, body: '' });
     if (url.pathname.endsWith('/pollOrdering')) {
       const closed = url.searchParams.get('closed') === 'true';
       const rows = ENTRIES
-        .filter((e) => (e.closeHeight != null && e.closeHeight <= HEIGHT) === closed)
+        .filter((e) => (e.closeHeight != null && e.closeHeight <= height) === closed)
         .map(orderingRow);
       return json(route, { ordering: rows.map((r) => r.id), data: rows });
     }
@@ -134,7 +135,28 @@ async function fakeGovernance(page: Page, server = { down: false }) {
 
   await page.route(
     (url) => url.pathname.endsWith('/v3/key-blocks/current/height'),
-    (route) => json(route, { height: HEIGHT }),
+    (route) => json(route, { height }),
+  );
+  // AeSdkProvider reads the generation, while the poll list reads the height endpoint.
+  // Leaving the generation live makes an open fixture poll appear closed on its detail page.
+  await page.route(
+    (url) => url.pathname.endsWith('/v3/generations/current'),
+    (route) => json(route, {
+      key_block: {
+        hash: encode(new Uint8Array(32).fill(8), Encoding.KeyBlockHash),
+        height,
+        prev_hash: encode(new Uint8Array(32).fill(7), Encoding.KeyBlockHash),
+        prev_key_hash: encode(new Uint8Array(32).fill(7), Encoding.KeyBlockHash),
+        state_hash: encode(new Uint8Array(32).fill(6), Encoding.BlockStateHash),
+        miner: AUTHOR,
+        beneficiary: AUTHOR,
+        target: 0,
+        time: Date.UTC(2026, 0, 1),
+        version: 6,
+        info: encode(new Uint8Array(), Encoding.ContractBytearray),
+      },
+      micro_blocks: [],
+    }),
   );
 
   // Answers only the registry's `polls()`; any other dry-run goes to the real node.
@@ -157,7 +179,7 @@ async function fakeGovernance(page: Page, server = { down: false }) {
           contract_id: call.contractId,
           gas_price: 1000000000,
           gas_used: 1000,
-          height: HEIGHT,
+          height,
           log: [],
           return_type: 'ok',
           return_value: POLLS_RESULT,
@@ -230,8 +252,24 @@ test.describe('æternity governance polls', () => {
       .toHaveAttribute('rel', 'noopener noreferrer');
     await expect(page.getByRole('radio', { name: 'Yes' })).toBeVisible();
     await expect(page.getByRole('radio', { name: 'No' })).toBeVisible();
+    await expect(page.getByRole('radio', { name: 'Yes' })).toBeEnabled();
+    await expect(page.getByRole('radio', { name: 'No' })).toBeEnabled();
     await expect(page.getByRole('button', { name: /connect wallet to vote/i })).toBeVisible();
     await expect(page.getByText('4 voters', { exact: true })).toBeVisible();
+    await expect(page.getByRole('progressbar', { name: 'Yes' })).toHaveAttribute('aria-valuenow', '60');
+    await expect(page.getByRole('progressbar', { name: 'No' })).toHaveAttribute('aria-valuenow', '40');
+  });
+
+  test('a poll at its closing height shows results without voting controls', async ({ page }) => {
+    await fakeGovernance(page, { height: EXPLORER_OVERVIEW.pollState.close_height });
+    await page.goto('/voting');
+    await page.getByText('Fund the explorer').click();
+
+    await expect(page.getByRole('heading', { name: 'Voting has ended' })).toBeVisible();
+    await expect(page.getByRole('radio')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /connect wallet to vote/i })).toHaveCount(0);
+    await expect(page.getByRole('progressbar', { name: 'Yes' })).toHaveAttribute('aria-valuenow', '60');
+    await expect(page.getByRole('progressbar', { name: 'No' })).toHaveAttribute('aria-valuenow', '40');
   });
 
   test('a governance server outage shows a retry that recovers', async ({ page }) => {
